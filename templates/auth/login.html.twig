@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+
+    {# CSS #}
+   
+    <link rel="stylesheet" href="{{ asset('css/style_2.css') }}">
+</head>
+<body>
+
+<div class="login-container">
+    <div class="login-card">    
+
+        <div class="login-left">
+            <img src="{{ asset('img/a11.jpg') }}" alt="Finance illustration">
+        </div>
+
+        <div class="login-right">
+            <h2>WELCOME!</h2>
+            <p>Manage your salary and finances smarter.</p>
+
+            <form method="post">
+                <input type="email" name="email" placeholder="Email or username" required>
+                <input type="password" name="password" placeholder="Password" required>
+
+                <select name="role">
+                    <option>Select your role</option>
+                    <option>ETUDIANT</option>
+                    <option>SALARIE</option>
+                    <option>ENSEIGNANT</option>
+                </select>
+
+                <div class="options">
+                    <label>
+                        <input type="checkbox"> Remember
+                    </label>
+                    <a href="#">Forgot your password?</a>
+                </div>
+
+                <button type="submit" class="btn">NEXT →</button>
+            </form>
+
+            <p class="signup">
+                Don’t have an account ?
+                <a href="{{ path('app_register') }}">Sign up</a>
+            </p>
+        </div>
+
+    </div>
+
+    <footer>designed by Decide$ Team</footer>
+</div>
+
+</body>
+</html>
