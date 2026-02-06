@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -31,6 +33,17 @@ class User
 
     #[ORM\Column(nullable: true)]
     private ?float $soldeTotal = null;
+
+    /**
+     * @var Collection<int, Revenue>
+     */
+    #[ORM\OneToMany(targetEntity: Revenue::class, mappedBy: 'user')]
+    private Collection $revenues;
+
+    public function __construct()
+    {
+        $this->revenues = new ArrayCollection();
+    }
 
 
     public function getId(): ?int
@@ -106,6 +119,36 @@ class User
     public function setSoldeTotal(?float $soldeTotal): static
     {
         $this->soldeTotal = $soldeTotal;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Revenue>
+     */
+    public function getRevenues(): Collection
+    {
+        return $this->revenues;
+    }
+
+    public function addRevenue(Revenue $revenue): static
+    {
+        if (!$this->revenues->contains($revenue)) {
+            $this->revenues->add($revenue);
+            $revenue->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRevenue(Revenue $revenue): static
+    {
+        if ($this->revenues->removeElement($revenue)) {
+            // set the owning side to null (unless already changed)
+            if ($revenue->getUser() === $this) {
+                $revenue->setUser(null);
+            }
+        }
 
         return $this;
     }
