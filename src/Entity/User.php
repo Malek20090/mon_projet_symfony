@@ -144,14 +144,10 @@ class User
     public function removeRevenue(Revenue $revenue): static
     {
         if ($this->revenues->removeElement($revenue)) {
-            // set the owning side to null (unless already changed)
             if ($revenue->getUser() === $this) {
                 $revenue->setUser(null);
             }
         }
-
         return $this;
     }
-
-   
 }
