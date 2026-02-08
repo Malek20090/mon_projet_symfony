@@ -40,9 +40,16 @@ class User
     #[ORM\OneToMany(targetEntity: Revenue::class, mappedBy: 'user')]
     private Collection $revenues;
 
+    /**
+     * @var Collection<int, Quiz>
+     */
+    #[ORM\OneToMany(targetEntity: Quiz::class, mappedBy: 'user')]
+    private Collection $quizzes;
+
     public function __construct()
     {
         $this->revenues = new ArrayCollection();
+        $this->quizzes = new ArrayCollection();
     }
 
 
@@ -148,6 +155,36 @@ class User
                 $revenue->setUser(null);
             }
         }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Quiz>
+     */
+    public function getQuizzes(): Collection
+    {
+        return $this->quizzes;
+    }
+
+    public function addQuiz(Quiz $quiz): static
+    {
+        if (!$this->quizzes->contains($quiz)) {
+            $this->quizzes->add($quiz);
+            $quiz->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeQuiz(Quiz $quiz): static
+    {
+        if ($this->quizzes->removeElement($quiz)) {
+            // set the owning side to null (unless already changed)
+            if ($quiz->getUser() === $this) {
+                $quiz->setUser(null);
+            }
+        }
+
         return $this;
     }
 }
