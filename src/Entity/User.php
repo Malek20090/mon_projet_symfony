@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -59,12 +60,32 @@ public function setImage(?string $image): self
     private Collection $transactions;
 
     public function __construct()
-    {
+        {
         $this->transactions = new ArrayCollection();
         $this->dateInscription = new \DateTime();
         $this->roles = [];
         $this->soldeTotal = 0;
     }
+    /**
+     * @var Collection<int, Revenue>
+     */
+    #[ORM\OneToMany(targetEntity: Revenue::class, mappedBy: 'user')]
+    private Collection $revenues;
+
+    /**
+     * @var Collection<int, Quiz>
+     */
+    #[ORM\OneToMany(targetEntity: Quiz::class, mappedBy: 'user')]
+    private Collection $quizzes;
+
+    public function __constructt()
+    {
+        $this->revenues = new ArrayCollection();
+        $this->quizzes = new ArrayCollection();
+    }
+
+
+
 
     /* ================= SECURITY ================= */
 
@@ -162,6 +183,23 @@ public function setImage(?string $image): self
             if ($transaction->getUser() === $this) {
                 $transaction->setUser(null);
             }
+            }
+
+        return $this;
+    }
+    /**
+     * @return Collection<int, Revenue>
+     */
+    public function getRevenues(): Collection
+    {
+        return $this->revenues;
+    }
+
+    public function addRevenue(Revenue $revenue): static
+    {
+        if (!$this->revenues->contains($revenue)) {
+            $this->revenues->add($revenue);
+            $revenue->setUser($this);
         }
 
         return $this;
@@ -182,5 +220,44 @@ public function setImage(?string $image): self
         }
 
         $this->soldeTotal = $total;
+    }
+    public function removeRevenue(Revenue $revenue): static
+    {
+        if ($this->revenues->removeElement($revenue)) {
+            if ($revenue->getUser() === $this) {
+                $revenue->setUser(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Quiz>
+     */
+    public function getQuizzes(): Collection
+    {
+        return $this->quizzes;
+    }
+
+    public function addQuiz(Quiz $quiz): static
+    {
+        if (!$this->quizzes->contains($quiz)) {
+            $this->quizzes->add($quiz);
+            $quiz->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeQuiz(Quiz $quiz): static
+    {
+        if ($this->quizzes->removeElement($quiz)) {
+            // set the owning side to null (unless already changed)
+            if ($quiz->getUser() === $this) {
+                $quiz->setUser(null);
+            }
+        }
+
+        return $this;
     }
 }
