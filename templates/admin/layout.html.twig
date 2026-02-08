@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin | Decide$</title>
+    <link rel="stylesheet" href="{{ asset('css/style_1.css') }}">
+</head>
+<body>
+
+<div class="admin-container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="brand">
+            Decide<span>$</span>
+        </div>
+
+        <nav>
+            
+
+            <a href="{{ path('app_user_index') }}"
+               class="{{ app.request.get('_route') starts with 'app_user' ? 'active' : '' }}">
+                <span class="icon">👤</span> Users
+            </a>
+
+            <a href="{{ path('app_transaction_index') }}"
+               class="{{ app.request.get('_route') starts with 'app_transaction' ? 'active' : '' }}">
+                <span class="icon">💳</span> Transactions
+            </a>
+
+            <a href="#">
+                <span class="icon">📚</span> Classes
+            </a>
+
+            <a href="#">
+                <span class="icon">⚠️</span> Aléas
+            </a>
+
+            <a href="{{ path('app_reports') }}"
+   class="{{ app.request.get('_route') starts with 'app_reports' ? 'active' : '' }}">
+    <span class="icon">📈</span> Reports
+</a>
+
+             
+        </nav>
+
+        <div class="sidebar-footer">
+    <a href="{{ path('app_logout') }}">
+        <span class="icon">🚪</span> Logout
+    </a>
+</div>
+
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+
+</body>
+</html>
