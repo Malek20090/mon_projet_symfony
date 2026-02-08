@@ -3,112 +3,184 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
-use Doctrine\DBAL\Types\Types;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 100, nullable: true)]
+    #[ORM\Column(length: 100)]
     private ?string $nom = null;
 
-    #[ORM\Column(length: 150, nullable: true)]
+    #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
+    #[ORM\Column]
+    private string $password;
+
+    #[ORM\Column(type: 'json')]
+    private array $roles = [];
+
+    #[ORM\Column(type: 'date')]
+    private \DateTime $dateInscription;
+
+    #[ORM\Column]
+    private float $soldeTotal = 0;
+    
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $password = null;
+private ?string $image = null;
 
-    #[ORM\Column(length: 20, nullable: true)]
-    private ?string $role = null;
+public function getImage(): ?string
+{
+    return $this->image;
+}
 
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $dateInscription = null;
+public function setImage(?string $image): self
+{
+    $this->image = $image;
+    return $this;
+}
 
-    #[ORM\Column(nullable: true)]
-    private ?float $soldeTotal = null;
+    // ✅ RELATION TRANSACTIONS
+    #[ORM\OneToMany(
+        mappedBy: 'user',
+        targetEntity: Transaction::class,
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
+    private Collection $transactions;
 
-
-    public function getId(): ?int
+    public function __construct()
     {
-        return $this->id;
+        $this->transactions = new ArrayCollection();
+        $this->dateInscription = new \DateTime();
+        $this->roles = [];
+        $this->soldeTotal = 0;
     }
 
-    public function getNom(): ?string
+    /* ================= SECURITY ================= */
+
+    public function getUserIdentifier(): string
     {
-        return $this->nom;
+        return (string) $this->email;
     }
 
-    public function setNom(?string $nom): static
+    public function getRoles(): array
     {
-        $this->nom = $nom;
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER';
+        return array_unique($roles);
+    }
 
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
         return $this;
     }
 
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(?string $email): static
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    public function getPassword(): ?string
+    public function getPassword(): string
     {
         return $this->password;
     }
 
-    public function setPassword(?string $password): static
+    public function setPassword(string $password): self
     {
         $this->password = $password;
-
         return $this;
     }
 
-    public function getRole(): ?string
-    {
-        return $this->role;
-    }
+    public function eraseCredentials(): void {}
 
-    public function setRole(?string $role): static
-    {
-        $this->role = $role;
+    /* ================= GETTERS / SETTERS ================= */
 
+    public function getId(): ?int { return $this->id; }
+
+    public function getNom(): ?string { return $this->nom; }
+
+    public function setNom(string $nom): self
+    {
+        $this->nom = $nom;
         return $this;
     }
 
-    public function getDateInscription(): ?\DateTime
+    public function getEmail(): ?string { return $this->email; }
+
+    public function setEmail(string $email): self
+    {
+        $this->email = strtolower($email);
+        return $this;
+    }
+
+    public function getDateInscription(): \DateTime
     {
         return $this->dateInscription;
     }
 
-    public function setDateInscription(?\DateTime $dateInscription): static
-    {
-        $this->dateInscription = $dateInscription;
-
-        return $this;
-    }
-
-    public function getSoldeTotal(): ?float
+    public function getSoldeTotal(): float
     {
         return $this->soldeTotal;
     }
 
-    public function setSoldeTotal(?float $soldeTotal): static
+    public function setSoldeTotal(float $solde): self
     {
-        $this->soldeTotal = $soldeTotal;
+        $this->soldeTotal = $solde;
+        return $this;
+    }
+
+    /* ================= TRANSACTIONS ================= */
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function getTransactions(): Collection
+    {
+        return $this->transactions;
+    }
+
+    // ✅ MÉTHODE MANQUANTE (CAUSE DE TON ERREUR)
+    public function addTransaction(Transaction $transaction): self
+    {
+        if (!$this->transactions->contains($transaction)) {
+            $this->transactions->add($transaction);
+            $transaction->setUser($this);
+        }
 
         return $this;
     }
 
-   
+    public function removeTransaction(Transaction $transaction): self
+    {
+        if ($this->transactions->removeElement($transaction)) {
+            if ($transaction->getUser() === $this) {
+                $transaction->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /* ================= BUSINESS ================= */
+
+    public function recalculateSolde(): void
+    {
+        $total = 0;
+
+        foreach ($this->transactions as $transaction) {
+            if ($transaction->getType() === 'SAVING') {
+                $total += $transaction->getMontant();
+            } elseif ($transaction->getType() === 'EXPENSE') {
+                $total -= $transaction->getMontant();
+            }
+        }
+
+        $this->soldeTotal = $total;
+    }
 }
