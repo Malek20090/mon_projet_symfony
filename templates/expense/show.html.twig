@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dépense #{{ expense.id }} | Decide${% endblock %}
+
+{% block body %}
+<div class="container-fluid bg-breadcrumb">
+    <div class="container text-center py-5">
+        <h1 class="display-4 text-white wow fadeInDown">Dépense #{{ expense.id }}</h1>
+        <p class="text-white-50 wow fadeInUp">Détail de la dépense</p>
+    </div>
+</div>
+
+<div class="container-fluid service bg-light py-5">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="service-item rounded p-4 wow fadeInUp">
+                    <h4 class="mb-4"><i class="fas fa-credit-card text-primary me-2"></i>Détails</h4>
+                    <table class="table table-bordered align-middle mb-0">
+                        <tbody>
+                            <tr><th>Id</th><td>{{ expense.id }}</td></tr>
+                            <tr><th>Montant</th><td class="text-primary fw-bold">{{ expense.amount|number_format(2, '.', ' ') }} TND</td></tr>
+                            <tr><th>Catégorie</th><td>{{ expense.category }}</td></tr>
+                            <tr><th>Date</th><td>{{ expense.expenseDate ? expense.expenseDate|date('d/m/Y') : '' }}</td></tr>
+                            <tr><th>Description</th><td>{{ expense.description ?? '-' }}</td></tr>
+                            <tr><th>Revenu associé</th>
+                                <td>
+                                    {% if expense.revenue %}
+                                        <a href="{{ path('app_revenue_show', { id: expense.revenue.id }) }}">Revenu #{{ expense.revenue.id }} ({{ expense.revenue.amount|number_format(2, '.', ' ') }} TND)</a>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <a href="{{ path('app_expense_index') }}" class="btn btn-secondary rounded-pill me-2"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
+            <a href="{{ path('app_expense_edit', { id: expense.id }) }}" class="btn btn-primary rounded-pill me-2"><i class="fas fa-edit me-2"></i>Modifier</a>
+            <form method="post" action="{{ path('app_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer cette dépense ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ expense.id) }}">
+                <button type="submit" class="btn btn-danger rounded-pill"><i class="fas fa-trash me-2"></i>Supprimer</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

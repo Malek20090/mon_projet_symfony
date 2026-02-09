@@ -18,7 +18,7 @@ class CasRellesRepository extends ServiceEntityRepository
     }
 
     /**
-     * Historique des cas reels pour un utilisateur (pour la page simulation aleas).
+     * Historique des cas réels pour un utilisateur (pour la page simulation aléas).
      * @return CasRelles[]
      */
     public function findByUserOrderByDateDesc(User $user): array
@@ -29,50 +29,6 @@ class CasRellesRepository extends ServiceEntityRepository
             ->orderBy('c.dateEffet', 'DESC')
             ->getQuery()
             ->getResult();
-    }
-
-    /**
-     * Find and sort CasRelles for admin.
-     *
-     * @param string $search Search term
-     * @param string $sort Field to sort by
-     * @param string $order Order direction (asc/desc)
-     * @param string $filter Filter by resultat (EN_ATTENTE, VALIDE, REFUSE, all)
-     * @return CasRelles[]
-     */
-    public function findBySearchAndSort(string $search = '', string $sort = 'id', string $order = 'desc', string $filter = 'all'): array
-    {
-        $qb = $this->createQueryBuilder('c');
-
-        // Apply search on multiple fields
-        if (!empty($search)) {
-            $qb->andWhere(
-                $qb->expr()->orX(
-                    $qb->expr()->like('c.titre', ':search'),
-                    $qb->expr()->like('c.description', ':search'),
-                    $qb->expr()->like('c.type', ':search'),
-                    $qb->expr()->like('c.solution', ':search'),
-                    $qb->expr()->like('c.resultat', ':search')
-                )
-            );
-            $qb->setParameter('search', '%' . $search . '%');
-        }
-
-        // Apply filter by resultat
-        if ($filter !== 'all' && !empty($filter)) {
-            $qb->andWhere('c.resultat = :filter');
-            $qb->setParameter('filter', $filter);
-        }
-
-        // Apply sorting
-        $validSortFields = ['id', 'titre', 'type', 'montant', 'solution', 'resultat', 'dateEffet'];
-        if (!in_array($sort, $validSortFields)) {
-            $sort = 'id';
-        }
-        $order = strtolower($order) === 'asc' ? 'ASC' : 'DESC';
-        $qb->orderBy('c.' . $sort, $order);
-
-        return $qb->getQuery()->getResult();
     }
 
     //    /**

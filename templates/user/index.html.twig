@@ -1,0 +1,99 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Users{% endblock %}
+
+{% block content %}
+
+<h1>Users</h1>
+
+{# ================= ADMIN SECTION ================= #}
+<h2>Administrateurs</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Rôle</th>
+            <th>Solde</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set hasAdmin = false %}
+
+        {% for user in users %}
+            {% if 'ROLE_ADMIN' in user.roles %}
+                {% set hasAdmin = true %}
+                <tr>
+                    <td>{{ user.nom }}</td>
+                    <td>{{ user.email }}</td>
+                    <td><span class="badge badge-danger">Admin</span></td>
+                    <td>{{ user.soldeTotal }}</td>
+                    <td>
+                        <a href="{{ path('app_user_show', {'id': user.id}) }}">Show</a>
+                        <a href="{{ path('app_user_edit', {'id': user.id}) }}">Edit</a>
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+
+        {% if not hasAdmin %}
+            <tr>
+                <td colspan="5">Aucun administrateur</td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>
+
+
+{# ================= OTHER USERS SECTION ================= #}
+<h2 class="section-title">Utilisateurs</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Rôle</th>
+            <th>Solde</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% set hasUsers = false %}
+    {% for user in users %}
+        {% if 'ROLE_ADMIN' not in user.roles %}
+            {% set hasUsers = true %}
+            <tr>
+                <td>{{ user.nom }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if 'ROLE_SALARY' in user.roles %}
+                        <span class="badge badge-salary">Salary</span>
+                    {% elseif 'ROLE_ETUDIANT' in user.roles %}
+                        <span class="badge badge-student">Étudiant</span>
+                    {% else %}
+                        {{ user.roles|join(', ') }}
+                    {% endif %}
+                </td>
+                <td>{{ user.soldeTotal }}</td>
+                <td>
+                    <a href="{{ path('app_user_show', {'id': user.id}) }}">Show</a>
+                    <a href="{{ path('app_user_edit', {'id': user.id}) }}">Edit</a>
+                </td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+
+    {% if not hasUsers %}
+        <tr>
+            <td colspan="5">Aucun utilisateur</td>
+        </tr>
+    {% endif %}
+    </tbody>
+</table>
+
+<a href="{{ path('app_user_new') }}" class="btn-primary">Add User</a>
+
+{% endblock %}

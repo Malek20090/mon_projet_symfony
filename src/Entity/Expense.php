@@ -23,10 +23,8 @@ class Expense
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $date = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $description = null;
-
-    #[ORM\ManyToOne(inversedBy: 'expenses')]
+    #[ORM\ManyToOne(targetEntity: Revenue::class, inversedBy: 'expenses')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?Revenue $revenue = null;
 
     public function getId(): ?int
@@ -66,18 +64,6 @@ class Expense
     public function setDate(\DateTime $date): static
     {
         $this->date = $date;
-
-        return $this;
-    }
-
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
-
-    public function setDescription(?string $description): static
-    {
-        $this->description = $description;
 
         return $this;
     }

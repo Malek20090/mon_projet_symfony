@@ -1,0 +1,14 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}New Transaction{% endblock %}
+
+{% block body %}
+<h1>Create Transaction</h1>
+
+{{ form_start(form) }}
+    {{ form_widget(form) }}
+    <button class="btn">Save</button>
+{{ form_end(form) }}
+
+<a href="{{ path('app_transaction_index') }}">Back</a>
+{% endblock %}

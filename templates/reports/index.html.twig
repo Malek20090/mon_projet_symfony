@@ -1,0 +1,124 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+
+<h1>Reports & Statistics</h1>
+
+<!-- =======================
+     📊 STAT CARDS
+======================= -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <h4>Total Users</h4>
+        <strong>{{ totalUsers }}</strong>
+    </div>
+
+    <div class="stat-card">
+        <h4>Total Transactions</h4>
+        <strong>{{ totalTransactions }}</strong>
+    </div>
+
+    <div class="stat-card">
+        <h4>Total Savings</h4>
+        <strong>{{ totalSavings|number_format(0, '.', ',') }} DT</strong>
+    </div>
+
+    <div class="stat-card">
+        <h4>Total Investments</h4>
+        <strong>{{ totalInvestments|number_format(0, '.', ',') }} DT</strong>
+    </div>
+</div>
+
+<hr>
+
+<!-- =======================
+     📈 CHART SECTION
+======================= -->
+<div class="chart-card">
+    <h3>📊 Monthly Savings vs Expenses</h3>
+    <canvas id="monthlyChart" height="120"></canvas>
+</div>
+
+<!-- =======================
+     📦 EXPORT PDF
+======================= -->
+<form id="pdfForm" method="POST" action="{{ path('app_reports_pdf') }}">
+    <input type="hidden" name="chartImage" id="chartImage">
+
+    <button type="submit" class="btn btn-primary mt-4">
+        📄 Export PDF
+    </button>
+</form>
+<script>
+document.getElementById('pdfForm').addEventListener('submit', function () {
+    const canvas = document.getElementById('monthlyChart');
+    document.getElementById('chartImage').value = canvas.toDataURL('image/png');
+});
+</script>
+
+
+<!-- =======================
+     📊 CHART.JS
+======================= -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const ctx = document.getElementById('monthlyChart');
+
+const chart = new Chart(ctx, {
+    data: {
+        labels: {{ months|json_encode|raw }},
+        datasets: [
+            {
+                type: 'bar',
+                label: 'Expenses',
+                data: {{ monthlyExpenses|json_encode|raw }},
+                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                borderRadius: 6
+            },
+            {
+                type: 'bar',
+                label: 'Savings',
+                data: {{ monthlySavings|json_encode|raw }},
+                backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                borderRadius: 6
+            },
+            {
+                type: 'line',
+                label: 'Savings Trend',
+                data: {{ monthlySavings|json_encode|raw }},
+                borderColor: '#16a34a',
+                backgroundColor: 'transparent',
+                tension: 0.4,
+                pointRadius: 4
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: value => value + ' DT'
+                }
+            }
+        }
+    }
+});
+
+/* =======================
+   📄 EXPORT PDF (Canvas → Image)
+======================= */
+document.getElementById('pdfForm').addEventListener('submit', function () {
+    document.getElementById('chartImage').value =
+        document.getElementById('monthlyChart').toDataURL('image/png');
+});
+</script>
+
+{% endblock %}

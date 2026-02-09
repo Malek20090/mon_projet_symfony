@@ -25,7 +25,7 @@ class Revenue
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $receivedAt = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
     #[ORM\Column]
@@ -38,13 +38,21 @@ class Revenue
     /**
      * @var Collection<int, Expense>
      */
-    #[ORM\OneToMany(targetEntity: Expense::class, mappedBy: 'revenue')]
+    #[ORM\OneToMany(
+        mappedBy: 'revenue',
+        targetEntity: Expense::class,
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
     private Collection $expenses;
 
     public function __construct()
     {
         $this->expenses = new ArrayCollection();
+        $this->createdAt = new \DateTimeImmutable();
     }
+
+    /* ===================== GETTERS / SETTERS ===================== */
 
     public function getId(): ?int
     {
@@ -56,10 +64,9 @@ class Revenue
         return $this->amount;
     }
 
-    public function setAmount(float $amount): static
+    public function setAmount(float $amount): self
     {
         $this->amount = $amount;
-
         return $this;
     }
 
@@ -68,22 +75,20 @@ class Revenue
         return $this->type;
     }
 
-    public function setType(string $type): static
+    public function setType(string $type): self
     {
         $this->type = $type;
-
         return $this;
     }
 
-    public function getReceivedAt(): ?\DateTime
+    public function getReceivedAt(): ?\DateTimeInterface
     {
         return $this->receivedAt;
     }
 
-    public function setReceivedAt(\DateTime $receivedAt): static
+    public function setReceivedAt(\DateTimeInterface $receivedAt): self
     {
         $this->receivedAt = $receivedAt;
-
         return $this;
     }
 
@@ -92,22 +97,20 @@ class Revenue
         return $this->description;
     }
 
-    public function setDescription(string $description): static
+    public function setDescription(?string $description): self
     {
         $this->description = $description;
-
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTime
+    public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTime $createdAt): static
+    public function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
@@ -116,10 +119,9 @@ class Revenue
         return $this->user;
     }
 
-    public function setUser(?User $user): static
+    public function setUser(User $user): self
     {
         $this->user = $user;
-
         return $this;
     }
 
@@ -131,7 +133,7 @@ class Revenue
         return $this->expenses;
     }
 
-    public function addExpense(Expense $expense): static
+    public function addExpense(Expense $expense): self
     {
         if (!$this->expenses->contains($expense)) {
             $this->expenses->add($expense);
@@ -141,10 +143,9 @@ class Revenue
         return $this;
     }
 
-    public function removeExpense(Expense $expense): static
+    public function removeExpense(Expense $expense): self
     {
         if ($this->expenses->removeElement($expense)) {
-            // set the owning side to null (unless already changed)
             if ($expense->getRevenue() === $this) {
                 $expense->setRevenue(null);
             }
@@ -153,3 +154,4 @@ class Revenue
         return $this;
     }
 }
+

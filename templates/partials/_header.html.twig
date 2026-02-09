@@ -1,0 +1,47 @@
+<header class="topbar" id="top">
+  <div class="container-fluid topbar-inner">
+    <div class="topbar-row topbar-grid">
+
+      {# ===== LEFT : BRAND ===== #}
+      <div class="brand">
+        <i class="fa-solid fa-wallet"></i>
+        <span>Decide</span><span>$</span>
+      </div>
+
+      {# ===== CENTER : NAV ===== #}
+      <nav class="nav-links">
+        <a href="{{ path('app_home') }}"
+           class="{{ app.request.attributes.get('_route') == 'app_home' ? 'active' }}">
+          Hom
+        </a>
+        <a href="#">About</a>
+        <a class="active" href="#">Service</a>
+        <a href="#">Contact</a>
+      </nav>
+
+      {# ===== RIGHT : INFO + ACTIONS ===== #}
+      <div class="right-info">
+        <div class="text-end topbar-text">
+          <div>Finance personnelle</div>
+          <b>Gestion du salaire</b>
+        </div>
+
+        <!-- 🌙 Night button -->
+        <button id="nightBtn"
+                class="pill-btn night-toggle"
+                type="button"
+                aria-pressed="false">
+          <i class="fa-solid fa-moon"></i>
+          <span>Night</span>
+        </button>
+
+        <!-- ⬅ Back -->
+        <a class="pill-btn back-btn" href="{{ path('app_savings') }}">
+          <i class="fa-solid fa-arrow-left"></i>
+          back
+        </a>
+      </div>
+
+    </div>
+  </div>
+</header>

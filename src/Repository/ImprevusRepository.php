@@ -18,6 +18,7 @@ class ImprevusRepository extends ServiceEntityRepository
 
     /**
      * Imprevus par type (POSITIF ou NEGATIF) pour la liste "Risques (-)" / "Opportunites (+)".
+     * Imprévus par type (POSITIF ou NEGATIF) pour la liste "Risques (-)" / "Opportunités (+)".
      * @return Imprevus[]
      */
     public function findByType(string $type): array
