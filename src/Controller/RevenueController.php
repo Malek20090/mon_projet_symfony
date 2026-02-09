@@ -73,7 +73,7 @@ class RevenueController extends AbstractController
     #[Route('/{id}', name: 'app_revenue_delete', methods: ['POST'])]
     public function delete(Request $request, Revenue $revenue, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete' . $revenue->getId(), $request->request->string('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $revenue->getId(), $request->request->get('_token', ''))) {
             $entityManager->remove($revenue);
             $entityManager->flush();
             $this->addFlash('success', 'Revenu supprimé.');
