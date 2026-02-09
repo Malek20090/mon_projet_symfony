@@ -1,10 +1,454 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Contact | Decide$</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Same theme as Salary / Home -->
+  <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}">
+  <style>
+    /* Contact page hero: image background instead of blue */
+    .hero.hero-contact {
+      background: url("{{ asset('img/a2.jpg') }}") center center / cover no-repeat !important;
+    }
+
+    /* ========== CONTACT PAGE ANIMATIONS ========== */
+    @keyframes contactFadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(28px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @keyframes contactFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes contactFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes contactIconPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    .hero.hero-contact .wrap h1 {
+      animation: contactFadeInUp 0.7s ease-out both;
+    }
+    .hero.hero-contact .wrap p {
+      animation: contactFadeInUp 0.7s ease-out 0.15s both;
+    }
+    .hero.hero-contact .wrap {
+      animation: contactFloat 4s ease-in-out 1s infinite;
+    }
+
+    .savings-zone .section-title {
+      animation: contactFadeInUp 0.6s ease-out both;
+    }
+    .contact-form-card {
+      animation: contactFadeInUp 0.6s ease-out 0.1s both;
+    }
+    .contact-move-1 { animation: contactFadeInUp 0.5s ease-out 0.2s both; }
+    .contact-move-2 { animation: contactFadeInUp 0.5s ease-out 0.3s both; }
+    .contact-move-3 { animation: contactFadeInUp 0.5s ease-out 0.4s both; }
+    .contact-move-4 { animation: contactFadeInUp 0.5s ease-out 0.5s both; }
+    .contact-move-5 { animation: contactFadeInUp 0.5s ease-out 0.6s both; }
+
+    .savings-zone .stat-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .savings-zone .stat-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 28px rgba(0,0,0,.12);
+    }
+    body.night .savings-zone .stat-card:hover {
+      box-shadow: 0 12px 28px rgba(0,0,0,.4);
+    }
+    .savings-zone .stat-card .icon-bubble {
+      transition: transform 0.3s ease;
+    }
+    .savings-zone .stat-card:hover .icon-bubble {
+      animation: contactIconPulse 0.6s ease;
+    }
+
+    .contact-form .form-control {
+      transition: transform 0.2s ease;
+    }
+    .contact-form .form-control:focus {
+      transform: scale(1.01);
+    }
+
+    /* Pro contact form */
+    .contact-form-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      padding: 2rem 2rem 2.25rem;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+    body.night .contact-form-card {
+      background: var(--card-bg, #2a2d36);
+      border-color: rgba(255,255,255,.08);
+      box-shadow: 0 4px 24px rgba(0,0,0,.3);
+    }
+    .contact-form-card .form-heading {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1a1d24;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid rgba(13, 110, 253, .2);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    body.night .contact-form-card .form-heading { color: #e8eaed; border-bottom-color: rgba(13, 110, 253, .4); }
+    .contact-form .form-group {
+      margin-bottom: 1.25rem;
+    }
+    .contact-form .form-group:last-of-type { margin-bottom: 0; }
+    .contact-form label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 0.375rem;
+    }
+    body.night .contact-form label { color: #b0b4bb; }
+    .contact-form .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      transition: border-color .2s, box-shadow .2s;
+      background: #fff;
+    }
+    body.night .contact-form .form-control {
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.12);
+      color: #e8eaed;
+    }
+    .contact-form .form-control::placeholder { color: #adb5bd; }
+    body.night .contact-form .form-control::placeholder { color: #6c757d; }
+    .contact-form .form-control:focus {
+      outline: none;
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 3px rgba(13, 110, 253, .15);
+    }
+    .contact-form textarea.form-control {
+      min-height: 140px;
+      resize: vertical;
+    }
+    .contact-form .btn-submit {
+      width: 100%;
+      padding: 0.875rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+      color: #fff;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .contact-form .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(13, 110, 253, .35);
+    }
+    .contact-form .btn-submit:active { transform: translateY(0); }
+    .contact-form .form-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .contact-form .form-row .form-group { flex: 1; min-width: 0; }
+    @media (max-width: 576px) { .contact-form .form-row { flex-direction: column; gap: 0; } }
+  </style>
 </head>
-<body>
-  <h1>Contact Us</h1>
-  <p>Email: support@decides.com</p>
+
+<body class="savings-page">
+
+<!-- ======================================================
+     HEADER (SAME AS HOME / SALARY)
+====================================================== -->
+<header class="topbar" id="top">
+  <div class="container-fluid topbar-inner">
+    <div class="topbar-row topbar-grid">
+
+      <div class="brand">
+        <a href="{{ path('app_salary_expense_index') }}" style="color: inherit; text-decoration: none;">
+          <i class="fa-solid fa-wallet"></i>
+          <span>Decide</span><span>$</span>
+        </a>
+      </div>
+
+      <nav class="nav-links">
+        <a href="{{ path('app_salary_expense_index') }}">Home</a>
+        <a href="{{ path('app_about') }}">About</a>
+        <a href="{{ path('app_service') }}">Service</a>
+        <a class="active" href="{{ path('app_contact') }}">Contact</a>
+      </nav>
+
+      <div class="right-info">
+        <div class="text-end topbar-text">
+          <div>Finance personnelle</div>
+          <b>Gestion du salaire</b>
+        </div>
+
+        <button id="nightBtn" class="pill-btn night-toggle" type="button">
+          <i class="fa-solid fa-moon"></i>
+          <span>Night</span>
+        </button>
+
+        <a class="pill-btn back-btn" href="javascript:history.back()">
+          <i class="fa-solid fa-arrow-left"></i> back
+        </a>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- ======================================================
+     HERO (SAME STYLE AS HOME) - background: a2.jpg
+====================================================== -->
+<section class="hero hero-contact">
+  <div class="wrap container text-center">
+    <h1>Contact Us</h1>
+    <p>
+      Get in touch with the Decide$ team. Send your message and we’ll get back to you as soon as possible.
+    </p>
+  </div>
+</section>
+
+<!-- ======================================================
+     CONTACT ZONE (SAME THEME AS SALARY CARDS)
+====================================================== -->
+<section class="savings-zone">
+  <div class="container">
+
+    <div class="section-title">
+      <span class="kicker">LET'S CONNECT</span>
+      <h2>Send Your Message</h2>
+      <p>
+        Need help with Decide$? Use the form below or reach us by email and phone.
+      </p>
+    </div>
+
+    <div class="row g-4" style="max-width: 1100px; margin: 0 auto;">
+      <div class="col-lg-6">
+        <div class="contact-form-card">
+          <h3 class="form-heading">
+            <i class="fa-solid fa-pen-to-square"></i> Get in touch
+          </h3>
+          <form class="contact-form" action="#" method="post">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="contact-name">Full name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="contact-name" name="name" placeholder="John Doe" required>
+              </div>
+              <div class="form-group">
+                <label for="contact-email">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="contact-email" name="email" placeholder="john@example.com" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="contact-phone">Phone</label>
+                <input type="tel" class="form-control" id="contact-phone" name="phone" placeholder="+216 12 345 678">
+              </div>
+              <div class="form-group">
+                <label for="contact-subject">Subject <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="contact-subject" name="subject" placeholder="e.g. Support, Partnership" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="contact-message">Message <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="contact-message" name="message" placeholder="Tell us how we can help you..." required></textarea>
+            </div>
+            <button type="submit" class="btn-submit">
+              <i class="fa-solid fa-paper-plane"></i> Send message
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="row g-3">
+          <div class="col-12 contact-move-1">
+            <div class="stat-card d-flex align-items-center">
+              <div class="icon-bubble me-3">
+                <i class="fa-solid fa-location-dot"></i>
+              </div>
+              <div>
+                <h4 class="mb-1">Address</h4>
+                <span class="small">Tunis, TUNISIA</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6 contact-move-2">
+            <div class="stat-card d-flex align-items-center">
+              <div class="icon-bubble me-3">
+                <i class="fa-solid fa-envelope"></i>
+              </div>
+              <div>
+                <h4 class="mb-1">Mail Us</h4>
+                <a href="mailto:Decide@gmail.com" class="small">Decide@gmail.com</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6 contact-move-3">
+            <div class="stat-card d-flex align-items-center">
+              <div class="icon-bubble me-3">
+                <i class="fa-solid fa-phone"></i>
+              </div>
+              <div>
+                <h4 class="mb-1">Telephone</h4>
+                <span class="small">(+216) 12 345 678</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 contact-move-4">
+            <div class="stat-card p-0 overflow-hidden">
+              <iframe
+                class="w-100"
+                style="height: 220px; border: 0; display: block;"
+                src="https://www.google.com/maps?q=Tunis&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade">
+              </iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var form = document.querySelector('.contact-form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var btn = form.querySelector('.btn-submit');
+        if (btn) {
+          var orig = btn.innerHTML;
+          btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...';
+          btn.disabled = true;
+          setTimeout(function() {
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Sent';
+            setTimeout(function() {
+              btn.innerHTML = orig;
+              btn.disabled = false;
+            }, 1500);
+          }, 800);
+        }
+      });
+    }
+  });
+</script>
+
+<!-- ======================================================
+     FOOTER (SAME AS HOME / SALARY)
+====================================================== -->
+<footer class="footer">
+  <div class="footer-top">
+    <div class="container">
+
+      <div class="newsletter">
+        <input type="email" placeholder="Enter your email to receive financial tips">
+        <button type="button">Subscribe</button>
+      </div>
+
+      <div class="footer-grid mt-20">
+
+        <div>
+          <h4>Decide$</h4>
+          <p class="footer-text">
+            Decide$ helps you manage salary, savings, and smart financial goals
+            with clean dashboards and future insights.
+          </p>
+        </div>
+
+        <div>
+          <h4>Platform</h4>
+          <a href="{{ path('app_salary_expense_index') }}">Salary Management</a>
+          <a href="#">Savings & Goals</a>
+          <a href="#">Budget Planning</a>
+          <a href="#">Smart Alerts</a>
+        </div>
+
+        <div>
+          <h4>Key Features</h4>
+          <span>✔ Salary tracking</span>
+          <span>✔ Deductions analysis</span>
+          <span>✔ Financial growth</span>
+          <span>✔ Smart insights</span>
+        </div>
+
+        <div>
+          <h4>Contact</h4>
+          <span>✉️ support@decides.com</span>
+          <span>📍 Tunisia</span>
+          <span>📞 +216 XX XXX XXX</span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    © {{ "now"|date("Y") }} Decide$ — All rights reserved.
+  </div>
+</footer>
+
+<!-- NIGHT MODE (SAME AS HOME) -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const btn = document.getElementById("nightBtn");
+  if (!btn) return;
+
+  if (localStorage.getItem("decides_night") === "1") {
+    document.body.classList.add("night");
+  }
+
+  function sync() {
+    const isNight = document.body.classList.contains("night");
+    btn.querySelector("span").textContent = isNight ? "Day" : "Night";
+    btn.querySelector("i").className = isNight
+      ? "fa-solid fa-sun"
+      : "fa-solid fa-moon";
+  }
+
+  sync();
+
+  btn.addEventListener("click", function () {
+    document.body.classList.toggle("night");
+    localStorage.setItem(
+      "decides_night",
+      document.body.classList.contains("night") ? "1" : "0"
+    );
+    sync();
+  });
+});
+</script>
+
 </body>
 </html>
