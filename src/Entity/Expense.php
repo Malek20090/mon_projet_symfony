@@ -14,19 +14,20 @@ class Expense
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
-    private ?float $montant = null;
+    #[ORM\Column(type: Types::FLOAT)]
+    private ?float $amount = null;
 
     #[ORM\Column(length: 100)]
-    private ?string $categorie = null;
+    private ?string $category = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTime $date = null;
+    private ?\DateTimeInterface $expenseDate = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\ManyToOne(inversedBy: 'expenses')]
+    #[ORM\ManyToOne(targetEntity: Revenue::class, inversedBy: 'expenses')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?Revenue $revenue = null;
 
     public function getId(): ?int
@@ -34,39 +35,36 @@ class Expense
         return $this->id;
     }
 
-    public function getMontant(): ?float
+    public function getAmount(): ?float
     {
-        return $this->montant;
+        return $this->amount;
     }
 
-    public function setMontant(float $montant): static
+    public function setAmount(float $amount): self
     {
-        $this->montant = $montant;
-
+        $this->amount = $amount;
         return $this;
     }
 
-    public function getCategorie(): ?string
+    public function getCategory(): ?string
     {
-        return $this->categorie;
+        return $this->category;
     }
 
-    public function setCategorie(string $categorie): static
+    public function setCategory(string $category): self
     {
-        $this->categorie = $categorie;
-
+        $this->category = $category;
         return $this;
     }
 
-    public function getDate(): ?\DateTime
+    public function getExpenseDate(): ?\DateTimeInterface
     {
-        return $this->date;
+        return $this->expenseDate;
     }
 
-    public function setDate(\DateTime $date): static
+    public function setExpenseDate(\DateTimeInterface $expenseDate): self
     {
-        $this->date = $date;
-
+        $this->expenseDate = $expenseDate;
         return $this;
     }
 
@@ -75,10 +73,9 @@ class Expense
         return $this->description;
     }
 
-    public function setDescription(?string $description): static
+    public function setDescription(?string $description): self
     {
         $this->description = $description;
-
         return $this;
     }
 
@@ -87,10 +84,9 @@ class Expense
         return $this->revenue;
     }
 
-    public function setRevenue(?Revenue $revenue): static
+    public function setRevenue(?Revenue $revenue): self
     {
         $this->revenue = $revenue;
-
         return $this;
     }
 }
