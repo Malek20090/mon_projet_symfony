@@ -1,0 +1,331 @@
+{# templates/savings/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Savings & Goals | Decide${% endblock %}
+
+{# ✅ IMPORTANT: page scope for CSS #}
+{% block body_class %}savings-page{% endblock %}
+
+{# ✅ IMPORTANT: load your module css LAST (so it overrides template/bootstrap) #}
+{% block stylesheets %}
+  <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}?v=1000">
+
+  {# ✅ HARD FIX: prevent Goals table from stretching cards/pages #}
+  <style>
+    .savings-page .table-wrap{
+      overflow-x:auto;
+      max-width:100%;
+    }
+    .savings-page .table-wrap table{
+      width:100% !important;
+      table-layout:fixed !important;
+      max-width:100% !important;
+    }
+    .savings-page .table-wrap th,
+    .savings-page .table-wrap td{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+  </style>
+{% endblock %}
+
+{% block body %}
+
+{# =========================
+   SAFETY DEFAULTS
+   ========================= #}
+{% set tab = tab|default('savings') %}
+{% set stats = stats|default({}) %}
+{% set savingAccount = savingAccount|default({}) %}
+{% set transactions = transactions|default([]) %}
+{% set goals = goals|default([]) %}
+
+{# small helpers for safe fields #}
+{% set sa_balance = savingAccount.sold|default(savingAccount.solde|default(0)) %}
+{% set sa_rate = savingAccount.taux_interet|default(savingAccount.tauxInteret|default(0)) %}
+{% set sa_created = savingAccount.date_creation|default(savingAccount.dateCreation|default(null)) %}
+
+{# JS needs this route pattern (do NOT remove) #}
+<script>
+  window.__goalEditUrlPattern = "{{ path('app_goal_edit', {id: '__ID__'}) }}";
+</script>
+
+{# =========================
+   PAGE PARTS
+   ========================= #}
+{% include 'savings/partials/_header.html.twig' %}
+{% include 'savings/partials/_hero.html.twig' %}
+
+<section class="savings-zone">
+  <div class="container">
+
+    <div class="section-title">
+      <div class="kicker">DECIDE$ MODULE</div>
+      <h2>Manage Savings & Financial Goals</h2>
+      <p>Simple dashboard. Clear actions. Visible progress.</p>
+    </div>
+
+    {# KPIs #}
+    {% include 'savings/partials/_kpis.html.twig' with {
+      stats: stats,
+      sa_balance: sa_balance,
+      sa_rate: sa_rate,
+      goals: goals
+    } %}
+
+    {# Smart panels (alerts, insights, gamification...) #}
+    {% include 'savings/partials/_smart_panels.html.twig' with {
+      sa_rate: sa_rate
+    } %}
+
+    {# Tabs buttons #}
+    {% include 'savings/partials/_tabs.html.twig' with { tab: tab } %}
+
+    {# =========================
+       TAB PANELS
+       ✅ DO NOT add another .container inside tabs
+       because it breaks layout/width/grids.
+       ========================= #}
+
+    {# TAB: SAVINGS #}
+    <div id="tab-savings" class="tab-panel {{ tab == 'savings' ? 'show' : '' }}">
+      {% include 'savings/partials/tabs/_savings_tab.html.twig' with {
+        sa_balance: sa_balance,
+        sa_rate: sa_rate,
+        sa_created: sa_created,
+        transactions: transactions
+      } %}
+    </div>
+
+    {# TAB: GOALS #}
+    <div id="tab-goals" class="tab-panel {{ tab == 'goals' ? 'show' : '' }}">
+      {% include 'savings/partials/tabs/_goals_tab.html.twig' with { goals: goals } %}
+    </div>
+
+  </div>
+</section>
+
+{# =========================
+   MODALS (keep outside tabs)
+   ========================= #}
+{% include 'savings/partials/modals/_calendar_modal.html.twig' %}
+{% include 'savings/partials/modals/_sim_modal.html.twig' %}
+{% include 'savings/partials/modals/_goal_edit_modal.html.twig' %}
+
+{% include 'savings/partials/_footer.html.twig' %}
+
+{# =========================
+   TABS JS (ADD ONCE)
+   ========================= #}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.js-tab');
+
+    const panels = {
+      savings: document.getElementById('tab-savings'),
+      goals: document.getElementById('tab-goals'),
+    };
+
+    // Safety: if tabs partial is not present, do nothing
+    if (!buttons.length || (!panels.savings && !panels.goals)) return;
+
+    function showTab(name) {
+      // Active pill
+      buttons.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+
+      // Panels
+      Object.keys(panels).forEach(k => {
+        if (!panels[k]) return;
+        panels[k].classList.toggle('show', k === name);
+      });
+
+      // Keep URL in sync (?tab=savings|goals)
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', name);
+        window.history.replaceState({}, '', url.toString());
+      } catch (e) {}
+    }
+
+    // Click handlers
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.tab;
+        if (!name || !panels[name]) return;
+        showTab(name);
+      });
+    });
+
+    // Initial tab: URL > existing active > default savings
+    const urlTab = (new URL(window.location.href)).searchParams.get('tab');
+    if (urlTab && panels[urlTab]) {
+      showTab(urlTab);
+    } else {
+      const activeBtn = document.querySelector('.js-tab.active');
+      showTab(activeBtn ? activeBtn.dataset.tab : 'savings');
+    }
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const statLabels = {{ stat_labels|default([])|json_encode|raw }};
+  const statValues = {{ stat_values|default([])|json_encode|raw }};
+
+  let barChartInstance = null;
+  let pieChartInstance = null;
+
+  function renderCharts() {
+    const barEl = document.getElementById('barChart');
+    const pieEl = document.getElementById('pieChart');
+    if (!barEl || !pieEl) return;
+
+    if (barChartInstance) barChartInstance.destroy();
+    if (pieChartInstance) pieChartInstance.destroy();
+
+    barChartInstance = new Chart(barEl, {
+      type: 'bar',
+      data: {
+        labels: statLabels,
+        datasets: [{ label: 'Total (TND)', data: statValues }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    pieChartInstance = new Chart(pieEl, {
+      type: 'doughnut',
+      data: {
+        labels: statLabels,
+        datasets: [{ data: statValues }]
+      },
+      options: { responsive: true }
+    });
+  }
+
+  document.addEventListener('shown.bs.modal', function(e) {
+    if (e.target && e.target.id === 'statsModal') {
+      renderCharts();
+    }
+  });
+</script>
+
+<script>
+  window.openGoalEdit = function(id){
+    const url = (window.__goalEditUrlPattern || '').replace('__ID__', id);
+    if(url) window.location.href = url;
+  };
+</script>
+<script>
+(function(){
+  // ---------- AUTOPLAN BUTTON (for now)
+  const autoBtn = document.getElementById('btn-autoplan');
+  if(autoBtn){
+    autoBtn.addEventListener('click', () => {
+      alert("✨ Auto-plan is not implemented yet. Next step: connect it to the controller.");
+    });
+  }
+
+  // ---------- EDIT MODAL OPEN/CLOSE
+  const overlay = document.getElementById('goalEditOverlay');
+  const closeBtn = document.getElementById('goalEditClose');
+  const cancelBtn = document.getElementById('goalEditCancel');
+  const form = document.getElementById('goalEditForm');
+
+  function openModal(){
+    overlay.style.display = 'flex';
+  }
+  function closeModal(){
+    overlay.style.display = 'none';
+  }
+
+  if(closeBtn) closeBtn.addEventListener('click', closeModal);
+  if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  if(overlay){
+    overlay.addEventListener('click', (e) => {
+      if(e.target === overlay) closeModal();
+    });
+  }
+
+  // Fill modal from edit buttons
+  document.querySelectorAll('[data-open-goal-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('edit_id').value   = btn.dataset.goalId || '';
+      document.getElementById('edit_nom').value  = btn.dataset.goalNom || btn.dataset.goalNom === '' ? '' : (btn.getAttribute('data-goal-nom') || '');
+      document.getElementById('edit_nom').value  = btn.getAttribute('data-goal-nom') || '';
+      document.getElementById('edit_cible').value= btn.getAttribute('data-goal-cible') || '';
+      document.getElementById('edit_date').value = btn.getAttribute('data-goal-date') || '';
+      document.getElementById('edit_prio').value = btn.getAttribute('data-goal-prio') || '3';
+
+      // Next step: set controller route
+      // form.action = `/goal/${btn.dataset.goalId}/edit`; // example later
+      openModal();
+    });
+  });
+
+  // ✅ REAL SUBMIT (NO POPUP)
+// Set form action dynamically when clicking the edit button,
+// then allow normal submit to Symfony controller.
+if(form){
+  // nothing here: we DO NOT prevent submit
+}
+
+
+  // ---------- CLIENT-SIDE FILTER/SORT (works even before controller)
+  const q = new URLSearchParams(window.location.search).get('q') || '';
+  const sort = new URLSearchParams(window.location.search).get('sort') || '';
+  const filter = new URLSearchParams(window.location.search).get('filter') || 'all';
+
+  const list = document.getElementById('goals-list');
+  if(list){
+    const cards = Array.from(list.querySelectorAll('.goal-card'));
+
+    // filter
+    const today = new Date();
+    const nearDays = 14;
+
+    const filtered = cards.filter(card => {
+      const name = (card.dataset.goalName || '').toLowerCase();
+      const pr = parseInt(card.dataset.goalPriority || '0', 10);
+      const dl = (card.dataset.goalDeadline || '').trim();
+
+      // search
+      if(q && !name.includes(q.toLowerCase())) return false;
+
+      // chips
+      if(filter === 'high'){
+        return pr <= 2; // P1 or P2
+      }
+      if(filter === 'near'){
+        if(!dl) return false;
+        const d = new Date(dl + "T00:00:00");
+        const diff = (d - today) / (1000*60*60*24);
+        return diff >= 0 && diff <= nearDays;
+      }
+      return true;
+    });
+
+    // sort
+    let sorted = filtered.slice();
+    if(sort === 'priority_desc'){
+      sorted.sort((a,b) => (parseInt(b.dataset.goalPriority||'0') - parseInt(a.dataset.goalPriority||'0')));
+    }else if(sort === 'deadline_asc'){
+      sorted.sort((a,b) => (a.dataset.goalDeadline||'9999-12-31').localeCompare(b.dataset.goalDeadline||'9999-12-31'));
+    }else if(sort === 'progress_desc'){
+      sorted.sort((a,b) => (parseFloat(b.dataset.goalProgress||'0') - parseFloat(a.dataset.goalProgress||'0')));
+    }else if(sort === 'name_asc'){
+      sorted.sort((a,b) => (a.dataset.goalName||'').localeCompare(b.dataset.goalName||''));
+    }
+
+    // re-render
+    cards.forEach(c => c.remove());
+    sorted.forEach(c => list.insertBefore(c, list.querySelector('.tiny-note') || null));
+  }
+})();
+</script>
+
+{% endblock %}

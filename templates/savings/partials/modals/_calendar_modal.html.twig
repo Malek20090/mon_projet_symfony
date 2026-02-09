@@ -1,0 +1,22 @@
+<div class="modal" id="calendarModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">📅 Calendar View</div>
+      <button class="close-x" type="button" data-close-modal>&times;</button>
+    </div>
+
+    <div class="badge-pill">Events: deposits • goal deadlines • reminders</div>
+
+    <div class="calendar">
+      {% set dows = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+      {% for d in dows %}<div class="cal-dow">{{ d }}</div>{% endfor %}
+      {% for i in 1..30 %}
+        <div class="cal-day {{ i == 7 ? 'today' : '' }} {{ i in [3,9,14,22,28] ? 'has-event' : '' }}">{{ i }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mt-16">
+      <button class="ghost-btn" type="button">➕ Add Reminder (later)</button>
+    </div>
+  </div>
+</div>

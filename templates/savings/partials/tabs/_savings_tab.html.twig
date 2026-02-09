@@ -1,0 +1,354 @@
+{# templates/savings/partials/tabs/_savings_tab.html.twig #}
+
+<div class="grid-savings">
+
+  {# =========================
+     LEFT: ACCOUNT CARD
+     ========================= #}
+  <div class="big-card">
+    <div class="head">
+      <div>
+        <h3>My Savings Account</h3>
+        <div class="sub">🐷 balance + deposit</div>
+      </div>
+      <div class="icon-bubble">🐷</div>
+    </div>
+
+    <div class="info-row"><span>Balance (solde)</span><b>{{ sa_balance|default(0) }} TND</b></div>
+
+    {# ✅ Interest rate: now editable #}
+    <form method="post" action="{{ path('app_savings_rate_update') }}" style="margin:0;">
+      <input type="hidden" name="_form" value="update_rate">
+      <div class="info-row" style="align-items:center; gap:12px;">
+        <span>Interest rate</span>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input class="form-control"
+                 name="taux_interet"
+                 type="number"
+                 step="0.01"
+                 min="0"
+                 max="100"
+                 style="width:120px;"
+                 value="{{ sa_rate|default(0) }}">
+          <b>%</b>
+          <button type="submit" class="pill-btn back-btn" style="padding:10px 14px;">
+  💾 Save
+</button>
+
+        </div>
+      </div>
+    </form>
+
+    <div class="info-row">
+      <span>Created on</span>
+      <b>
+        {% if sa_created %}{{ sa_created|date('Y-m-d') }}{% else %}--/--/----{% endif %}
+      </b>
+    </div>
+
+    <hr class="soft-hr">
+    <h4 class="mini-title">Add a Deposit</h4>
+
+    <form method="post" action="{{ path('app_savings_deposit') }}">
+      <input type="hidden" name="_form" value="deposit">
+
+      <div style="margin-bottom:10px;">
+        <label class="form-label">Amount</label>
+        <input class="form-control" name="amount" type="number" step="0.01" placeholder="Ex: 200" required>
+        <div class="help-text">Creates a transaction (type = EPARGNE).</div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label class="form-label">Description</label>
+        <input class="form-control" name="description" placeholder="Ex: monthly savings">
+      </div>
+
+      <button class="primary-btn" type="submit">➕ Save Deposit</button>
+    </form>
+
+    <div class="mt-16">
+      <button class="ghost-btn" type="button" id="openQuickAddNote">🏷️ Add Note / Tag (later)</button>
+    </div>
+  </div>
+
+  {# =========================
+     RIGHT: HISTORY CARD
+     ========================= #}
+  <div class="big-card">
+    <div class="head">
+      <div>
+        <h3>Savings History</h3>
+        <div class="sub">🔎 search • ⇅ sort • ✏️ edit • 🗑 delete</div>
+      </div>
+      <div class="icon-bubble">🧾</div>
+    </div>
+
+    {# ✅ Toolbar submits to index with query params #}
+<form class="table-toolbar" method="get" action="" id="goalToolbarForm">
+
+  {# ===== LINE 1 : SEARCH ===== #}
+  <div class="toolbar-row">
+    <button type="submit" class="emoji-btn" title="Search">🔎</button>
+
+    <input class="form-control"
+           id="goalSearchInput"
+           type="text"
+           name="q"
+           value="{{ app.request.get('q') }}"
+           placeholder="Search: name, priority, deadline…"
+           oninput="clearTimeout(window.__gsearch);
+                    window.__gsearch=setTimeout(()=>this.form.submit(),450);">
+  </div>
+
+  {# ===== LINE 2 : SORT + FILTER ===== #}
+  <div class="toolbar-row">
+    <button type="button" class="emoji-btn" id="sortLoopBtn" title="Next sort">🔁</button>
+
+    <select class="form-control"
+            name="sort"
+            id="goalSortSelect"
+            onchange="this.form.submit()">
+      {% set sortVal = app.request.get('sort') %}
+      <option value="">Sort by…</option>
+      <option value="priority_desc" {{ sortVal == 'priority_desc' ? 'selected' }}>Priority (high → low)</option>
+      <option value="deadline_asc" {{ sortVal == 'deadline_asc' ? 'selected' }}>Deadline (soonest)</option>
+      <option value="progress_desc" {{ sortVal == 'progress_desc' ? 'selected' }}>Progress (high → low)</option>
+      <option value="name_asc" {{ sortVal == 'name_asc' ? 'selected' }}>Name (A → Z)</option>
+    </select>
+
+    {% set filterVal = app.request.get('filter')|default('all') %}
+    <button type="submit"
+            name="filter"
+            value="all"
+            class="chip {{ filterVal == 'all' ? 'active' : '' }}">
+      All
+    </button>
+
+    <a class="chip" href="{{ app.request.pathinfo }}">Reset</a>
+  </div>
+
+</form>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:60px">#</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Description</th>
+            <th style="width:140px;text-align:center;">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% if transactions is empty %}
+            <tr>
+              <td colspan="5" style="text-align:center;padding:18px;color:var(--muted);">
+                No savings transactions yet.
+              </td>
+            </tr>
+          {% else %}
+            {% for t in transactions %}
+              {% set txId = attribute(t, 'id')|default(0) %}
+              {% set txDate = attribute(t, 'date')|default(attribute(t,'dateTransaction')|default(null)) %}
+              {% set txAmount = attribute(t,'montant')|default(attribute(t,'amount')|default(0)) %}
+              {% set txDesc = attribute(t,'description')|default('') %}
+
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{% if txDate %}{{ txDate|date('Y-m-d') }}{% else %}-{% endif %}</td>
+                <td class="amount">{{ txAmount }} TND</td>
+                <td>{{ txDesc is not empty ? txDesc : '-' }}</td>
+                <td>
+                  <div class="actions" style="display:flex; gap:10px; justify-content:center;">
+                    <button class="circle-btn"
+                            type="button"
+                            title="Edit"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editTx{{ txId }}">
+                      ✏️
+                    </button>
+
+                    <form method="post"
+                          action="{{ path('app_savings_tx_delete', { id: txId }) }}"
+                          style="display:inline;">
+                      <input type="hidden" name="_token" value="{{ csrf_token('delete_tx_' ~ txId) }}">
+                      <button class="circle-btn danger"
+                              type="submit"
+                              title="Delete"
+                              onclick="return confirm('Delete this transaction?');">
+                        🗑️
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tiny-note">Connected to your DB ✓ · Search/Sort/Filter use query params now.</div>
+
+    <div class="mt-16" style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="pill-btn back-btn" type="button" data-bs-toggle="modal" data-bs-target="#statsModal">
+    📊 Stats
+  </button>
+
+      {# ⚠️ You must add these routes in controller (export) #}
+       <a class="pill-btn back-btn" href="{{ path('app_savings_export_csv', { tab: 'savings' }) }}">
+    📄 Export CSV
+  </a>
+     <a class="pill-btn back-btn" href="{{ path('app_savings_export_pdf', { tab: 'savings' }) }}">
+    🧾 Export PDF
+  </a>
+    </div>
+  </div>
+
+</div>
+
+{# =========================
+   MODALS OUTSIDE CARDS
+   ========================= #}
+
+{# =========================
+   STATS MODAL (ONE ONLY)
+   ========================= #}
+<div class="modal fade" id="statsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Savings Stats</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        {# ✅ Choose attribute (reload with stat_by=...) #}
+        <form method="get" action="{{ path('app_savings_index') }}"
+              style="display:flex; gap:10px; align-items:center; margin-bottom:14px;">
+
+          <input type="hidden" name="tab" value="savings">
+          <input type="hidden" name="tx_q" value="{{ tx_q|default('') }}">
+          <input type="hidden" name="tx_sort" value="{{ tx_sort|default('date_desc') }}">
+          <input type="hidden" name="tx_range" value="{{ tx_range|default('all') }}">
+
+          <label class="form-label" style="margin:0; min-width:160px;">Stats attribute</label>
+
+          <select class="form-control" name="stat_by" onchange="this.form.submit()">
+            <option value="type" {{ stat_by|default('type') == 'type' ? 'selected' : '' }}>Type</option>
+            <option value="day" {{ stat_by|default('type') == 'day' ? 'selected' : '' }}>Day</option>
+            <option value="month" {{ stat_by|default('type') == 'month' ? 'selected' : '' }}>Month</option>
+            <option value="amount_bucket" {{ stat_by|default('type') == 'amount_bucket' ? 'selected' : '' }}>Amount Buckets</option>
+            <option value="description" {{ stat_by|default('type') == 'description' ? 'selected' : '' }}>Description</option>
+          </select>
+        </form>
+
+        {# ✅ Numbers #}
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; margin-bottom:16px;">
+          <div class="info-row"><span>Total transactions</span><b>{{ tx_stats.total|default(transactions|length) }}</b></div>
+          <div class="info-row"><span>Total saved</span><b>{{ tx_stats.sum|default(0) }} TND</b></div>
+          <div class="info-row"><span>Average deposit</span><b>{{ tx_stats.avg|default(0)|round(0) }} TND</b></div>
+          <div class="info-row"><span>Max deposit</span><b>{{ tx_stats.max|default(0) }} TND</b></div>
+        </div>
+
+        {# ✅ Charts #}
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:18px; align-items:center;">
+          <div>
+            <h6 style="margin:0 0 10px;">Histogram (sum by {{ stat_by|default('type') }})</h6>
+            <canvas id="barChart" height="140"></canvas>
+          </div>
+
+          <div>
+            <h6 style="margin:0 0 10px;">Circle chart</h6>
+            <canvas id="pieChart" height="140"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+      
+</div>
+
+{# ✅ Edit modals for each transaction (outside cards => no click lock) #}
+{% if transactions is not empty %}
+  {% for t in transactions %}
+    {% set txId = attribute(t, 'id')|default(0) %}
+    {% set txDate = attribute(t, 'date')|default(attribute(t,'dateTransaction')|default(null)) %}
+    {% set txAmount = attribute(t,'montant')|default(attribute(t,'amount')|default(0)) %}
+    {% set txDesc = attribute(t,'description')|default('') %}
+
+    <div class="modal fade" id="editTx{{ txId }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Transaction #{{ txId }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <form method="post" action="{{ path('app_savings_tx_edit', { id: txId }) }}">
+            <div class="modal-body">
+              <input type="hidden" name="_token" value="{{ csrf_token('edit_tx_' ~ txId) }}">
+
+              <label class="form-label">Amount</label>
+              <input class="form-control"
+                     type="number"
+                     step="0.01"
+                     name="montant"
+                     value="{{ txAmount }}"
+                     required>
+
+              <label class="form-label" style="margin-top:10px;">Description</label>
+              <input class="form-control"
+                     type="text"
+                     name="description"
+                     value="{{ txDesc }}">
+
+              <label class="form-label" style="margin-top:10px;">Date</label>
+              <input class="form-control"
+                     type="datetime-local"
+                     name="date"
+                     value="{{ txDate ? txDate|date('Y-m-d\\TH:i') : '' }}">
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save changes</button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+  
+<script>
+  // --------- Savings sort loop (🔁)
+  const sToolbarForm = document.getElementById('savingsToolbarForm');
+  const sSortLoopBtn = document.getElementById('sSortLoopBtn');
+  const sSortSelect  = document.getElementById('savingsSortSelect');
+
+  if (sSortLoopBtn && sSortSelect && sToolbarForm) {
+    sSortLoopBtn.addEventListener('click', () => {
+      const opts = Array.from(sSortSelect.options).filter(o => o.value);
+      let i = opts.findIndex(o => o.value === sSortSelect.value);
+      i = (i === -1) ? 0 : (i + 1) % opts.length;
+      sSortSelect.value = opts[i].value;
+      sToolbarForm.submit();
+    });
+  }
+</script>
+
+{% endif %}

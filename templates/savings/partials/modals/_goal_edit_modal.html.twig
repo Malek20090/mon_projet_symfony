@@ -1,0 +1,40 @@
+<div class="modal" id="goalEditModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">✏️ Edit Goal</div>
+      <button class="close-x" type="button" data-close-modal>&times;</button>
+    </div>
+
+    <div class="sub">Update goal info and save.</div>
+
+    <form method="post" id="goalEditForm" action="">
+      <input type="hidden" name="_form" value="edit_goal">
+
+      <div class="mt-16">
+        <label class="form-label">Goal name</label>
+        <input class="form-control" id="ge_nom" name="nom" required>
+      </div>
+
+      <div class="mt-10" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label class="form-label">Target (TND)</label>
+          <input class="form-control" id="ge_cible" name="montant_cible" type="number" step="0.01" required>
+        </div>
+        <div>
+          <label class="form-label">Priority (1-5)</label>
+          <input class="form-control" id="ge_prio" name="priorite" type="number" min="1" max="5" required>
+        </div>
+      </div>
+
+      <div class="mt-10">
+        <label class="form-label">Deadline</label>
+        <input class="form-control" id="ge_date" name="date_limite" type="date">
+      </div>
+
+      <div class="mt-16 d-flex gap-10">
+        <button class="primary-btn" type="submit" style="width:auto; padding:12px 18px;">✅ Save changes</button>
+        <button class="ghost-btn" type="button" style="width:auto; padding:12px 18px;" data-close-modal>Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>

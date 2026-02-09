@@ -7,6 +7,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: FinancialGoalRepository::class)]
+#[ORM\Table(name: 'financial_goal')]
 class FinancialGoal
 {
     #[ORM\Id]
@@ -14,98 +15,42 @@ class FinancialGoal
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $nom = null;
+    #[ORM\Column(length: 255)]
+    private string $nom = '';
 
-    #[ORM\Column(nullable: true)]
-    private ?float $montantCible = null;
+    #[ORM\Column(name: 'montant_cible')]
+    private float $montantCible = 0;
 
-    #[ORM\Column(nullable: true)]
-    private ?float $montantActuel = null;
+    #[ORM\Column(name: 'montant_actuel')]
+    private float $montantActuel = 0;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[ORM\Column(name: 'date_limite', type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTime $dateLimite = null;
 
     #[ORM\Column(nullable: true)]
-    private ?int $priorite = null;
+    private ?int $priorite = 3;
 
-    #[ORM\ManyToOne(inversedBy: 'no')]
+    #[ORM\ManyToOne(inversedBy: 'financialGoals')]
+    #[ORM\JoinColumn(name: 'saving_account_id', referencedColumnName: 'id', nullable: false)]
     private ?SavingAccount $savingAccount = null;
 
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
+    public function getId(): ?int { return $this->id; }
 
-    public function getNom(): ?string
-    {
-        return $this->nom;
-    }
+    public function getNom(): string { return $this->nom; }
+    public function setNom(string $nom): static { $this->nom = $nom; return $this; }
 
-    public function setNom(?string $nom): static
-    {
-        $this->nom = $nom;
+    public function getMontantCible(): float { return $this->montantCible; }
+    public function setMontantCible(float $montantCible): static { $this->montantCible = $montantCible; return $this; }
 
-        return $this;
-    }
+    public function getMontantActuel(): float { return $this->montantActuel; }
+    public function setMontantActuel(float $montantActuel): static { $this->montantActuel = $montantActuel; return $this; }
 
-    public function getMontantCible(): ?float
-    {
-        return $this->montantCible;
-    }
+    public function getDateLimite(): ?\DateTime { return $this->dateLimite; }
+    public function setDateLimite(?\DateTime $dateLimite): static { $this->dateLimite = $dateLimite; return $this; }
 
-    public function setMontantCible(?float $montantCible): static
-    {
-        $this->montantCible = $montantCible;
+    public function getPriorite(): ?int { return $this->priorite; }
+    public function setPriorite(?int $priorite): static { $this->priorite = $priorite; return $this; }
 
-        return $this;
-    }
-
-    public function getMontantActuel(): ?float
-    {
-        return $this->montantActuel;
-    }
-
-    public function setMontantActuel(?float $montantActuel): static
-    {
-        $this->montantActuel = $montantActuel;
-
-        return $this;
-    }
-
-    public function getDateLimite(): ?\DateTime
-    {
-        return $this->dateLimite;
-    }
-
-    public function setDateLimite(?\DateTime $dateLimite): static
-    {
-        $this->dateLimite = $dateLimite;
-
-        return $this;
-    }
-
-    public function getPriorite(): ?int
-    {
-        return $this->priorite;
-    }
-
-    public function setPriorite(?int $priorite): static
-    {
-        $this->priorite = $priorite;
-
-        return $this;
-    }
-
-    public function getSavingAccount(): ?SavingAccount
-    {
-        return $this->savingAccount;
-    }
-
-    public function setSavingAccount(?SavingAccount $savingAccount): static
-    {
-        $this->savingAccount = $savingAccount;
-
-        return $this;
-    }
+    public function getSavingAccount(): ?SavingAccount { return $this->savingAccount; }
+    public function setSavingAccount(?SavingAccount $savingAccount): static { $this->savingAccount = $savingAccount; return $this; }
 }

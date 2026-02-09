@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+{% block title %}Admin Goals | Decide${% endblock %}
+
+{% block body %}
+<div class="container" style="padding:30px 18px;">
+  <h2 style="margin:0 0 14px;">🛠 Admin — Goals</h2>
+
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+    <form method="get" style="display:flex; gap:10px; flex-wrap:wrap;">
+      <input class="form-control" name="q" value="{{ q }}" placeholder="Search name / priority">
+      <select class="form-control" name="sort">
+        <option value="priority_desc" {{ sort=='priority_desc'?'selected':'' }}>Priority (desc)</option>
+        <option value="deadline_asc" {{ sort=='deadline_asc'?'selected':'' }}>Deadline (asc)</option>
+        <option value="name_asc" {{ sort=='name_asc'?'selected':'' }}>Name (A→Z)</option>
+      </select>
+      <button class="primary-btn" style="width:auto;" type="submit">Apply</button>
+    </form>
+
+    <a class="mini-link" href="{{ path('admin_goal_export_pdf') }}">📄 Export PDF</a>
+    <a class="mini-link" href="{{ path('app_savings', {tab:'goals'}) }}">↩ Back to Front</a>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Name</th><th>Target</th><th>Current</th><th>Deadline</th><th>Priority</th><th style="text-align:center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for g in goals %}
+        <tr>
+          <td>{{ g.id }}</td>
+          <td>{{ g.nom }}</td>
+          <td>{{ g.montantCible }}</td>
+          <td>{{ g.montantActuel }}</td>
+          <td>{{ g.dateLimite ? g.dateLimite|date('Y-m-d') : '-' }}</td>
+          <td>P{{ g.priorite ?? 0 }}</td>
+          <td style="text-align:center;">
+            <a class="circle-btn" href="{{ path('admin_goal_show', {id:g.id}) }}">👁️</a>
+            <a class="circle-btn" href="{{ path('admin_goal_edit', {id:g.id}) }}">✏️</a>
+            <form method="post" action="{{ path('admin_goal_delete', {id:g.id}) }}" style="display:inline;" onsubmit="return confirm('Delete?');">
+              <input type="hidden" name="_token" value="{{ csrf_token('admin_delete_goal_' ~ g.id) }}">
+              <button class="circle-btn danger" type="submit">🗑️</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7" style="text-align:center; padding:18px;">No goals.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
