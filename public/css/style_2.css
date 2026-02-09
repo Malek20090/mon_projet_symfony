@@ -44,8 +44,6 @@ body {
     position: relative;
     overflow: hidden;
 }
-/* ILLUSTRATION */
-
 
 .illustration img {
     position: absolute;
@@ -54,7 +52,6 @@ body {
     height: 100%;
     object-fit: cover;
     object-position: center;
-    transition: transform 0.6s ease;
 }
 .illustration:hover img {
     transform: scale(1.12); /* zoom (1.1 à 1.2 max conseillé) */

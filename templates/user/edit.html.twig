@@ -1,0 +1,70 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Modifier utilisateur{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1>Modifier l’utilisateur</h1>
+    <p class="text-muted">Mise à jour des informations du compte</p>
+</div>
+
+<div class="card user-card">
+    <div class="card-header">
+        <h2>{{ user.nom }}</h2>
+        <span class="user-id">ID #{{ user.id }}</span>
+    </div>
+
+    <div class="card-body">
+        {{ form_start(form) }}
+
+        <div class="form-grid">
+            <div class="form-group">
+                {{ form_label(form.nom) }}
+                {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.nom) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.email) }}
+                {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.email) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.password) }}
+                {{ form_widget(form.password, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.password) }}
+                <small class="text-muted">
+                    Laisser vide pour conserver le mot de passe actuel
+                </small>
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.roles) }}
+                {{ form_widget(form.roles, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.roles) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.soldeTotal) }}
+                {{ form_widget(form.soldeTotal, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.soldeTotal) }}
+            </div>
+        </div>
+
+        <div class="card-footer actions">
+            <a href="{{ path('app_user_index') }}" class="btn btn-secondary">
+                ← Retour
+            </a>
+
+            <button class="btn btn-primary">
+                💾 Enregistrer
+            </button>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+</div>
+
+{% endblock %}

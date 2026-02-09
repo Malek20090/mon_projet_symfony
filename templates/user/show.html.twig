@@ -1,0 +1,58 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}User{% endblock %}
+
+{% block content %}
+<h1>User details</h1>
+<div style="text-align:center; margin-bottom:20px;">
+    {% if user.image %}
+        <img src="{{ asset('uploads/users/' ~ user.image) }}"
+             alt="Photo utilisateur"
+             style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:2px solid #ddd;">
+    {% else %}
+        <<img src="{{ asset('uploads/users/chat1.png') }}"
+     alt="Photo par défaut"
+     style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:2px solid #ddd;">
+    {% endif %}
+</div>
+<table class="table">
+    <tbody>
+        <tr>    
+            <th>ID</th>
+            <td>{{ user.id }}</td>
+        </tr>
+        <tr>
+            <th>Nom</th>
+            <td>{{ user.nom }}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>{{ user.email }}</td>
+        </tr>
+        <tr>
+    <th>Rôle</th>
+    <td>
+        {{ user.roles | join(', ') }}
+    </td>
+</tr>
+        <tr>
+            <th>Solde</th>
+            <td>{{ user.soldeTotal }}</td>
+        </tr>
+        <tr>
+            <th>Date inscription</th>
+            <td>{{ user.dateInscription ? user.dateInscription|date('Y-m-d') : '' }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<a href="{{ path('app_user_index') }}" class="btn-primary">Back</a>
+<a href="{{ path('app_user_edit', {'id': user.id}) }}" class="btn-edit">Edit</a>
+
+<form method="post"
+      action="{{ path('app_user_delete', {'id': user.id}) }}"
+      style="display:inline-block">
+    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
+    <button class="btn-delete">Delete</button>
+</form>
+{% endblock %}

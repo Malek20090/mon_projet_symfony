@@ -2,44 +2,149 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-
-    <title>{% block title %}Decide${% endblock %}</title>
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Decide$ | Revenu & Expense Module{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>💰</text></svg>">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Animate.css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
 
     {% block stylesheets %}
-        <link href="{{ asset('lib/animate/animate.min.css') }}" rel="stylesheet">
-        <link href="{{ asset('lib/owlcarousel/assets/owl.carousel.min.css') }}" rel="stylesheet">
-        <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
-        <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    <style>
+        body { font-family: 'Open Sans', sans-serif; }
+        h1, h2, h3, h4, h5 { font-weight: 700; }
+        .service-item { background: #fff; box-shadow: 0 0 25px rgba(0,0,0,.08); }
+        .service-item:hover { box-shadow: none !important; transform: none !important; background: #fff !important; }
+        .service-item:focus, .service-item:focus-within, .service-item:active { outline: none !important; box-shadow: none !important; background: #fff !important; }
+        .service-item::before, .service-item::after { content: none !important; display: none !important; }
+        .service-item *:focus, .service-item *:active, .service-item *:focus-visible { outline: none !important; box-shadow: none !important; }
+        .service-item .btn:focus, .service-item .btn:active, .service-item .btn:focus-visible { outline: none !important; box-shadow: none !important; }
+        .bg-breadcrumb { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); }
+        .footer { background: #0d6efd; }
+        .copyright { background: #0a58ca; }
+    </style>
     {% endblock %}
 </head>
-
 <body>
 
-{% block body %}{% endblock %}
+<!-- Navbar -->
+<div class="container-fluid position-relative p-0">
+    <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0 bg-white shadow-sm">
+        <a href="{{ path('app_salary_expense_index') }}" class="navbar-brand p-0 d-flex align-items-center">
+            <i class="fas fa-wallet text-primary me-2" style="font-size: 32px;"></i>
+            <h1 class="text-primary m-0 fw-bold">Decide<span class="text-dark">$</span></h1>
+        </a>
 
-<!-- JS -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+            <span class="fa fa-bars"></span>
+        </button>
 
-<script src="{{ asset('lib/wow/wow.min.js') }}"></script>
-<script src="{{ asset('lib/easing/easing.min.js') }}"></script>
-<script src="{{ asset('lib/waypoints/waypoints.min.js') }}"></script>
-<script src="{{ asset('lib/owlcarousel/owl.carousel.min.js') }}"></script>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto py-0">
+                <a href="{{ path('app_salary_expense_index') }}" class="nav-item nav-link {{ app.request.attributes.get('_route') == 'app_salary_expense_index' ? 'active' : '' }}">Home</a>
+                <a href="{{ path('app_transaction_index') }}" class="nav-item nav-link">Transactions</a>
+                <a href="{{ path('app_user_index') }}" class="nav-item nav-link">Users</a>
+            </div>
 
-<script src="{{ asset('js/main.js') }}"></script>
+            <div class="d-none d-xl-flex me-3">
+                <div class="d-flex flex-column pe-3 border-end border-primary">
+                    <span class="text-body">Finance personnelle</span>
+                    <span class="text-primary">Gestion des revenus</span>
+                </div>
+            </div>
 
+            <a href="{{ path('app_register') }}" class="btn btn-primary rounded-pill d-inline-flex flex-shrink-0 py-2 px-4">Register</a>
+        </div>
+    </nav>
+</div>
+
+{% block body %}
+{% endblock %}
+
+<!-- Footer -->
+<div class="container-fluid footer py-5 wow fadeIn" data-wow-delay="0.2s">
+    <div class="container py-5">
+        <div class="row g-5 mb-5 align-items-center">
+            <div class="col-lg-7">
+                <div class="position-relative mx-auto">
+                    <input class="form-control rounded-pill w-100 py-3 ps-4 pe-5" type="email" placeholder="Enter your email to receive financial tips">
+                    <button type="button" class="btn btn-secondary rounded-pill position-absolute top-0 end-0 py-2 px-4 mt-2 me-2">Subscribe</button>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="d-flex align-items-center justify-content-center justify-content-lg-end">
+                    <a class="btn btn-secondary btn-md-square rounded-circle me-3" href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a class="btn btn-secondary btn-md-square rounded-circle me-3" href="#"><i class="fab fa-github"></i></a>
+                    <a class="btn btn-secondary btn-md-square rounded-circle me-3" href="#"><i class="fab fa-twitter"></i></a>
+                    <a class="btn btn-secondary btn-md-square rounded-circle me-0" href="#"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="row g-5">
+            <div class="col-md-6 col-lg-6 col-xl-3">
+                <div class="footer-item d-flex flex-column">
+                    <h3 class="text-white mb-4"><i class="fas fa-chart-line text-primary me-3"></i>Decide$</h3>
+                    <p class="mb-3 text-white-50">Decide$ is a smart financial management platform designed to help users track salaries, control expenses, build savings, and make informed financial decisions.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-6 col-xl-3">
+                <div class="footer-item d-flex flex-column">
+                    <h4 class="text-white mb-4">Platform</h4>
+                    <a href="{{ path('app_salary_expense_index') }}" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-angle-right me-2"></i> Revenu & Expense Management</a>
+                    <a href="{{ path('app_transaction_index') }}" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-angle-right me-2"></i> Transactions</a>
+                    <a href="#" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-angle-right me-2"></i> Savings Goals</a>
+                    <a href="#" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-angle-right me-2"></i> Financial Dashboard</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-6 col-xl-3">
+                <div class="footer-item d-flex flex-column">
+                    <h4 class="text-white mb-4">Key Features</h4>
+                    <p class="text-white mb-2">✔ Suivi mensuel des revenus</p>
+                    <p class="text-white mb-2">✔ Budget Planning</p>
+                    <p class="text-white mb-2">✔ Expense Categorization</p>
+                    <p class="text-white mb-2">✔ Financial Security Alerts</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-6 col-xl-3">
+                <div class="footer-item d-flex flex-column">
+                    <h4 class="text-white mb-4">Contact</h4>
+                    <a href="#" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-user me-2"></i> Project Team – Decide$</a>
+                    <a href="mailto:support@decides.com" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-envelope me-2"></i> support@decides.com</a>
+                    <a href="#" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-university me-2"></i> Academic Project</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copyright -->
+<div class="container-fluid copyright py-4">
+    <div class="container">
+        <div class="row g-4 align-items-center">
+            <div class="col-md-6 text-center text-md-start mb-md-0">
+                <span class="text-white-50"><i class="fas fa-copyright text-light me-2"></i>Decide$, All right reserved.</span>
+            </div>
+            <div class="col-md-6 text-center text-md-end text-white-50">
+                Designed By <strong class="text-white">Decides Team</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
+<script> if (typeof WOW !== 'undefined') { new WOW().init(); } </script>
 {% block javascripts %}{% endblock %}
-
 </body>
 </html>
