@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20260206112009 extends AbstractMigration
+final class Version20260208160643 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -20,9 +20,9 @@ final class Version20260206112009 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE TABLE expense (id INT AUTO_INCREMENT NOT NULL, montant DOUBLE PRECISION NOT NULL, categorie VARCHAR(100) NOT NULL, date DATE NOT NULL, description LONGTEXT DEFAULT NULL, revenue_id INT DEFAULT NULL, INDEX IDX_2D3A8DA6224718EB (revenue_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
+        $this->addSql('CREATE TABLE expense (id INT AUTO_INCREMENT NOT NULL, amount DOUBLE PRECISION NOT NULL, category VARCHAR(100) NOT NULL, expense_date DATE NOT NULL, description LONGTEXT DEFAULT NULL, revenue_id INT NOT NULL, INDEX IDX_2D3A8DA6224718EB (revenue_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('CREATE TABLE financial_goal (id INT AUTO_INCREMENT NOT NULL, nom VARCHAR(255) DEFAULT NULL, montant_cible DOUBLE PRECISION DEFAULT NULL, montant_actuel DOUBLE PRECISION DEFAULT NULL, date_limite DATE DEFAULT NULL, priorite INT DEFAULT NULL, saving_account_id INT DEFAULT NULL, INDEX IDX_2CB34D6A54BD4B2C (saving_account_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
-        $this->addSql('CREATE TABLE revenue (id INT AUTO_INCREMENT NOT NULL, amount DOUBLE PRECISION NOT NULL, type VARCHAR(20) NOT NULL, received_at DATE NOT NULL, description VARCHAR(255) NOT NULL, created_at DATETIME NOT NULL, user_id INT NOT NULL, INDEX IDX_E9116C85A76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
+        $this->addSql('CREATE TABLE revenue (id INT AUTO_INCREMENT NOT NULL, amount DOUBLE PRECISION NOT NULL, type VARCHAR(20) NOT NULL, received_at DATE NOT NULL, description LONGTEXT DEFAULT NULL, created_at DATETIME NOT NULL, user_id INT NOT NULL, INDEX IDX_E9116C85A76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('CREATE TABLE saving_account (id INT AUTO_INCREMENT NOT NULL, sold DOUBLE PRECISION DEFAULT NULL, date_creation DATE DEFAULT NULL, taux_interet DOUBLE PRECISION DEFAULT NULL, user_id INT NOT NULL, INDEX IDX_EF4ED035A76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('CREATE TABLE transaction (id INT AUTO_INCREMENT NOT NULL, type VARCHAR(30) DEFAULT NULL, montant DOUBLE PRECISION DEFAULT NULL, date DATE DEFAULT NULL, description LONGTEXT DEFAULT NULL, module_source VARCHAR(50) DEFAULT NULL, user_id INT DEFAULT NULL, INDEX IDX_723705D1A76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('CREATE TABLE user (id INT AUTO_INCREMENT NOT NULL, nom VARCHAR(100) DEFAULT NULL, email VARCHAR(150) DEFAULT NULL, password VARCHAR(255) DEFAULT NULL, role VARCHAR(20) DEFAULT NULL, date_inscription DATE DEFAULT NULL, solde_total DOUBLE PRECISION DEFAULT NULL, PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
