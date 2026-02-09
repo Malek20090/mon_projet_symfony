@@ -1,0 +1,1643 @@
+/* =========================================================
+   Decide$ — Savings & Goals — COMPLETE CSS (FINAL)
+   File: public/css/decides-savings.css
+   IMPORTANT:
+   - In base.html.twig you MUST have:
+     <body class="{% block body_class %}{% endblock %}">
+   - In your page: {% block body_class %}savings-page{% endblock %}
+   ========================================================= */
+
+/* =========================
+   TOKENS
+   ========================= */
+:root{
+  --c-primary:#00bfe5;
+  --c-navy:#081a3a;
+
+  --bg:#f5fbff;
+  --soft:#eef7f8;
+
+  --card: rgba(255,255,255,.74);
+  --card2: rgba(255,255,255,.90);
+  --stroke: rgba(8,26,58,.10);
+
+  --text:#0f1a2b;
+  --muted:#6f7f8c;
+
+  --radius:22px;
+
+  --shadow: 0 18px 42px rgba(8,26,58,.10);
+  --shadow2: 0 30px 70px rgba(8,26,58,.14);
+
+  --ring: 0 0 0 4px rgba(0,191,229,.12);
+}
+
+/* =========================
+   RESET (safe)
+   ========================= */
+*{ box-sizing:border-box; }
+html, body{ height:100%; }
+body{
+  margin:0;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+/* =========================
+   SMOOTH TRANSITIONS (Night mode)
+   ========================= */
+body,
+.savings-page *{
+  transition: background-color .25s ease, color .25s ease, border-color .25s ease,
+              box-shadow .25s ease, filter .25s ease, opacity .25s ease;
+}
+
+/* =========================
+   PAGE SCOPE (prevents conflicts with Bootstrap/template)
+   ========================= */
+body.savings-page{
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Containers (work with or without bootstrap) */
+.savings-page .container,
+.savings-page .container-fluid{
+  width:100%;
+  margin-left:auto;
+  margin-right:auto;
+  padding-left:18px;
+  padding-right:18px;
+}
+.savings-page .container{ max-width:1180px; }
+
+/* Helpers */
+.savings-page .text-center{ text-align:center; }
+.savings-page .text-end{ text-align:right; }
+.savings-page .w-100{ width:100%; }
+.savings-page .d-flex{ display:flex; }
+.savings-page .align-items-center{ align-items:center; }
+.savings-page .justify-content-between{ justify-content:space-between; }
+.savings-page .gap-2{ gap:10px; }
+.savings-page .gap-3{ gap:14px; }
+.savings-page .me-2{ margin-right:8px; }
+.savings-page .mt-1{ margin-top:8px; }
+.savings-page .mt-2{ margin-top:12px; }
+.savings-page .mt-3{ margin-top:18px; }
+.savings-page .py-3{ padding-top:16px; padding-bottom:16px; }
+.savings-page .mt-10{ margin-top:10px; }
+.savings-page .mt-16{ margin-top:16px; }
+.savings-page .mt-20{ margin-top:20px; }
+.savings-page .mt-24{ margin-top:24px; }
+.savings-page .mt-32{ margin-top:32px; }
+.savings-page .gap-10{ gap:10px; }
+.savings-page .gap-14{ gap:14px; }
+
+/* =========================
+   NAVBAR / TOPBAR (fix conflicts)
+   ========================= */
+.savings-page .topbar,
+.savings-page .navbar{
+  background: rgba(255,255,255,.92) !important;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,0,0,.06) !important;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Brand */
+.savings-page .brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:900;
+  font-size:28px;
+  letter-spacing:.2px;
+  color:#0aaed0;
+}
+.savings-page .brand i{ font-size:20px; }
+.savings-page .brand span:last-child{ color:#0f1a2b; font-weight:950; }
+
+/* Links */
+.savings-page .nav-links{
+  display:flex;
+  align-items:center;
+  gap:22px;
+}
+.savings-page .nav-links a,
+.savings-page .navbar a,
+.savings-page .navbar .nav-link{
+  color:#20314a !important;
+  text-decoration:none !important;
+  font-weight:700;
+  opacity:.92;
+  border-bottom:none !important;
+  box-shadow:none !important;
+}
+.savings-page .nav-links a:hover,
+.savings-page .navbar a:hover,
+.savings-page .navbar .nav-link:hover{
+  opacity:1;
+  color:#0b1c3f !important;
+}
+
+/* active underline (only if your twig uses .active) */
+.savings-page .nav-links a.active{
+  color:var(--c-primary) !important;
+  opacity:1;
+  position:relative;
+  padding-bottom:10px;
+}
+.savings-page .nav-links a.active::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:0;
+  width:46px;
+  height:3px;
+  background:var(--c-primary);
+  border-radius:999px;
+}
+.savings-page .nav-links a.active::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:-7px;
+  width:0;height:0;
+  border-left:7px solid transparent;
+  border-right:7px solid transparent;
+  border-top:7px solid var(--c-primary);
+}
+
+/* Right info */
+.savings-page .right-info{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  color:#5a6a78;
+  font-size:14px;
+}
+.savings-page .right-info b{ color:#2f3e52; }
+
+/* Back button */
+.savings-page .back-btn{
+  background:var(--c-primary);
+  color:#fff !important;
+  border:none;
+  padding:10px 22px;
+  border-radius:999px;
+  font-weight:900;
+  text-decoration:none !important;
+  box-shadow:0 10px 20px rgba(0,191,229,.25);
+}
+.savings-page .back-btn:hover{
+  transform: translateY(-1px);
+  box-shadow:0 16px 28px rgba(0,191,229,.32);
+}
+
+/* =========================
+   HERO (image + overlays)
+   ========================= */
+.savings-page .hero{
+  position:relative;
+  padding:64px 0 44px;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+  min-height:420px;
+  overflow:hidden;
+  color:#fff;
+
+  background-image: url("/img/savings-banner.jpg?v=20260207") !important;
+  background-position:center !important;
+  background-size:cover !important;
+  background-repeat:no-repeat !important;
+  background-color:transparent !important;
+}
+
+.savings-page .hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(120deg, rgba(8,26,58,.62), rgba(0,191,229,.38)) !important;
+  z-index:1;
+  pointer-events:none;
+}
+.savings-page .hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 20% 0%, rgba(0,191,229,.25), transparent 55%);
+  z-index:2;
+  pointer-events:none;
+}
+.savings-page .hero .wrap{ position:relative; z-index:3; }
+
+/* Hero buttons */
+.savings-page .btn-soft{
+  padding:10px 18px;
+  border-radius:999px;
+  font-weight:900;
+  border:1px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.14);
+  color:#fff;
+  text-decoration:none !important;
+}
+.savings-page .btn-soft:hover{ transform: translateY(-1px); background:rgba(255,255,255,.22); }
+
+.savings-page .btn-primary2{
+  padding:10px 18px;
+  border-radius:999px;
+  font-weight:900;
+  border:none;
+  background:var(--c-primary);
+  color:#fff;
+  text-decoration:none !important;
+  box-shadow:0 14px 28px rgba(0,191,229,.28);
+}
+.savings-page .btn-primary2:hover{ transform: translateY(-1px); box-shadow:0 18px 34px rgba(0,191,229,.34); }
+
+/* =========================
+   MAIN ZONE
+   ========================= */
+.savings-page .savings-zone{
+  padding:34px 0 70px;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(0,191,229,.12), transparent 42%),
+    radial-gradient(circle at 90% 0%, rgba(8,26,58,.09), transparent 46%),
+    transparent;
+}
+
+/* Section title */
+.savings-page .section-title{
+  text-align:center;
+  padding:18px 0 8px;
+}
+.savings-page .section-title .kicker{
+  color:var(--c-primary);
+  letter-spacing:2.5px;
+  font-weight:950;
+  font-size:12px;
+}
+.savings-page .section-title h2{
+  font-family: Georgia, "Times New Roman", serif;
+  font-size:42px;
+  margin:10px 0 6px;
+  color:#0b1c3f;
+}
+.savings-page .section-title p{
+  color:#20455a;
+  max-width:820px;
+  margin:0 auto;
+  opacity:.86;
+  font-size:14px;
+}
+
+/* =========================
+   GRIDS
+   ========================= */
+.savings-page .grid-4{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:16px;
+}
+.savings-page .kpi-grid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:18px;
+  margin-top:20px;
+}
+.savings-page .grid-3{
+  display:grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  gap:18px;
+}
+.savings-page .grid-2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+.savings-page .grid-savings,
+.savings-page .grid-goals{
+  display:grid;
+  grid-template-columns: 420px 1fr;
+  gap:16px;
+  margin-top:16px;
+}
+
+/* =========================
+   KPI / STAT CARDS
+   ========================= */
+.savings-page .stats-row{ margin-top:22px; }
+
+.savings-page .stat-card{
+  background: var(--card);
+  border-radius: var(--radius);
+  padding:26px 24px;
+  box-shadow:var(--shadow);
+  border:1px solid var(--stroke);
+  backdrop-filter: blur(10px);
+  min-height:140px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+}
+.savings-page .stat-card:hover{ transform: translateY(-4px); box-shadow:var(--shadow2); }
+.savings-page .stat-card h4{
+  font-family: Georgia, "Times New Roman", serif;
+  margin:0 0 8px;
+  color:#0b1c3f;
+  font-size:22px;
+}
+.savings-page .stat-card .small{ color:var(--muted); font-size:12px; }
+.savings-page .stat-card .value{
+  margin-top:18px;
+  color:var(--c-primary);
+  font-weight:950;
+  font-size:28px;
+}
+
+.savings-page .icon-bubble{
+  width:72px;height:72px;
+  border-radius:999px;
+  background:var(--c-primary);
+  display:grid; place-items:center;
+  color:#fff;
+  font-size:26px;
+  box-shadow:0 22px 44px rgba(0,191,229,.25);
+}
+
+/* =========================
+   TABS
+   ========================= */
+.savings-page .tabs{
+  margin-top:20px;
+  display:flex;
+  justify-content:center;
+  gap:14px;
+}
+.savings-page .tab-pill{
+  border:none;
+  padding:12px 22px;
+  border-radius:999px;
+  background:rgba(255,255,255,.72);
+  color:#173a54;
+  font-weight:950;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06), 0 14px 26px rgba(0,0,0,.07);
+  cursor:pointer;
+}
+.savings-page .tab-pill:hover{
+  transform: translateY(-1px);
+  box-shadow:0 18px 28px rgba(0,0,0,.10);
+}
+.savings-page .tab-pill.active{
+  background: linear-gradient(135deg, rgba(0,191,229,1), rgba(0,191,229,.72));
+  color:#fff;
+  box-shadow:0 18px 30px rgba(0,191,229,.28);
+}
+
+/* Tab panels */
+.savings-page .tab-panel{ display:none; margin-top:16px; }
+.savings-page .tab-panel.show{ display:block; }
+
+/* =========================
+   BIG CARDS
+   ========================= */
+.savings-page .big-card{
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow:var(--shadow);
+  border:1px solid var(--stroke);
+  padding:26px;
+  height:100%;
+  backdrop-filter: blur(10px);
+}
+.savings-page .big-card:hover{ transform: translateY(-3px); box-shadow:var(--shadow2); }
+
+.savings-page .big-card .head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:14px;
+}
+.savings-page .big-card h3{
+  font-family: Georgia, "Times New Roman", serif;
+  margin:0;
+  color:#0b1c3f;
+  font-size:34px;
+}
+.savings-page .big-card .sub{
+  color:var(--muted);
+  font-size:14px;
+  margin-top:4px;
+  opacity:.78;
+}
+
+/* Info rows */
+.savings-page .info-row{
+  background: rgba(255,255,255,.92);
+  border:1px solid rgba(0,0,0,.06);
+  border-radius:14px;
+  padding:14px 18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+  color:#41556a;
+}
+.savings-page .info-row b{ color:#0b1c3f; font-weight:950; }
+
+.savings-page .soft-hr{
+  border:none;
+  border-top:1px solid rgba(0,0,0,.10);
+  margin:18px 0;
+}
+.savings-page .mini-title{
+  font-weight:950;
+  color:#0b1c3f;
+  margin:0 0 10px;
+  font-size:18px;
+}
+
+/* =========================
+   FORMS
+   ========================= */
+.savings-page .form-label{
+  font-weight:900;
+  color:#2a3c50;
+  font-size:13px;
+  display:block;
+  margin-bottom:6px;
+}
+.savings-page .form-control{
+  width:100%;
+  border-radius:12px;
+  border:1px solid rgba(0,0,0,.10);
+  padding:12px 14px;
+  background:rgba(255,255,255,.96);
+  outline:none;
+}
+.savings-page .form-control:focus{
+  border-color: rgba(0,191,229,.55);
+  box-shadow: var(--ring);
+}
+
+.savings-page .help-text{
+  font-size:12px;
+  color:#6a7b89;
+  margin-top:6px;
+}
+
+.savings-page .primary-btn{
+  background:var(--c-primary);
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  padding:12px 22px;
+  font-weight:950;
+  box-shadow:0 14px 28px rgba(0,191,229,.25);
+  cursor:pointer;
+}
+.savings-page .primary-btn:hover{ transform: translateY(-1px); box-shadow:0 18px 34px rgba(0,191,229,.32); }
+
+.savings-page .danger-btn{
+  background:#e84141;
+  border:none;
+  color:#fff;
+  border-radius:12px;
+  padding:10px 12px;
+  height:44px;
+  display:grid;
+  place-items:center;
+  box-shadow:0 12px 24px rgba(232,65,65,.20);
+  cursor:pointer;
+}
+.savings-page .danger-btn:hover{ transform: translateY(-1px); }
+
+/* =========================
+   TABLES
+   ========================= */
+.savings-page .table-wrap{
+  border:1px solid rgba(0,0,0,.08);
+  border-radius:16px;
+  overflow:hidden;
+  background:rgba(255,255,255,.92);
+}
+.savings-page table{ width:100%; border-collapse:collapse; background:transparent; }
+.savings-page thead th{
+  background: rgba(245,251,252,.98);
+  font-weight:950;
+  padding:14px 14px;
+  color:#0b1c3f;
+  font-size:14px;
+  border-bottom:1px solid rgba(0,0,0,.08);
+}
+.savings-page tbody td{
+  padding:14px 14px;
+  border-bottom:1px solid rgba(0,0,0,.06);
+  color:#3c5168;
+  font-size:14px;
+}
+.savings-page tbody tr:hover td{ background:rgba(251,254,255,.97); }
+.savings-page tbody tr:last-child td{ border-bottom:0; }
+
+.savings-page .amount{ color:var(--c-primary); font-weight:950; }
+
+.savings-page .actions{ display:flex; gap:10px; justify-content:center; }
+.savings-page .circle-btn{
+  width:38px;height:38px;border-radius:999px;
+  display:grid;place-items:center;
+  border:2px solid rgba(0,191,229,.55);
+  color:var(--c-primary);
+  background:#fff;
+  text-decoration:none !important;
+}
+.savings-page .circle-btn:hover{ transform: scale(1.05); }
+.savings-page .circle-btn.danger{ border-color:rgba(232,65,65,.55); color:#e84141; }
+
+.savings-page .tiny-note{
+  text-align:center;
+  font-size:12px;
+  color:#6b7c8a;
+  margin-top:12px;
+}
+
+/* =========================
+   GOALS
+   ========================= */
+.savings-page .empty-box{
+  padding:18px;
+  border-radius:16px;
+  background:rgba(255,255,255,.86);
+  border:1px solid rgba(0,0,0,.07);
+  color:#1d3c55;
+  font-weight:900;
+  text-align:center;
+}
+
+.savings-page .goal-card{
+  background: rgba(255,255,255,.92);
+  border-radius:18px;
+  padding:16px;
+  box-shadow: 0 18px 40px rgba(8,26,58,.10);
+  border:1px solid rgba(0,0,0,.05);
+  margin-top:12px;
+}
+.savings-page .goal-top{ display:flex; justify-content:space-between; gap:12px; }
+.savings-page .goal-name{ font-weight:950; color:#0b1c3f; font-size:18px; }
+.savings-page .goal-meta{ color:#6b7c8a; font-size:13px; margin-top:3px; }
+.savings-page .goal-badge{
+  background:rgba(0,191,229,.12);
+  color:#0b4d62;
+  font-weight:950;
+  border-radius:999px;
+  padding:6px 12px;
+  height:fit-content;
+}
+
+.savings-page .goal-progress{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:12px;
+}
+.savings-page .goal-progress .bar{
+  width:100%;
+  height:10px;
+  border-radius:999px;
+  background:#e8f6fb;
+  overflow:hidden;
+}
+.savings-page .goal-progress .fill{
+  height:100%;
+  border-radius:999px;
+  background: linear-gradient(90deg, rgba(0,191,229,1), rgba(0,191,229,.55));
+  transition: width .6s ease;
+}
+.savings-page .goal-progress .pct{
+  min-width:55px;
+  text-align:right;
+  font-weight:950;
+  color:#0b1c3f;
+}
+
+.savings-page .goal-actions{
+  margin-top:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+}
+
+/* =========================
+   FOOTER
+   ========================= */
+.savings-page .footer{
+  background: #081a3a;
+  color: #ffffff;
+  margin-top: 80px;
+}
+.savings-page .footer-top{ padding: 60px 0 40px; }
+.savings-page .newsletter{
+  display:flex;
+  gap:12px;
+  margin-bottom:40px;
+}
+.savings-page .newsletter input{
+  flex:1;
+  padding:12px 14px;
+  border-radius:8px;
+  border:none;
+  outline:none;
+  font-size:14px;
+}
+.savings-page .newsletter button{
+  padding:12px 20px;
+  border-radius:8px;
+  border:none;
+  background:#00bfe5;
+  color:#081a3a;
+  font-weight:700;
+  cursor:pointer;
+}
+.savings-page .newsletter button:hover{ opacity:.92; }
+
+.savings-page .footer-grid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:40px;
+}
+.savings-page .footer-grid h4{
+  font-size:16px;
+  margin-bottom:12px;
+}
+.savings-page .footer-grid a,
+.savings-page .footer-grid span,
+.savings-page .footer-text{
+  font-size:13px;
+  color: rgba(255,255,255,0.80);
+  text-decoration:none !important;
+  display:block;
+  line-height:1.7;
+}
+.savings-page .footer-grid a:hover{ color:#00bfe5; }
+
+.savings-page .footer-bottom{
+  border-top: 1px solid rgba(255,255,255,0.1);
+  text-align:center;
+  padding:16px;
+  font-size:13px;
+  color: rgba(255,255,255,0.6);
+}
+
+/* =========================
+   NIGHT MODE (Smooth + pretty)
+   ========================= */
+body.night.savings-page{
+  background: #071225;
+  color: rgba(255,255,255,.88);
+}
+
+/* dim hero image smoothly */
+body.night.savings-page .hero{
+  filter: brightness(.86) saturate(.96);
+}
+
+/* cards & panels in night */
+body.night.savings-page .stat-card,
+body.night.savings-page .big-card{
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.10);
+  box-shadow: 0 20px 60px rgba(0,0,0,.28);
+}
+body.night.savings-page .stat-card h4,
+body.night.savings-page .big-card h3,
+body.night.savings-page .mini-title,
+body.night.savings-page .goal-name{
+  color: rgba(255,255,255,.92);
+}
+body.night.savings-page .stat-card .small,
+body.night.savings-page .big-card .sub,
+body.night.savings-page .goal-meta,
+body.night.savings-page .tiny-note{
+  color: rgba(255,255,255,.65);
+}
+
+/* inputs in night */
+body.night.savings-page .form-control{
+  background: rgba(255,255,255,.10);
+  border-color: rgba(255,255,255,.14);
+  color: rgba(255,255,255,.92);
+}
+body.night.savings-page .form-label{ color: rgba(255,255,255,.78); }
+body.night.savings-page .help-text{ color: rgba(255,255,255,.60); }
+
+/* tables night */
+body.night.savings-page .table-wrap{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.10);
+}
+body.night.savings-page thead th{
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.86);
+  border-bottom-color: rgba(255,255,255,.10);
+}
+body.night.savings-page tbody td{
+  color: rgba(255,255,255,.78);
+  border-bottom-color: rgba(255,255,255,.08);
+}
+body.night.savings-page tbody tr:hover td{
+  background: rgba(255,255,255,.06);
+}
+
+/* tabs night */
+body.night.savings-page .tab-pill{
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.86);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.10);
+}
+body.night.savings-page .tab-pill.active{
+  background: linear-gradient(135deg, rgba(0,191,229,1), rgba(0,191,229,.55));
+  color:#fff;
+}
+
+/* navbar night */
+body.night.savings-page .topbar,
+body.night.savings-page .navbar{
+  background: rgba(8,26,58,.88) !important;
+  border-bottom: 1px solid rgba(255,255,255,.10) !important;
+}
+body.night.savings-page .navbar a,
+body.night.savings-page .navbar .nav-link,
+body.night.savings-page .nav-links a{
+  color: rgba(255,255,255,.88) !important;
+}
+body.night.savings-page .navbar a:hover,
+body.night.savings-page .navbar .nav-link:hover,
+body.night.savings-page .nav-links a:hover{
+  color: var(--c-primary) !important;
+}
+
+/* footer night keeps same (already dark) */
+body.night.savings-page .footer-grid a:hover{ color: var(--c-primary); }
+
+/* FontAwesome safety */
+i.fa-solid{ line-height:1; }
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 1200px){
+  .savings-page .grid-savings,
+  .savings-page .grid-goals{ grid-template-columns: 380px 1fr; }
+}
+@media (max-width: 1100px){
+  .savings-page .kpi-grid{ grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 992px){
+  .savings-page .grid-4{ grid-template-columns: repeat(2, 1fr); }
+  .savings-page .grid-3{ grid-template-columns: 1fr; }
+  .savings-page .grid-savings,
+  .savings-page .grid-goals{ grid-template-columns: 1fr; }
+  .savings-page .section-title h2{ font-size:38px; }
+}
+@media (max-width: 576px){
+  .savings-page .grid-4{ grid-template-columns: 1fr; }
+  .savings-page .section-title h2{ font-size:32px; }
+  .savings-page .newsletter{ flex-direction: column; }
+  .savings-page .footer-grid{ grid-template-columns: 1fr; }
+}
+/* =========================
+   FIX SMART PANELS ACTIONS
+   ========================= */
+
+/* Make links inside smart cards look like app links */
+.savings-page .smart-panels a,
+.savings-page .smart-panels .link,
+.savings-page .smart-panels .card a{
+  color: var(--c-primary) !important;
+  text-decoration: none !important;
+  font-weight: 900;
+}
+
+.savings-page .smart-panels a:hover{
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+
+/* Action row at the bottom (align + spacing) */
+.savings-page .smart-panels .actions-row,
+.savings-page .smart-panels .card-actions,
+.savings-page .smart-panels .mini-actions{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+
+/* Buttons inside smart cards (remove ugly black border) */
+.savings-page .smart-panels button,
+.savings-page .smart-panels .btn,
+.savings-page .smart-panels .btn-outline,
+.savings-page .smart-panels .btn-later{
+  appearance:none;
+  border: none !important;
+  background: rgba(0,191,229,.14) !important;
+  color: #0b4d62 !important;
+  font-weight: 900;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0,191,229,.30);
+}
+
+.savings-page .smart-panels button:hover{
+  transform: translateY(-1px);
+  background: rgba(0,191,229,.20) !important;
+}
+
+/* If you want ONE primary button style in smart panels */
+.savings-page .smart-panels .btn-primary,
+.savings-page .smart-panels .primary-btn{
+  background: var(--c-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 14px 28px rgba(0,191,229,.25) !important;
+}
+
+/* Checkbox / icons alignment */
+.savings-page .smart-panels i,
+.savings-page .smart-panels .fa-solid{
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Night mode: keep readable */
+body.night.savings-page .smart-panels a{
+  color: var(--c-primary) !important;
+}
+body.night.savings-page .smart-panels button{
+  background: rgba(255,255,255,.08) !important;
+  color: rgba(255,255,255,.88) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12) !important;
+}
+/* =========================================================
+   SMART PANELS — FIX (Insights / Alerts / Gamification)
+   Works with your exact HTML
+   Paste at END of decides-savings.css
+   ========================================================= */
+
+.savings-page .grid-3{
+  align-items: stretch;
+}
+
+/* badge pill */
+.savings-page .badge-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:13px;
+  color:#0b4d62;
+  background: rgba(0,191,229,.14);
+  box-shadow: inset 0 0 0 1px rgba(0,191,229,.20);
+}
+
+/* alert items */
+.savings-page .alert-item{
+  display:flex;
+  gap:12px;
+  padding:12px 12px;
+  border-radius:14px;
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(0,0,0,.06);
+  margin-top:10px;
+}
+
+.savings-page .alert-item.warn{
+  background: rgba(255, 243, 205, .70);
+  border-color: rgba(255, 193, 7, .25);
+}
+
+.savings-page .alert-item.danger{
+  background: rgba(248, 215, 218, .70);
+  border-color: rgba(220, 53, 69, .25);
+}
+
+.savings-page .alert-dot{
+  width:10px;
+  height:10px;
+  margin-top:6px;
+  border-radius:999px;
+  background: var(--c-primary);
+  flex: 0 0 10px;
+}
+
+.savings-page .alert-item.warn .alert-dot{ background:#ffc107; }
+.savings-page .alert-item.danger .alert-dot{ background:#dc3545; }
+
+.savings-page .alert-title{
+  margin:0;
+  font-weight:950;
+  color:#0b1c3f;
+  font-size:14px;
+}
+
+.savings-page .alert-desc{
+  margin:4px 0 0;
+  color:#4c6076;
+  font-size:13px;
+  line-height:1.6;
+}
+
+/* ghost button */
+.savings-page .ghost-btn{
+  appearance:none;
+  border:none !important;
+  background: rgba(0,191,229,.14) !important;
+  color:#0b4d62 !important;
+  font-weight:950;
+  padding:11px 16px;
+  border-radius:12px;
+  cursor:pointer;
+  box-shadow: inset 0 0 0 1px rgba(0,191,229,.30);
+}
+
+.savings-page .ghost-btn:hover{
+  transform: translateY(-1px);
+  background: rgba(0,191,229,.20) !important;
+}
+
+/* mini links row (fix blue underline + spacing) */
+.savings-page .mini-link{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-right:14px;
+  margin-top:6px;
+  color: var(--c-primary) !important;
+  font-weight:950;
+  text-decoration:none !important;
+}
+
+.savings-page .mini-link:hover{
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+
+/* progress bar */
+.savings-page .progress{
+  width:100%;
+  height:12px;
+  border-radius:999px;
+  background: rgba(8,26,58,.10);
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.savings-page .progress > div{
+  height:100%;
+  border-radius:999px;
+  background: linear-gradient(90deg, rgba(0,191,229,1), rgba(0,191,229,.55));
+  transition: width .6s ease;
+}
+
+/* chips/badges */
+.savings-page .chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:900;
+  color:#173a54;
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0,0,0,.08);
+}
+
+.savings-page .chip.active{
+  background: rgba(0,191,229,.16);
+  border-color: rgba(0,191,229,.35);
+  color:#0b4d62;
+}
+
+/* ===== NIGHT MODE (smooth + readable) ===== */
+body.night.savings-page .alert-item{
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.10);
+}
+
+body.night.savings-page .alert-item.warn{
+  background: rgba(255,193,7,.12);
+  border-color: rgba(255,193,7,.20);
+}
+
+body.night.savings-page .alert-item.danger{
+  background: rgba(220,53,69,.12);
+  border-color: rgba(220,53,69,.20);
+}
+
+body.night.savings-page .alert-title{
+  color: rgba(255,255,255,.92);
+}
+
+body.night.savings-page .alert-desc{
+  color: rgba(255,255,255,.68);
+}
+
+body.night.savings-page .badge-pill{
+  background: rgba(255,255,255,.10);
+  color: rgba(255,255,255,.88);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+}
+
+body.night.savings-page .ghost-btn{
+  background: rgba(255,255,255,.10) !important;
+  color: rgba(255,255,255,.88) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+}
+
+body.night.savings-page .progress{
+  background: rgba(255,255,255,.10);
+}
+
+body.night.savings-page .chip{
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.12);
+  color: rgba(255,255,255,.86);
+}
+
+body.night.savings-page .chip.active{
+  background: rgba(0,191,229,.18);
+  border-color: rgba(0,191,229,.35);
+  color: rgba(255,255,255,.92);
+}
+/* =========================================================
+   HEADER FIX (alignment + spacing + looks like your mock)
+   ========================================================= */
+
+/* Make the header container behave */
+.savings-page .topbar .container,
+.savings-page .topbar .container-fluid{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:16px !important;
+  padding-top:14px !important;
+  padding-bottom:14px !important;
+}
+
+/* Left side: logo + links on one line */
+.savings-page .topbar .brand{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  white-space:nowrap !important;
+}
+
+/* Navigation links */
+.savings-page .topbar .nav-links{
+  display:flex !important;
+  align-items:center !important;
+  gap:22px !important;
+  flex-wrap:wrap !important;
+}
+
+/* Right side area: night button + back button */
+.savings-page .topbar .right-info{
+  display:flex !important;
+  align-items:center !important;
+  gap:12px !important;
+  flex-wrap:wrap !important;
+  justify-content:flex-end !important;
+  margin-left:auto !important;
+}
+
+/* Night button look */
+.savings-page .night-toggle{
+  border:1px solid rgba(0,0,0,.15);
+  background:rgba(255,255,255,.9);
+  border-radius:10px;
+  padding:8px 12px;
+  font-weight:900;
+  cursor:pointer;
+}
+.savings-page .night-toggle:hover{ transform: translateY(-1px); }
+
+/* Back button size */
+.savings-page .back-btn{
+  padding:10px 18px !important;
+  border-radius:999px !important;
+}
+/* =========================================================
+   NIGHT MODE — FORCE APPLY
+   ========================================================= */
+body.night{
+  background:#071225 !important;
+  color:rgba(255,255,255,.88) !important;
+}
+
+body.night .topbar,
+body.night .navbar{
+  background: rgba(8,26,58,.92) !important;
+  border-bottom: 1px solid rgba(255,255,255,.10) !important;
+}
+
+body.night .nav-links a,
+body.night .navbar a,
+body.night .navbar .nav-link{
+  color: rgba(255,255,255,.88) !important;
+}
+
+body.night .nav-links a:hover{
+  color: var(--c-primary) !important;
+}
+/* =========================================================
+   SMOOTH NIGHT MODE + HEADER LOCK (FINAL)
+   Paste at END of decides-savings.css
+   ========================================================= */
+
+/* smooth transitions */
+body, .topbar, .big-card, .stat-card, .hero::before, .hero::after, .tab-pill, .footer{
+  transition: background .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease, filter .25s ease;
+}
+
+/* HEADER lock layout (no template weirdness) */
+.topbar .container-fluid > .d-flex{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:18px !important;
+}
+.topbar .nav-links{
+  display:flex !important;
+  align-items:center !important;
+  gap:22px !important;
+}
+.topbar .right-info{
+  display:flex !important;
+  align-items:center !important;
+  gap:12px !important;
+  justify-content:flex-end !important;
+}
+
+/* Night toggle button style */
+.night-toggle{
+  border: 1px solid rgba(0,0,0,.15);
+  background: rgba(255,255,255,.92);
+  color:#0b1c3f;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor:pointer;
+}
+.night-toggle:hover{ transform: translateY(-1px); }
+
+/* =========================
+   NIGHT MODE (FORCED)
+   ========================= */
+body.night{
+  background: #071225 !important;
+  color: rgba(255,255,255,.88) !important;
+}
+
+/* topbar */
+body.night .topbar{
+  background: rgba(8,26,58,.92) !important;
+  border-bottom: 1px solid rgba(255,255,255,.10) !important;
+}
+body.night .brand span:last-child{ color: rgba(255,255,255,.9) !important; }
+body.night .nav-links a{
+  color: rgba(255,255,255,.86) !important;
+}
+body.night .nav-links a.active{
+  color: var(--c-primary) !important;
+}
+body.night .right-info{
+  color: rgba(255,255,255,.75) !important;
+}
+body.night .night-toggle{
+  background: rgba(255,255,255,.10) !important;
+  color: rgba(255,255,255,.92) !important;
+  border-color: rgba(255,255,255,.18) !important;
+}
+
+/* hero: slightly darker */
+body.night .hero{
+  filter: brightness(.92) saturate(.95);
+}
+body.night .hero::before{
+  background: linear-gradient(120deg, rgba(0,0,0,.55), rgba(0,191,229,.22)) !important;
+}
+
+/* cards */
+body.night .big-card,
+body.night .stat-card{
+  background: rgba(255,255,255,.08) !important;
+  border-color: rgba(255,255,255,.12) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.35) !important;
+}
+body.night .big-card h3,
+body.night .stat-card h4{
+  color: rgba(255,255,255,.92) !important;
+}
+body.night .big-card .sub,
+body.night .stat-card .small{
+  color: rgba(255,255,255,.62) !important;
+}
+
+/* tabs */
+body.night .tab-pill{
+  background: rgba(255,255,255,.10) !important;
+  color: rgba(255,255,255,.88) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), 0 14px 26px rgba(0,0,0,.20) !important;
+}
+body.night .tab-pill.active{
+  background: linear-gradient(135deg, rgba(0,191,229,1), rgba(0,191,229,.65)) !important;
+}
+
+/* footer */
+body.night .footer{
+  background: #050c1a !important;
+}
+/* ===== HEADER ORGANIZATION FIX ===== */
+.topbar-inner{ padding:16px 24px; }
+.topbar-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+}
+.topbar-text{ line-height:1.2; }
+
+@media (max-width: 992px){
+  .topbar-row{ flex-wrap:wrap; }
+  .nav-links{ width:100%; justify-content:center; }
+  .right-info{ width:100%; justify-content:center; }
+}
+
+/* ===== NIGHT MODE VISUALS ===== */
+body.night{
+  background:#071225 !important;
+  color:rgba(255,255,255,.90) !important;
+}
+
+body.night .topbar{
+  background: rgba(8,26,58,.95) !important;
+  border-bottom: 1px solid rgba(255,255,255,.12) !important;
+}
+
+body.night .nav-links a{
+  color: rgba(255,255,255,.86) !important;
+}
+body.night .nav-links a.active{
+  color: var(--c-primary) !important;
+}
+
+body.night .night-toggle{
+  background: rgba(255,255,255,.10) !important;
+  color: rgba(255,255,255,.92) !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+}
+/* =========================================================
+   NIGHT MODE UPGRADE (Fix invisible text + soften icons)
+   Paste at END of decides-savings.css
+   ========================================================= */
+
+body.night{
+  background:#071225 !important;
+  color: rgba(255,255,255,.90) !important;
+}
+
+/* Make ALL common texts readable */
+body.night,
+body.night p,
+body.night span,
+body.night small,
+body.night div,
+body.night li{
+  color: rgba(255,255,255,.86);
+}
+
+/* headings */
+body.night h1,
+body.night h2,
+body.night h3,
+body.night h4{
+  color: rgba(255,255,255,.95) !important;
+}
+
+/* muted/subtitles */
+body.night .sub,
+body.night .small,
+body.night .help-text,
+body.night .tiny-note{
+  color: rgba(255,255,255,.62) !important;
+}
+
+/* Links */
+body.night a{
+  color: rgba(0,191,229,.95);
+}
+body.night a:hover{
+  color: rgba(120,235,255,1);
+}
+
+/* HERO overlay darker */
+body.night .hero{
+  filter: brightness(.92) saturate(.95);
+}
+body.night .hero::before{
+  background: linear-gradient(120deg, rgba(0,0,0,.62), rgba(0,191,229,.18)) !important;
+}
+body.night .hero::after{
+  opacity:.35;
+}
+
+/* CARDS (glass dark) */
+body.night .big-card,
+body.night .stat-card,
+body.night .goal-card{
+  background: rgba(255,255,255,.06) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.35) !important;
+}
+
+/* rows that were white */
+body.night .info-row{
+  background: rgba(255,255,255,.06) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+body.night .info-row b{ color: rgba(255,255,255,.92) !important; }
+
+/* inputs & selects */
+body.night .form-control,
+body.night input,
+body.night select,
+body.night textarea{
+  background: rgba(255,255,255,.06) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.92) !important;
+}
+body.night .form-control::placeholder,
+body.night input::placeholder,
+body.night textarea::placeholder{
+  color: rgba(255,255,255,.40) !important;
+}
+
+/* tables */
+body.night .table-wrap{
+  background: rgba(255,255,255,.05) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+body.night thead th{
+  background: rgba(255,255,255,.06) !important;
+  color: rgba(255,255,255,.90) !important;
+  border-bottom-color: rgba(255,255,255,.12) !important;
+}
+body.night tbody td{
+  color: rgba(255,255,255,.78) !important;
+  border-bottom-color: rgba(255,255,255,.08) !important;
+}
+body.night tbody tr:hover td{
+  background: rgba(255,255,255,.04) !important;
+}
+
+/* tabs */
+body.night .tab-pill{
+  background: rgba(255,255,255,.08) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  color: rgba(255,255,255,.88) !important;
+}
+body.night .tab-pill.active{
+  background: linear-gradient(135deg, rgba(0,191,229,1), rgba(0,191,229,.55)) !important;
+  border-color: rgba(0,191,229,.45) !important;
+}
+
+/* =========================
+   ICONS — remove harsh white
+   ========================= */
+
+/* bubble background slightly darker */
+body.night .icon-bubble{
+  background: rgba(0,191,229,.18) !important;
+  box-shadow: 0 18px 40px rgba(0,191,229,.12) !important;
+}
+
+/* make emoji/icons softer (not pure white) */
+body.night .icon-bubble{
+  color: rgba(0,191,229,.95) !important;
+  filter: saturate(.9) brightness(.95);
+}
+
+/* if some icons are FontAwesome inside bubbles */
+body.night .icon-bubble i{
+  color: rgba(0,191,229,.95) !important;
+}
+
+/* Buttons in night */
+body.night .ghost-btn{
+  background: rgba(255,255,255,.06) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.88) !important;
+}
+body.night .ghost-btn:hover{
+  background: rgba(255,255,255,.10) !important;
+}
+
+/* Footer contrast */
+body.night .footer{
+  background:#050c1a !important;
+}
+body.night .footer-bottom{
+  color: rgba(255,255,255,.55) !important;
+}
+
+/* Remove any random “black text” forced somewhere */
+body.night [style*="color:#0b1c3f"],
+body.night [style*="color: #0b1c3f"]{
+  color: rgba(255,255,255,.90) !important;
+}
+/* ===== FORCE HEADER LAYOUT (OVERRIDE EVERYTHING) ===== */
+header.topbar .topbar-row.topbar-grid{
+  display:grid !important;
+  grid-template-columns:auto 1fr auto !important;
+  align-items:center !important;
+  gap:18px !important;
+  width:100% !important;
+}
+
+/* center nav */
+header.topbar .topbar-row.topbar-grid .nav-links{
+  justify-self:center !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:22px !important;
+  margin:0 !important;
+}
+
+/* right group */
+header.topbar .topbar-row.topbar-grid .right-info{
+  justify-self:end !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:14px !important;
+  margin:0 !important;
+}
+
+/* make text compact */
+header.topbar .topbar-row.topbar-grid .topbar-text{
+  white-space:nowrap !important;
+  max-width:190px !important;
+  line-height:1.15 !important;
+}
+/* ======================================================
+   STABLE TOOLBAR (Goals + Savings) — NO RANDOM REFRESH
+   Works with your existing HTML:
+   - .table-toolbar
+   - .toolbar-row
+   - .tool-field / .tool-field.full
+   - .emoji-btn
+   - .chip
+   ====================================================== */
+
+/* toolbar container -> always 2 rows */
+.table-toolbar{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  margin-bottom:18px;
+}
+
+/* each row is ONE line (stable) */
+.table-toolbar .toolbar-row{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:nowrap; /* ✅ prevents emoji on its own line */
+}
+
+/* field wrapper */
+.table-toolbar .tool-field{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+/* row 1 full width search */
+.table-toolbar .tool-field.full{
+  flex:1;
+  width:100%;
+}
+
+/* search input expands */
+.table-toolbar .tool-field.full .form-control{
+  flex:1;
+  min-width:0;
+  width:auto;          /* ✅ kills width:100% conflicts */
+}
+
+/* row 2 -> keep select + buttons on same line */
+.table-toolbar .toolbar-row .form-control{
+  height:44px;
+}
+
+/* sort select keeps a good size (NOT full width) */
+.table-toolbar select.form-control{
+  width:auto;
+  min-width:320px;     /* ✅ bigger so it matches your design */
+  flex:0 0 auto;
+}
+
+/* emoji buttons */
+.table-toolbar .emoji-btn{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  border:1px solid var(--border, rgba(0,0,0,.08));
+  background: rgba(255,255,255,.75);
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  flex:0 0 auto;
+  box-shadow: 0 10px 18px rgba(0,0,0,.06);
+}
+.table-toolbar .emoji-btn:hover{
+  box-shadow: 0 14px 24px rgba(0,0,0,.10);
+}
+
+/* chips aligned with inputs */
+.table-toolbar .chip{
+  height:44px;
+  padding:0 16px;
+  border-radius:999px;
+  border:1px solid var(--border, rgba(0,0,0,.08));
+  background: rgba(255,255,255,.75);
+  font-weight:800;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  white-space:nowrap;
+  flex:0 0 auto;
+  text-decoration:none;
+}
+.table-toolbar .chip.active{
+  background: rgba(0,191,229,.18);
+  border-color: rgba(0,191,229,.35);
+}
+
+/* ---------- RESPONSIVE (only on small screens) ---------- */
+@media (max-width: 700px){
+  .table-toolbar .toolbar-row{
+    flex-wrap:wrap; /* ✅ allow wrap only on small screens */
+  }
+  .table-toolbar select.form-control{
+    width:100%;
+    min-width:0;
+  }
+  .table-toolbar .tool-field{
+    width:100%;
+  }
+}
+/* ===== FORCE GOALS TOOLBAR ALIGNMENT (does not touch Savings) ===== */
+#goalToolbarForm .tool-field{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  flex-wrap:nowrap !important;
+}
+
+#goalToolbarForm .tool-field.full{
+  width:100% !important;
+}
+
+#goalToolbarForm .tool-field.full .form-control{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  width:auto !important;
+}
+
+#goalToolbarForm #goalSortSelect{
+  width:auto !important;
+  min-width:320px !important;
+  flex:0 0 auto !important;
+}
+
+#goalToolbarForm .emoji-btn,
+#goalToolbarForm .chip{
+  flex:0 0 auto !important;
+}

@@ -1,2 +1,245 @@
-<h1>Interface Salary</h1>
-<p>Bienvenue {{ app.user.nom }}</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Salary | Decide$</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- YOUR SAVINGS CSS -->
+  <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}">
+</head>
+
+<body class="savings-page">
+
+<!-- ======================================================
+     HEADER (IDENTICAL TO SAVINGS)
+====================================================== -->
+<header class="topbar" id="top">
+  <div class="container-fluid topbar-inner">
+    <div class="topbar-row topbar-grid">
+
+      <!-- LEFT -->
+      <div class="brand">
+        <i class="fa-solid fa-wallet"></i>
+        <span>Decide</span><span>$</span>
+      </div>
+
+      <!-- CENTER -->
+      <nav class="nav-links">
+        <a class="active" href="/">Home</a>
+        <a href="{{ path('app_about') }}">About</a>
+  <a href="{{ path('app_service') }}">Service</a>
+  <a href="{{ path('app_contact') }}">Contact</a>
+</nav>
+
+      <!-- RIGHT -->
+      <div class="right-info">
+        <div class="text-end topbar-text">
+          <div>Finance personnelle</div>
+          <b>Gestion du salaire</b>
+        </div>
+
+        <button id="nightBtn" class="pill-btn night-toggle" type="button">
+          <i class="fa-solid fa-moon"></i>
+          <span>Night</span>
+        </button>
+
+        <!-- SAFE BACK -->
+        <a class="pill-btn back-btn" href="javascript:history.back()">
+          <i class="fa-solid fa-arrow-left"></i> back
+        </a>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- ======================================================
+     HERO (SAME STYLE AS SAVINGS)
+====================================================== -->
+<section class="hero">
+  <div class="wrap container text-center">
+    <h1>Salary Overview</h1>
+    <p>
+      Track income, manage expenses, and understand your salary flow —
+      all in one place.
+    </p>
+
+    <div class="d-flex justify-content-center gap-3 mt-3">
+      <a class="btn-primary2" href="#">
+        <i class="fa-solid fa-plus"></i> Add Salary
+      </a>
+      <a class="btn-soft" href="#">
+        <i class="fa-solid fa-chart-line"></i> Analytics
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================
+     MAIN ZONE (CARDS LIKE SAVINGS)
+====================================================== -->
+<section class="savings-zone">
+  <div class="container">
+
+    <!-- SECTION TITLE -->
+    <div class="section-title">
+      <span class="kicker">OVERVIEW</span>
+      <h2>Your Salary Snapshot</h2>
+      <p>
+        Monitor your monthly income, deductions, and net salary
+        with a clear visual dashboard.
+      </p>
+    </div>
+
+    <!-- KPI GRID -->
+    <div class="kpi-grid stats-row">
+
+      <div class="stat-card">
+        <div>
+          <h4>Gross Salary</h4>
+          <div class="small">This month</div>
+          <div class="value">$4,200</div>
+        </div>
+        <div class="icon-bubble">
+          <i class="fa-solid fa-money-bill-wave"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <h4>Deductions</h4>
+          <div class="small">Taxes & charges</div>
+          <div class="value">$850</div>
+        </div>
+        <div class="icon-bubble">
+          <i class="fa-solid fa-percent"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <h4>Net Salary</h4>
+          <div class="small">After deductions</div>
+          <div class="value">$3,350</div>
+        </div>
+        <div class="icon-bubble">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <h4>Salary Growth</h4>
+          <div class="small">Yearly</div>
+          <div class="value">+8%</div>
+        </div>
+        <div class="icon-bubble">
+          <i class="fa-solid fa-arrow-trend-up"></i>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================
+     FOOTER (SAME AS SAVINGS)
+====================================================== -->
+<footer class="footer">
+  <div class="footer-top">
+    <div class="container">
+
+      <div class="newsletter">
+        <input type="email" placeholder="Enter your email to receive financial tips">
+        <button type="button">Subscribe</button>
+      </div>
+
+      <div class="footer-grid mt-20">
+
+        <div>
+          <h4>Decide$</h4>
+          <p class="footer-text">
+            Decide$ helps you manage salary, savings, and smart financial goals
+            with clean dashboards and future insights.
+          </p>
+        </div>
+
+        <div>
+          <h4>Platform</h4>
+          <a href="#">Salary Management</a>
+          <a href="#">Savings & Goals</a>
+          <a href="#">Budget Planning</a>
+          <a href="#">Smart Alerts</a>
+        </div>
+
+        <div>
+          <h4>Key Features</h4>
+          <span>✔ Salary tracking</span>
+          <span>✔ Deductions analysis</span>
+          <span>✔ Financial growth</span>
+          <span>✔ Smart insights</span>
+        </div>
+
+        <div>
+          <h4>Contact</h4>
+          <span>✉️ support@decides.com</span>
+          <span>📍 Tunisia</span>
+          <span>📞 +216 XX XXX XXX</span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    © {{ "now"|date("Y") }} Decide$ — All rights reserved.
+  </div>
+</footer>
+
+<!-- ======================================================
+     NIGHT MODE SCRIPT (SAME AS SAVINGS)
+====================================================== -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const btn = document.getElementById("nightBtn");
+  if (!btn) return;
+
+  if (localStorage.getItem("decides_night") === "1") {
+    document.body.classList.add("night");
+  }
+
+  function sync() {
+    const isNight = document.body.classList.contains("night");
+    btn.querySelector("span").textContent = isNight ? "Day" : "Night";
+    btn.querySelector("i").className = isNight
+      ? "fa-solid fa-sun"
+      : "fa-solid fa-moon";
+  }
+
+  sync();
+
+  btn.addEventListener("click", function () {
+    document.body.classList.toggle("night");
+    localStorage.setItem(
+      "decides_night",
+      document.body.classList.contains("night") ? "1" : "0"
+    );
+    sync();
+  });
+});
+</script>
+
+</body>
+</html>
