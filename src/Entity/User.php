@@ -5,10 +5,9 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -18,39 +17,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, nullable: true)]
     private ?string $nom = null;
 
-    #[ORM\Column(length: 180, unique: true)]
+    #[ORM\Column(length: 180, unique: true, nullable: true)]
     private ?string $email = null;
 
     #[ORM\Column]
     private string $password;
 
-    #[ORM\Column(type: 'json')]
-    private array $roles = [];
+    /**
+     * Single role stored in DB (column `role`), exposed as array for UserInterface::getRoles()
+     */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $role = null;
 
-    #[ORM\Column(type: 'date')]
-    private \DateTime $dateInscription;
+    #[ORM\Column(type: 'date', nullable: true)]
+    private ?\DateTime $dateInscription = null;
 
     #[ORM\Column]
     private float $soldeTotal = 0;
-    
-    #[ORM\Column(length: 255, nullable: true)]
-private ?string $image = null;
 
-public function getImage(): ?string
-{
-    return $this->image;
-}
+    /**
+     * Not mapped to database. If you want to persist it, add a migration
+     * to create `image` column on `user` table and add an ORM\Column.
+     */
+    private ?string $image = null;
 
-public function setImage(?string $image): self
-{
-    $this->image = $image;
-    return $this;
-}
-
-    // ✅ RELATION TRANSACTIONS
     #[ORM\OneToMany(
         mappedBy: 'user',
         targetEntity: Transaction::class,
@@ -59,13 +52,6 @@ public function setImage(?string $image): self
     )]
     private Collection $transactions;
 
-    public function __construct()
-        {
-        $this->transactions = new ArrayCollection();
-        $this->dateInscription = new \DateTime();
-        $this->roles = [];
-        $this->soldeTotal = 0;
-    }
     /**
      * @var Collection<int, Revenue>
      */
@@ -78,32 +64,60 @@ public function setImage(?string $image): self
     #[ORM\OneToMany(targetEntity: Quiz::class, mappedBy: 'user')]
     private Collection $quizzes;
 
-    public function __constructt()
+    public function __construct()
     {
+        $this->transactions = new ArrayCollection();
         $this->revenues = new ArrayCollection();
         $this->quizzes = new ArrayCollection();
+        $this->dateInscription = new \DateTime();
+        $this->soldeTotal = 0;
     }
 
+    /* ================= IMAGE (NON PERSISTÉE) ================= */
 
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
 
+    public function setImage(?string $image): self
+    {
+        $this->image = $image;
+        return $this;
+    }
 
     /* ================= SECURITY ================= */
 
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        return (string) ($this->email ?? '');
     }
 
     public function getRoles(): array
     {
-        $roles = $this->roles;
+        $roles = [];
+        if ($this->role) {
+            $roles[] = $this->role;
+        }
         $roles[] = 'ROLE_USER';
+
         return array_unique($roles);
     }
 
     public function setRoles(array $roles): self
     {
-        $this->roles = $roles;
+        $this->role = $roles[0] ?? null;
+        return $this;
+    }
+
+    public function getRole(): ?string
+    {
+        return $this->role;
+    }
+
+    public function setRole(?string $role): self
+    {
+        $this->role = $role;
         return $this;
     }
 
@@ -118,31 +132,49 @@ public function setImage(?string $image): self
         return $this;
     }
 
-    public function eraseCredentials(): void {}
+    public function eraseCredentials(): void
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
+    }
 
     /* ================= GETTERS / SETTERS ================= */
 
-    public function getId(): ?int { return $this->id; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
 
-    public function getNom(): ?string { return $this->nom; }
+    public function getNom(): ?string
+    {
+        return $this->nom;
+    }
 
-    public function setNom(string $nom): self
+    public function setNom(?string $nom): self
     {
         $this->nom = $nom;
         return $this;
     }
 
-    public function getEmail(): ?string { return $this->email; }
-
-    public function setEmail(string $email): self
+    public function getEmail(): ?string
     {
-        $this->email = strtolower($email);
+        return $this->email;
+    }
+
+    public function setEmail(?string $email): self
+    {
+        $this->email = $email ? strtolower($email) : null;
         return $this;
     }
 
-    public function getDateInscription(): \DateTime
+    public function getDateInscription(): ?\DateTime
     {
         return $this->dateInscription;
+    }
+
+    public function setDateInscription(?\DateTime $date): self
+    {
+        $this->dateInscription = $date;
+        return $this;
     }
 
     public function getSoldeTotal(): float
@@ -166,7 +198,6 @@ public function setImage(?string $image): self
         return $this->transactions;
     }
 
-    // ✅ MÉTHODE MANQUANTE (CAUSE DE TON ERREUR)
     public function addTransaction(Transaction $transaction): self
     {
         if (!$this->transactions->contains($transaction)) {
@@ -183,10 +214,13 @@ public function setImage(?string $image): self
             if ($transaction->getUser() === $this) {
                 $transaction->setUser(null);
             }
-            }
+        }
 
         return $this;
     }
+
+    /* ================= REVENUES ================= */
+
     /**
      * @return Collection<int, Revenue>
      */
@@ -195,11 +229,22 @@ public function setImage(?string $image): self
         return $this->revenues;
     }
 
-    public function addRevenue(Revenue $revenue): static
+    public function addRevenue(Revenue $revenue): self
     {
         if (!$this->revenues->contains($revenue)) {
             $this->revenues->add($revenue);
             $revenue->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRevenue(Revenue $revenue): self
+    {
+        if ($this->revenues->removeElement($revenue)) {
+            if ($revenue->getUser() === $this) {
+                $revenue->setUser(null);
+            }
         }
 
         return $this;
@@ -221,15 +266,8 @@ public function setImage(?string $image): self
 
         $this->soldeTotal = $total;
     }
-    public function removeRevenue(Revenue $revenue): static
-    {
-        if ($this->revenues->removeElement($revenue)) {
-            if ($revenue->getUser() === $this) {
-                $revenue->setUser(null);
-            }
-        }
-        return $this;
-    }
+
+    /* ================= QUIZZES ================= */
 
     /**
      * @return Collection<int, Quiz>
@@ -239,7 +277,7 @@ public function setImage(?string $image): self
         return $this->quizzes;
     }
 
-    public function addQuiz(Quiz $quiz): static
+    public function addQuiz(Quiz $quiz): self
     {
         if (!$this->quizzes->contains($quiz)) {
             $this->quizzes->add($quiz);
@@ -249,10 +287,9 @@ public function setImage(?string $image): self
         return $this;
     }
 
-    public function removeQuiz(Quiz $quiz): static
+    public function removeQuiz(Quiz $quiz): self
     {
         if ($this->quizzes->removeElement($quiz)) {
-            // set the owning side to null (unless already changed)
             if ($quiz->getUser() === $this) {
                 $quiz->setUser(null);
             }
