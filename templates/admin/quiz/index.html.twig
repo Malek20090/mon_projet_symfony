@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Quiz{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-4">Gestion des Quiz</h1>
+        <a href="{{ path('admin_quiz_new') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nouveau Quiz
+        </a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if quizzes|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Question</th>
+                                <th>Choix</th>
+                                <th>Réponse Correcte</th>
+                                <th>Points</th>
+                                <th>Cours</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for quiz in quizzes %}
+                                <tr>
+                                    <td>
+                                        <div style="max-width: 300px;">
+                                            {{ quiz.question|slice(0, 80) }}{% if quiz.question|length > 80 %}...{% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if quiz.choixReponses|length > 0 %}
+                                            <span class="badge bg-secondary">{{ quiz.choixReponses|join(', ') }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ quiz.reponseCorrecte }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ quiz.pointsValeur }} pts</span>
+                                    </td>
+                                    <td>
+                                        {% if quiz.cours %}
+                                            <a href="{{ path('admin_cours_show', {'id': quiz.cours.id}) }}" class="text-decoration-none">
+                                                {{ quiz.cours.titre|slice(0, 30) }}...
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Aucun cours</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ path('admin_quiz_show', {'id': quiz.id}) }}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ path('admin_quiz_edit', {'id': quiz.id}) }}" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="post" action="{{ path('admin_quiz_delete', {'id': quiz.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce quiz ?');" class="d-inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ quiz.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Aucun quiz trouvé.</p>
+                    <a href="{{ path('admin_quiz_new') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Créer le premier quiz
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{{ path('admin_dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+        </a>
+    </div>
+</div>
+{% endblock %}

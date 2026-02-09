@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tous les Quiz{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('css/home.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-question-circle text-success"></i> Tous les Quiz
+        </h1>
+        <p class="lead text-muted">Testez vos connaissances en finance</p>
+    </div>
+
+    {% if quizzes|length > 0 %}
+        <div class="row g-4">
+            {% for quiz in quizzes %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0 hover-card">
+                        <div class="card-body d-flex flex-column">
+                            <div class="mb-3">
+                                {% if quiz.cours %}
+                                    <span class="badge bg-primary mb-2">
+                                        <i class="fas fa-book"></i> {{ quiz.cours.titre|slice(0, 20) }}...
+                                    </span>
+                                {% endif %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-star"></i> {{ quiz.pointsValeur }} points
+                                </span>
+                            </div>
+                            
+                            <h5 class="card-title text-dark mb-3">
+                                {{ quiz.question|slice(0, 80) }}{% if quiz.question|length > 80 %}...{% endif %}
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-list"></i> {{ quiz.choixReponses|length }} choix disponibles
+                                </small>
+                            </div>
+
+                            <div class="mt-auto">
+                                <a href="{{ path('student_quiz_pass', {'id': quiz.id}) }}" class="btn btn-success w-100">
+                                    <i class="fas fa-play"></i> Passer le quiz
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-question-circle fa-4x text-muted mb-3"></i>
+            <h3 class="text-muted">Aucun quiz disponible</h3>
+            <p class="text-muted">Les quiz seront bientôt disponibles.</p>
+        </div>
+    {% endif %}
+
+    <div class="mt-5 text-center">
+        <a href="{{ path('student_cours_index') }}" class="btn btn-primary me-2">
+            <i class="fas fa-book"></i> Voir les cours
+        </a>
+        <a href="{{ path('app_home_education') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour à l'accueil
+        </a>
+    </div>
+</div>
+
+<style>
+.hover-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0, 128, 0, 0.2) !important;
+}
+</style>
+{% endblock %}

@@ -187,4 +187,17 @@ class User
 
         return $this;
     }
+
+    public function __toString(): string
+    {
+        if ($this->nom && $this->email) {
+            return $this->nom . ' (' . $this->email . ')';
+        } elseif ($this->email) {
+            return $this->email;
+        } elseif ($this->nom) {
+            return $this->nom;
+        } else {
+            return 'User #' . $this->id;
+        }
+    }
 }

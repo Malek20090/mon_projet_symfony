@@ -1,0 +1,161 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Passer le Quiz{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('css/home.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ path('app_home_education') }}">Accueil</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('student_quiz_index') }}">Quiz</a></li>
+                    <li class="breadcrumb-item active">Passer le quiz</li>
+                </ol>
+            </nav>
+
+            {% if score is null %}
+                <!-- Formulaire du quiz -->
+                <div class="card shadow border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">
+                            <i class="fas fa-question-circle"></i> Quiz
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        {% if quiz.cours %}
+                            <div class="mb-3">
+                                <span class="badge bg-info">
+                                    <i class="fas fa-book"></i> Cours: {{ quiz.cours.titre }}
+                                </span>
+                                <span class="badge bg-success ms-2">
+                                    <i class="fas fa-star"></i> {{ quiz.pointsValeur }} points
+                                </span>
+                            </div>
+                        {% endif %}
+
+                        <div class="question-section mb-4">
+                            <h4 class="text-dark mb-3">
+                                <i class="fas fa-question text-primary"></i> {{ quiz.question }}
+                            </h4>
+                        </div>
+
+                        <form method="POST" action="{{ path('student_quiz_pass', {'id': quiz.id}) }}">
+                            <div class="choices-section">
+                                {% for choix in quiz.choixReponses %}
+                                    <div class="form-check mb-3 p-3 border rounded choice-option" style="cursor: pointer; transition: all 0.3s ease;">
+                                        <input class="form-check-input" type="radio" name="reponse" id="choice{{ loop.index0 }}" value="{{ choix }}" required>
+                                        <label class="form-check-label w-100" for="choice{{ loop.index0 }}" style="cursor: pointer;">
+                                            <strong>{{ loop.index0 == 0 ? 'A' : (loop.index0 == 1 ? 'B' : (loop.index0 == 2 ? 'C' : 'D')) }}.</strong> {{ choix }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-paper-plane"></i> Soumettre ma réponse
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Résultats du quiz -->
+                <div class="card shadow {% if isCorrect %}border-success{% else %}border-danger{% endif %}">
+                    <div class="card-header {% if isCorrect %}bg-success{% else %}bg-danger{% endif %} text-white">
+                        <h3 class="mb-0">
+                            <i class="fas fa-{% if isCorrect %}check-circle{% else %}times-circle{% endif %}"></i> 
+                            Résultat du Quiz
+                        </h3>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="result-icon mb-4">
+                            {% if isCorrect %}
+                                <i class="fas fa-check-circle fa-5x text-success"></i>
+                                <h2 class="text-success mt-3">Bravo ! Réponse correcte</h2>
+                            {% else %}
+                                <i class="fas fa-times-circle fa-5x text-danger"></i>
+                                <h2 class="text-danger mt-3">Réponse incorrecte</h2>
+                            {% endif %}
+                        </div>
+
+                        <div class="question-section mb-4">
+                            <h5 class="text-dark mb-3">{{ quiz.question }}</h5>
+                        </div>
+
+                        <div class="answer-section mb-4">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <strong class="text-muted">Votre réponse :</strong>
+                                        <p class="mb-0 mt-2">
+                                            <span class="badge bg-{% if isCorrect %}success{% else %}danger{% endif %} fs-6">
+                                                {{ reponseUtilisateur }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="p-3 border rounded">
+                                        <strong class="text-muted">Réponse correcte :</strong>
+                                        <p class="mb-0 mt-2">
+                                            <span class="badge bg-success fs-6">{{ quiz.reponseCorrecte }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="score-section mb-4">
+                            <div class="alert {% if isCorrect %}alert-success{% else %}alert-danger{% endif %}">
+                                <h4 class="mb-0">
+                                    <i class="fas fa-star"></i> Score : {{ score }} / {{ quiz.pointsValeur }} points
+                                </h4>
+                            </div>
+                        </div>
+
+                        <div class="actions-section">
+                            {% if quiz.cours %}
+                                <a href="{{ path('student_cours_show', {'id': quiz.cours.id}) }}" class="btn btn-primary me-2">
+                                    <i class="fas fa-book"></i> Retour au cours
+                                </a>
+                            {% endif %}
+                            <a href="{{ path('student_quiz_pass', {'id': quiz.id}) }}" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-redo"></i> Réessayer
+                            </a>
+                            <a href="{{ path('student_quiz_index') }}" class="btn btn-secondary">
+                                <i class="fas fa-list"></i> Autres quiz
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.choice-option:hover {
+    background-color: #f8f9fa;
+    border-color: #1e3fa3 !important;
+    transform: translateX(5px);
+}
+
+.choice-option input[type="radio"]:checked + label {
+    color: #1e3fa3;
+    font-weight: bold;
+}
+
+.choice-option:has(input[type="radio"]:checked) {
+    background-color: #e7f3ff;
+    border-color: #1e3fa3 !important;
+}
+</style>
+{% endblock %}

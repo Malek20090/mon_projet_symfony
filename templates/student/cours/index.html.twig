@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Catalogue des Cours{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('css/home.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-book text-primary"></i> Catalogue des Cours
+        </h1>
+        <p class="lead text-muted">Explorez nos cours de formation financière</p>
+    </div>
+
+    {% if cours|length > 0 %}
+        <div class="row g-4">
+            {% for cour in cours %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0 hover-card" style="transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                        {% if cour.urlMedia %}
+                            <div class="card-img-top-container" style="height: 200px; overflow: hidden; background: linear-gradient(135deg, #1e3fa3, #00cfff);">
+                                {% if cour.typeMedia == 'video' %}
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-white">
+                                        <i class="fas fa-video fa-4x"></i>
+                                    </div>
+                                {% elseif cour.typeMedia == 'image' %}
+                                    <img src="{{ cour.urlMedia }}" class="img-fluid w-100 h-100" style="object-fit: cover;" alt="{{ cour.titre }}">
+                                {% else %}
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-white">
+                                        <i class="fas fa-file-alt fa-4x"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="card-img-top-container d-flex align-items-center justify-content-center" style="height: 200px; background: linear-gradient(135deg, #1e3fa3, #00cfff);">
+                                <i class="fas fa-book fa-4x text-white"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-primary">{{ cour.titre }}</h5>
+                            <p class="card-text text-muted flex-grow-1">
+                                {{ cour.contenuTexte|slice(0, 100) }}{% if cour.contenuTexte|length > 100 %}...{% endif %}
+                            </p>
+                            <div class="mb-3">
+                                <span class="badge bg-info">{{ cour.typeMedia|upper }}</span>
+                                {% if cour.quizzes|length > 0 %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-question-circle"></i> {{ cour.quizzes|length }} Quiz
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="mt-auto">
+                                <a href="{{ path('student_cours_show', {'id': cour.id}) }}" class="btn btn-primary w-100">
+                                    <i class="fas fa-eye"></i> Voir le cours
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-book fa-4x text-muted mb-3"></i>
+            <h3 class="text-muted">Aucun cours disponible</h3>
+            <p class="text-muted">Les cours seront bientôt disponibles.</p>
+        </div>
+    {% endif %}
+
+    <div class="mt-5 text-center">
+        <a href="{{ path('app_home_education') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour à l'accueil
+        </a>
+    </div>
+</div>
+
+<style>
+.hover-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(30, 63, 163, 0.2) !important;
+}
+</style>
+{% endblock %}

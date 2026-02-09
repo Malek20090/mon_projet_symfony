@@ -1,0 +1,4 @@
+- [x] Edit templates/base.html.twig to include the common layout (DOCTYPE, head with meta, links, scripts, navbar, footer) from index.html, using Twig blocks for dynamic content.
+- [x] Create templates/home/index.html.twig that extends base.html.twig and fills the blocks with the specific content (carousel, about, service sections).
+- [x] Update src/Controller/HomeEducationController.php to render 'home/index.html.twig' instead of 'home/education.html.twig'.
+- [x] Test the route '/homeeducation' to ensure it renders correctly.
