@@ -1,0 +1,109 @@
+
+
+{% extends 'admin/base_admin.html.twig' %}
+{% block title %}{{ action }} un Imprevu{% endblock %}
+{% block admin_content %}
+<div class="page-header-card">
+    <div>
+        <h1>{{ action }} un Imprevu</h1>
+        <p>{% if action == 'Ajouter' %}Créez un nouvel imprévu{% else %}Modifiez les informations de l'imprévu{% endif %}</p>
+    </div>
+</div>
+
+{% if errors is defined and errors is not empty %}
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <h5><i class="fas fa-exclamation-triangle me-2"></i>Erreurs de validation</h5>
+        <ul class="mb-0">
+            {% for field, error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+{% endif %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-exclamation-circle me-2"></i>Informations de l'imprévu</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="_token" value="{{ csrf_token('imprevus_form') }}">
+                    
+                    <!-- Titre -->
+                    <div class="mb-3">
+                        <label for="titre" class="form-label fw-bold">Titre de l'imprévu <span class="text-danger">*</span></label>
+                        <input type="text" name="titre" id="titre" 
+                               class="form-control {% if errors.titre is defined %}is-invalid{% endif %}"
+                               value="{{ imprevus.titre ?? '' }}" 
+                               placeholder="Ex: Panne de voiture, Prime exceptionnelle..."
+                               maxlength="150" required>
+                        {% if errors.titre is defined %}
+                            <div class="invalid-feedback">{{ errors.titre }}</div>
+                        {% endif %}
+                        <div class="form-text">Le titre ne doit pas dépasser 150 caractères.</div>
+                    </div>
+
+                    <!-- Type et Budget -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="type" class="form-label fw-bold">Type <span class="text-danger">*</span></label>
+                            <select name="type" id="type" 
+                                    class="form-select {% if errors.type is defined %}is-invalid{% endif %}" required>
+                                <option value="">Sélectionnez...</option>
+                                <option value="NEGATIF" {% if imprevus.type == 'NEGATIF' %}selected{% endif %}>
+                                    Négatif (Dépense)
+                                </option>
+                                <option value="POSITIF" {% if imprevus.type == 'POSITIF' %}selected{% endif %}>
+                                    Positif (Gain)
+                                </option>
+                            </select>
+                            {% if errors.type is defined %}
+                                <div class="invalid-feedback">{{ errors.type }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="budget" class="form-label fw-bold">Budget (DT) <span class="text-danger">*</span></label>
+                            <input type="number" name="budget" id="budget" 
+                                   class="form-control {% if errors.budget is defined %}is-invalid{% endif %}"
+                                   value="{{ imprevus.budget ?? '' }}" 
+                                   step="0.01" min="0" 
+                                   placeholder="0.00" required>
+                            {% if errors.budget is defined %}
+                                <div class="invalid-feedback">{{ errors.budget }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Message Éducatif -->
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message Éducatif</label>
+                        <textarea name="message" id="message" 
+                                  class="form-control {% if errors.message is defined %}is-invalid{% endif %}"
+                                  rows="4" 
+                                  placeholder="Description ou conseil pour l'utilisateur...">{{ imprevus.messageEducatif ?? '' }}</textarea>
+                        {% if errors.message is defined %}
+                            <div class="invalid-feedback">{{ errors.message }}</div>
+                        {% endif %}
+                        <div class="form-text">Ce message sera affiché à l'utilisateur pour l'éduquer sur l'imprévu.</div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>{{ action }}
+                        </button>
+                        <a href="{{ path('admin_imprevus_list') }}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

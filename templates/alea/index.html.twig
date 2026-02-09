@@ -1,0 +1,568 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Decide$ - Simulation Aléas{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Styles personnalisés pour la logique +/- */
+        .clickable-item {
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        .clickable-item:hover {
+            background-color: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        /* Thème Négatif */
+        .item-negative { border-left-color: #dc3545; }
+        .theme-negative .card-header-icon { color: #dc3545; background-color: rgba(220, 53, 69, 0.1); }
+        .theme-negative .amount-text { color: #dc3545; }
+        
+        /* Thème Positif */
+        .item-positive { border-left-color: #198754; }
+        .theme-positive .card-header-icon { color: #198754; background-color: rgba(25, 135, 84, 0.1); }
+        .theme-positive .amount-text { color: #198754; }
+
+        .choice-btn { text-align: left; position: relative; transition: 0.3s; }
+        .choice-btn:hover { background-color: #f8f9fa; border-color: #0d6efd; }
+        
+        /* Épargne cards */
+        .epargne-card {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .epargne-card:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+        .epargne-card.selected {
+            border-color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+        .epargne-card.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .epargne-balance {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .epargne-date {
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid position-relative p-0">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0">
+        <a href="{{ path('app_alea') }}" class="navbar-brand p-0 d-flex align-items-center">
+            <i class="fas fa-wallet text-primary me-2" style="font-size: 32px;"></i>
+            <h1 class="text-primary m-0 fw-bold">Decide<span class="text-dark">$</span></h1>
+        </a>
+        <div class="ms-auto">
+            <a href="{{ path('app_alea') }}" class="btn btn-primary rounded-pill py-2 px-4">Retour Accueil</a>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb / Header -->
+    <div class="container-fluid bg-breadcrumb">
+        <div class="container text-center py-5" style="max-width: 900px;">
+            <h4 class="text-white display-4 mb-4">Gestion des Imprévus</h4>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="container-fluid py-5 bg-light">
+        <div class="container">
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-primary border-3">
+                        <i class="fas fa-university text-primary fa-2x mb-2"></i>
+                        <h6>Total Épargnes</h6>
+                        <h3 class="text-dark">{{ epargnes|length }} comptes</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-success border-3">
+                        <i class="fas fa-shield-alt text-success fa-2x mb-2"></i>
+                        <h6>Fonds de Sécurité</h6>
+                        <h3 class="text-success">{{ securityFund|number_format(2, ',', ' ') }} DT</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-danger border-3">
+                        <i class="fas fa-heartbeat text-danger fa-2x mb-2"></i>
+                        <h6>Score Résilience</h6>
+                        <h3 class="text-danger">85/100</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-5">
+                <!-- Left Panel -->
+                <div class="col-lg-5">
+                    <!-- Ajouter un Cas Réel -->
+                    <div class="bg-white rounded p-4 shadow-sm mb-4">
+                        <h5 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Ajouter un Cas Réel</h5>
+                        <form id="customEventForm">
+                            <div class="mb-2">
+                                <input type="text" id="customTitle" class="form-control" placeholder="Titre">
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <select id="customType" class="form-select">
+                                        <option value="NEGATIF">Dépense (-)</option>
+                                        <option value="POSITIF">Gain (+)</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" id="customAmount" class="form-control" placeholder="Montant (DT)">
+                                </div>
+                            </div>
+                            <button type="button" onclick="addCustomEvent()" class="btn btn-primary w-100 btn-sm">Choisir ce cas</button>
+                        </form>
+                    </div>
+
+                    <!-- Imprévus Possibles -->
+                    <h5 class="mb-3">Imprévus Possibles (Base de données)</h5>
+                    <div class="list-group shadow-sm">
+                        <!-- Risques -->
+                        <div class="list-group-item bg-light fw-bold text-danger">
+                            <i class="fas fa-arrow-down me-2"></i>Risques (-)
+                        </div>
+                        {% for impr in imprevus %}
+                            {% if impr.type == 'NEGATIF' %}
+                                <div class="list-group-item list-group-item-action clickable-item item-negative p-3" 
+                                     onclick="loadEvent('NEGATIF', '{{ impr.titre|escape('js') }}', {{ impr.budget }}, '{{ impr.messageEducatif|default('Description')|escape('js') }}')">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-exclamation-triangle text-muted me-2"></i>{{ impr.titre }}</span>
+                                        <span class="fw-bold text-danger">-{{ impr.budget }} DT</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Opportunités -->
+                        <div class="list-group-item bg-light fw-bold text-success mt-2">
+                            <i class="fas fa-arrow-up me-2"></i>Opportunités (+)
+                        </div>
+                        {% for impr in imprevus %}
+                            {% if impr.type == 'POSITIF' %}
+                                <div class="list-group-item list-group-item-action clickable-item item-positive p-3" 
+                                     onclick="loadEvent('POSITIF', '{{ impr.titre|escape('js') }}', {{ impr.budget }}, '{{ impr.messageEducatif|default('Description')|escape('js') }}')">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-gift text-muted me-2"></i>{{ impr.titre }}</span>
+                                        <span class="fw-bold text-success">+{{ impr.budget }} DT</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Right Panel / Decision -->
+                <div class="col-lg-7">
+                    <div id="decisionPanel" class="bg-white rounded p-5 shadow-sm theme-negative">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="btn-lg-square rounded-circle me-3 card-header-icon d-flex align-items-center justify-content-center" style="width:60px;height:60px;">
+                                <i id="eventIcon" class="fas fa-exclamation-triangle fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-uppercase text-muted mb-1">Cas Réel En Cours</h6>
+                                <h2 id="eventTitle" class="mb-0">Sélectionnez un cas...</h2>
+                            </div>
+                        </div>
+                        <div class="p-4 border rounded bg-light mb-4">
+                            <p id="eventDesc" class="lead mb-3">Cliquez sur un événement à gauche.</p>
+                            <hr>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fs-5">Impact Financier :</span>
+                                <span id="eventAmount" class="display-6 fw-bold amount-text">---</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Options pour CAS NEGATIF -->
+                        <div id="negativeOptions" class="d-none">
+                            <h5 class="mb-3">Comment souhaitez-vous gérer cette dépense?</h5>
+                            
+                            <!-- Option 1: Fonds de Sécurité -->
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn solution-btn" data-solution="FONDS_SECURITE" onclick="selectSolution(this)">
+                                <i class="fas fa-shield-alt text-primary me-3 fa-lg"></i>
+                                <strong>Utiliser Fonds de Sécurité</strong>
+                                <span class="text-muted float-end">{{ securityFund|number_format(2, ',', ' ') }} DT</span>
+                            </button>
+                            
+                            <!-- Option 2: Puiser dans l'Épargne -->
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn solution-btn" data-solution="EPARGNE" onclick="selectSolution(this)">
+                                <i class="fas fa-piggy-bank text-warning me-3 fa-lg"></i>
+                                <strong>Puiser dans l'Épargne</strong>
+                            </button>
+                            
+                            <!-- Option 3: Famille -->
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn solution-btn" data-solution="FAMILLE" onclick="selectSolution(this)">
+                                <i class="fas fa-users text-info me-3 fa-lg"></i>
+                                <strong>Demander à la Famille</strong>
+                            </button>
+                            
+                            <!-- Section de sélection d'épargne (cachée par défaut) -->
+                            <div id="epargneSelection" class="mt-3 p-3 border rounded bg-white d-none">
+                                <h6 class="mb-3"><i class="fas fa-piggy-bank text-warning me-2"></i>Sélectionnez le compte d'épargne:</h6>
+                                {% for epargne in epargnes %}
+                                    {% set hasEnough = epargne.sold >= 0 %}
+                                    <div class="epargne-card {% if not hasEnough %}disabled{% endif %}" 
+                                         data-id="{{ epargne.id }}" 
+                                         data-balance="{{ epargne.sold }}"
+                                         onclick="selectEpargne(this)"
+                                         {% if not hasEnough %}style="opacity:0.5;cursor:not-allowed;"{% endif %}>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <div class="fw-bold">Compte #{{ epargne.id }}</div>
+                                                <div class="epargne-date">Créé le: {{ epargne.dateCreation|date('d/m/Y') }}</div>
+                                            </div>
+                                            <div class="epargne-balance {% if epargne.sold < currentAmount|default(0) %}text-danger{% else %}text-success{% endif %}">
+                                                {{ epargne.sold|number_format(2, ',', ' ') }} DT
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="text-muted text-center py-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Aucun compte d'épargne disponible
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Options pour CAS POSITIF -->
+                        <div id="positiveOptions" class="d-none">
+                            <h5 class="mb-3">Comment souhaitez-vous utiliser ce gain?</h5>
+                            
+                            <!-- Option 1: Renforcer Fonds de Sécurité -->
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn solution-btn" data-solution="FONDS_SECURITE" onclick="selectSolution(this)">
+                                <i class="fas fa-shield-alt text-success me-3 fa-lg"></i>
+                                <strong>Renforcer Fonds de Sécurité</strong>
+                                <span class="text-muted float-end">{{ securityFund|number_format(2, ',', ' ') }} DT</span>
+                            </button>
+                            
+                            <!-- Option 2: Ajouter à l'Épargne -->
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn solution-btn" data-solution="EPARGNE" onclick="selectSolution(this)">
+                                <i class="fas fa-piggy-bank text-warning me-3 fa-lg"></i>
+                                <strong>Ajouter à l'Épargne</strong>
+                            </button>
+                            
+                            <!-- Section de sélection d'épargne (cachée par défaut) -->
+                            <div id="epargneSelectionPos" class="mt-3 p-3 border rounded bg-white d-none">
+                                <h6 class="mb-3"><i class="fas fa-piggy-bank text-warning me-2"></i>Sélectionnez le compte d'épargne:</h6>
+                                {% for epargne in epargnes %}
+                                    <div class="epargne-card" data-id="{{ epargne.id }}" data-balance="{{ epargne.sold }}" onclick="selectEpargnePos(this)">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <div class="fw-bold">Compte #{{ epargne.id }}</div>
+                                                <div class="epargne-date">Créé le: {{ epargne.dateCreation|date('d/m/Y') }}</div>
+                                            </div>
+                                            <div class="epargne-balance text-success">
+                                                {{ epargne.sold|number_format(2, ',', ' ') }} DT
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="text-muted text-center py-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Aucun compte d'épargne disponible
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Bouton de validation -->
+                        <div id="submitSection" class="mt-4 d-none">
+                            <button type="button" onclick="submitRequest()" class="btn btn-primary w-100 py-3">
+                                <i class="fas fa-paper-plane me-2"></i>Envoyer la demande
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- End row -->
+        </div> <!-- End container -->
+    </div> <!-- End container-fluid -->
+</div> <!-- End container-fluid position-relative -->
+
+<!-- Modal de confirmation -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="confirmMessage">
+                Êtes-vous sûr de vouloir envoyer cette demande?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="confirmSubmit()">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de résultat -->
+<div class="modal fade" id="resultModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" id="resultHeader">
+                <h5 class="modal-title" id="resultTitle">Résultat</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="resultMessage">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+let currentEvent = null;
+let selectedSolution = null;
+let selectedEpargneId = null;
+
+function loadEvent(type, title, amount, desc) {
+    const panel = document.getElementById('decisionPanel');
+    const icon = document.getElementById('eventIcon');
+    const titleElem = document.getElementById('eventTitle');
+    const descElem = document.getElementById('eventDesc');
+    const amountElem = document.getElementById('eventAmount');
+    const negOptions = document.getElementById('negativeOptions');
+    const posOptions = document.getElementById('positiveOptions');
+    const submitSection = document.getElementById('submitSection');
+
+    currentEvent = { type, title, amount, desc };
+    selectedSolution = null;
+    selectedEpargneId = null;
+
+    titleElem.innerText = title;
+    descElem.innerText = desc;
+
+    // Reset UI
+    document.querySelectorAll('.solution-btn').forEach(btn => btn.classList.remove('btn-primary', 'btn-secondary'));
+    document.querySelectorAll('.solution-btn').forEach(btn => btn.classList.add('btn-light'));
+    document.getElementById('epargneSelection').classList.add('d-none');
+    document.getElementById('epargneSelectionPos').classList.add('d-none');
+    submitSection.classList.add('d-none');
+
+    if (type === 'NEGATIF') {
+        panel.className = "bg-white rounded p-5 shadow-sm theme-negative";
+        icon.className = "fas fa-tools fa-2x";
+        amountElem.innerText = "- " + amount + " DT";
+        negOptions.classList.remove('d-none');
+        posOptions.classList.add('d-none');
+        
+        // Update balance colors for negative amount
+        updateBalanceColors(amount);
+    } else {
+        panel.className = "bg-white rounded p-5 shadow-sm theme-positive";
+        icon.className = "fas fa-gift fa-2x";
+        amountElem.innerText = "+ " + amount + " DT";
+        posOptions.classList.remove('d-none');
+        negOptions.classList.add('d-none');
+    }
+}
+
+function updateBalanceColors(amount) {
+    document.querySelectorAll('#epargneSelection .epargne-card').forEach(card => {
+        const balance = parseFloat(card.dataset.balance);
+        const balanceElem = card.querySelector('.epargne-balance');
+        if (balance < amount) {
+            balanceElem.classList.remove('text-success');
+            balanceElem.classList.add('text-danger');
+        } else {
+            balanceElem.classList.remove('text-danger');
+            balanceElem.classList.add('text-success');
+        }
+    });
+}
+
+function addCustomEvent() {
+    const title = document.getElementById('customTitle').value;
+    const type = document.getElementById('customType').value;
+    const amount = document.getElementById('customAmount').value;
+    if(title && amount) {
+        loadEvent(type, title, amount, "Cas personnalisé");
+    } else {
+        alert('Veuillez remplir tous les champs');
+    }
+}
+
+function selectSolution(btn) {
+    selectedSolution = btn.dataset.solution;
+    
+    // Reset all buttons
+    document.querySelectorAll('.solution-btn').forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-light');
+    });
+    // Highlight selected
+    btn.classList.remove('btn-light');
+    btn.classList.add('btn-primary');
+    
+    // Show/hide epargne selection
+    const epargneNeg = document.getElementById('epargneSelection');
+    const epargnePos = document.getElementById('epargneSelectionPos');
+    
+    if (selectedSolution === 'EPARGNE') {
+        if (currentEvent.type === 'NEGATIF') {
+            epargneNeg.classList.remove('d-none');
+        } else {
+            epargnePos.classList.remove('d-none');
+        }
+    } else {
+        epargneNeg.classList.add('d-none');
+        epargnePos.classList.add('d-none');
+    }
+    
+    // Show submit section
+    document.getElementById('submitSection').classList.remove('d-none');
+}
+
+function selectEpargne(card) {
+    if (card.classList.contains('disabled')) return;
+    
+    // Deselect others
+    document.querySelectorAll('#epargneSelection .epargne-card').forEach(c => {
+        c.classList.remove('selected');
+    });
+    // Select this one
+    card.classList.add('selected');
+    selectedEpargneId = card.dataset.id;
+}
+
+function selectEpargnePos(card) {
+    // Deselect others
+    document.querySelectorAll('#epargneSelectionPos .epargne-card').forEach(c => {
+        c.classList.remove('selected');
+    });
+    // Select this one
+    card.classList.add('selected');
+    selectedEpargneId = card.dataset.id;
+}
+
+function submitRequest() {
+    if (!currentEvent) {
+        alert('Veuillez sélectionner un cas');
+        return;
+    }
+    
+    if (!selectedSolution) {
+        alert('Veuillez sélectionner une option');
+        return;
+    }
+    
+    if ((selectedSolution === 'EPARGNE') && !selectedEpargneId) {
+        alert('Veuillez sélectionner un compte d\'épargne');
+        return;
+    }
+    
+    // Show confirmation modal
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    document.getElementById('confirmMessage').innerHTML = `
+        <strong>Titre:</strong> ${currentEvent.title}<br>
+        <strong>Type:</strong> ${currentEvent.type === 'NEGATIF' ? 'Dépense' : 'Gain'}<br>
+        <strong>Montant:</strong> ${currentEvent.amount} DT<br>
+        <strong>Solution:</strong> ${getSolutionLabel(selectedSolution)}
+        ${selectedEpargneId ? '<br><strong>Compte épargne:</strong> #' + selectedEpargneId : ''}
+    `;
+    modal.show();
+}
+
+function getSolutionLabel(solution) {
+    const labels = {
+        'FONDS_SECURITE': 'Fonds de Sécurité',
+        'EPARGNE': selectedEpargneId ? 'Compte Épargne #' + selectedEpargneId : 'Épargne',
+        'FAMILLE': 'Famille'
+    };
+    return labels[solution] || solution;
+}
+
+function confirmSubmit() {
+    const modalEl = document.getElementById('confirmModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal.hide();
+    
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('type', currentEvent.type);
+    formData.append('titre', currentEvent.title);
+    formData.append('montant', currentEvent.amount);
+    formData.append('solution', selectedSolution);
+    if (selectedEpargneId) {
+        formData.append('epargne_id', selectedEpargneId);
+    }
+    
+    // Send request
+    fetch('{{ path('app_alea_submit') }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+        const resultHeader = document.getElementById('resultHeader');
+        const resultTitle = document.getElementById('resultTitle');
+        
+        if (data.success) {
+            resultHeader.className = 'modal-header bg-success text-white';
+            resultTitle.innerText = 'Succès';
+            document.getElementById('resultMessage').innerHTML = `
+                <i class="fas fa-check-circle text-success fa-3x d-block text-center mb-3"></i>
+                ${data.message}
+            `;
+        } else {
+            resultHeader.className = 'modal-header bg-danger text-white';
+            resultTitle.innerText = 'Erreur';
+            document.getElementById('resultMessage').innerHTML = `
+                <i class="fas fa-times-circle text-danger fa-3x d-block text-center mb-3"></i>
+                ${data.message}
+            `;
+        }
+        resultModal.show();
+        
+        // Reset form on success
+        if (data.success) {
+            document.getElementById('customTitle').value = '';
+            document.getElementById('customAmount').value = '';
+            currentEvent = null;
+            selectedSolution = null;
+            selectedEpargneId = null;
+            document.querySelectorAll('.solution-btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-light');
+            });
+            document.getElementById('epargneSelection').classList.add('d-none');
+            document.getElementById('epargneSelectionPos').classList.add('d-none');
+            document.getElementById('submitSection').classList.add('d-none');
+            document.getElementById('eventTitle').innerText = 'Sélectionnez un cas...';
+            document.getElementById('eventDesc').innerText = 'Cliquez sur un événement à gauche.';
+            document.getElementById('eventAmount').innerText = '---';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Une erreur est survenue. Veuillez réessayer.');
+    });
+}
+</script>
+{% endblock %}
+

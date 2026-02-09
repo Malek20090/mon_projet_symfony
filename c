@@ -1,0 +1,137 @@
+{% extends 'admin/base_admin.html.twig' %}
+{% block title %}Gestion des Demandes{% endblock %}
+{% block admin_content %}
+<div class="page-header-card">
+    <div>
+        <h1>Gestion des Demandes</h1>
+        <p>Traitement des demandes des utilisateurs</p>
+    </div>
+    <a href="{{ path('admin_casrelles_add') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Ajouter
+    </a>
+</div>
+
+<!-- Flash Messages -->
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+<!-- Search Form -->
+<div class="card-custom mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ path('admin_casrelles_list') }}" class="row g-3">
+            <div class="col-md-5">
+                <label for="search" class="form-label">Rechercher</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search ?? '' }}" placeholder="Titre, description, type...">
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">Trier par</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="id" {% if sort == 'id' %}selected{% endif %}>ID</option>
+                    <option value="titre" {% if sort == 'titre' %}selected{% endif %}>Titre</option>
+                    <option value="montant" {% if sort == 'montant' %}selected{% endif %}>Montant</option>
+                    <option value="dateEffet" {% if sort == 'dateEffet' %}selected{% endif %}>Date</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="order" class="form-label">Ordre</label>
+                <select class="form-select" id="order" name="order">
+                    <option value="desc" {% if order == 'desc' %}selected{% endif %}>Décroissant</option>
+                    <option value="asc" {% if order == 'asc' %}selected{% endif %}>Croissant</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <div class="d-grid w-100">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i> Rechercher
+                    </button>
+                </div>
+        </form>
+    </div>
+
+<div class="card-custom">
+    {% if casrelles|length > 0 %}
+    <div class="table-responsive">
+        <table class="table table-custom table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Titre</th>
+                    <th>Type</th>
+                    <th>Montant</th>
+                    <th>Solution</th>
+                    <th>Date</th>
+                    <th>Statut</th>
+                    <th style="width: 120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cas in casrelles %}
+                <tr>
+                    <td>{{ cas.id }}</td>
+                    <td><strong>{{ cas.titre }}</strong></td>
+                    <td>
+                        {% if cas.type == 'POSITIF' %}
+                            <span class="badge bg-success">POSITIF (+)</span>
+                        {% else %}
+                            <span class="badge bg-danger">NEGATIF (-)</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold">{{ cas.montant }} DT</td>
+                    <td>{{ cas.solution }}</td>
+                    <td>{{ cas.dateEffet|date('d/m/Y H:i') }}</td>
+                    <td>
+                        {% if cas.resultat == 'VALIDE' %}
+                            <span class="badge bg-success">Acceptée</span>
+                        {% elseif cas.resultat == 'REFUSE' %}
+                            <span class="badge bg-danger">Refusée</span>
+                        {% else %}
+                            <span class="badge bg-warning">En attente</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ path('admin_casrelles_process', {'id': cas.id}) }}" 
+                               class="btn btn-outline-primary" title="Traiter">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ path('admin_casrelles_edit', {'id': cas.id}) }}" 
+                               class="btn btn-outline-secondary" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ path('admin_casrelles_delete', {'id': cas.id}) }}?_token={{ csrf_token('casrelles_delete_' ~ cas.id) }}" 
+                               class="btn btn-outline-danger" title="Supprimer"
+                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette demande ?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-folder-open text-muted fa-4x mb-3"></i>
+        <h5 class="text-muted">Aucune demande trouvée</h5>
+        <p class="text-muted">
+            {% if search is defined and search %}
+                Aucun résultat pour "{{ search }}"
+            {% else %}
+                Aucune demande dans le système
+            {% endif %}
+        </p>
+        <a href="{{ path('admin_casrelles_add') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Ajouter une demande
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

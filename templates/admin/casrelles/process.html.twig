@@ -1,0 +1,248 @@
+
+{% extends 'admin/base_admin.html.twig' %}
+{% block title %}Traiter la Demande{% endblock %}
+{% block admin_content %}
+<div class="page-header-card">
+    <div>
+        <h1>Traitement de la Demande</h1>
+        <p>Accepter ou refuser la demande</p>
+    </div>
+</div>
+
+<div class="card-custom">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Détails de la Demande</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td><strong>Titre:</strong></td>
+                            <td>{{ cas.titre }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Type:</strong></td>
+                            <td>
+                                {% if cas.type == 'POSITIF' %}
+                                    <span class="badge bg-success">POSITIF (+)</span>
+                                {% else %}
+                                    <span class="badge bg-danger">NEGATIF (-)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Montant:</strong></td>
+                            <td class="h4 {% if cas.type == 'POSITIF' %}text-success{% else %}text-danger{% endif %}">
+                                {{ cas.montant }} DT
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Date:</strong></td>
+                            <td>{{ cas.dateEffet|date('d/m/Y H:i') }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Solution:</strong></td>
+                            <td>
+                                {% if cas.solution == 'FONDS_SECURITE' %}
+                                    <span class="badge bg-info"><i class="fas fa-shield-alt me-1"></i>Fonds de Sécurité</span>
+                                {% elseif cas.solution == 'EPARGNE' %}
+                                    <span class="badge bg-warning"><i class="fas fa-piggy-bank me-1"></i>Épargne</span>
+                                {% elseif cas.solution == 'FAMILLE' %}
+                                    <span class="badge bg-secondary"><i class="fas fa-users me-1"></i>Famille</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark">{{ cas.solution }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if cas.resultat %}
+                        <tr>
+                            <td><strong>Statut:</strong></td>
+                            <td>
+                                {% if cas.resultat == 'VALIDE' %}
+                                    <span class="badge bg-success">Accepté</span>
+                                {% elseif cas.resultat == 'REFUSE' %}
+                                    <span class="badge bg-danger">Refusé</span>
+                                {% else %}
+                                    <span class="badge bg-warning">En attente</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% if cas.raisonRefus %}
+                        <tr>
+                            <td><strong>Raison du refus:</strong></td>
+                            <td class="text-danger">{{ cas.raisonRefus }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Security Fund Info -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Fonds de Sécurité</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="text-info">{{ securityFund|number_format(2, ',', ' ') }} DT</h2>
+                    <p class="text-muted mb-0">Solde actuel du fonds de sécurité</p>
+                </div>
+            </div>
+            
+            <!-- Épargne Info if applicable -->
+            {% if cas.solution == 'EPARGNE' and cas.epargne %}
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-piggy-bank me-2"></i>Compte d'Épargne</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td><strong>Compte:</strong></td>
+                            <td>#{{ cas.epargne.id }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Solde actuel:</strong></td>
+                            <td class="{% if cas.type == 'NEGATIF' and cas.epargne.sold < cas.montant %}text-danger{% else %}text-success{% endif %}">
+                                {{ cas.epargne.sold|number_format(2, ',', ' ') }} DT
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Créé le:</strong></td>
+                            <td>{{ cas.epargne.dateCreation|date('d/m/Y') }}</td>
+                        </tr>
+                        {% if cas.type == 'NEGATIF' %}
+                        <tr>
+                            <td><strong>Après transaction:</strong></td>
+                            <td class="text-primary">
+                                {{ (cas.epargne.sold - cas.montant)|number_format(2, ',', ' ') }} DT
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td><strong>Après transaction:</strong></td>
+                            <td class="text-primary">
+                                {{ (cas.epargne.sold + cas.montant)|number_format(2, ',', ' ') }} DT
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-6">
+            {% if cas.resultat == 'EN_ATTENTE' %}
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body text-center">
+                    <p class="mb-4">La demande est en attente de validation.</p>
+                    
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        En acceptant, les transactions seront effectuées automatiquement sur le compte d'épargne ou le fonds de sécurité.
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <form method="POST">
+                        <button type="submit" name="action" value="accept" class="btn btn-success w-100 mb-2" onclick="return confirm('Êtes-vous sûr de vouloir accepter cette demande?');">
+                            <i class="fas fa-check me-2"></i>Accepter la Demande
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <i class="fas fa-times me-2"></i>Refuser la Demande
+                    </button>
+                    <a href="{{ path('admin_casrelles_list') }}" class="btn btn-secondary w-100 mt-2">
+                        Annuler
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Demande Déjà Traitée</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if cas.resultat == 'VALIDE' %}
+                        <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
+                        <h4 class="text-success">Demande Acceptée</h4>
+                        <p>La demande a été traitée avec succès.</p>
+                        {% if cas.solution == 'EPARGNE' and cas.epargne %}
+                            <div class="alert alert-success">
+                                <strong>Compte d'épargne #{{ cas.epargne.id }}</strong><br>
+                                {% if cas.type == 'NEGATIF' %}
+                                    {{ cas.montant }} DT ont été prélevés<br>
+                                {% else %}
+                                    {{ cas.montant }} DT ont été ajoutés<br>
+                                {% endif %}
+                                Nouveau solde: {{ cas.epargne.sold|number_format(2, ',', ' ') }} DT
+                            </div>
+                        {% elseif cas.solution == 'FONDS_SECURITE' %}
+                            <div class="alert alert-info">
+                                {% if cas.type == 'NEGATIF' %}
+                                    <strong>{{ cas.montant }} DT</strong> ont été prélevés du fonds de sécurité
+                                {% else %}
+                                    <strong>{{ cas.montant }} DT</strong> ont été ajoutés au fonds de sécurité
+                                {% endif %}
+                            </div>
+                        {% elseif cas.solution == 'FAMILLE' %}
+                            <div class="alert alert-secondary">
+                                <i class="fas fa-users me-2"></i>Famille sollicitée
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <i class="fas fa-times-circle text-danger fa-4x mb-3"></i>
+                        <h4 class="text-danger">Demande Refusée</h4>
+                        {% if cas.raisonRefus %}
+                            <div class="alert alert-danger">
+                                <strong>Raison du refus:</strong><br>
+                                {{ cas.raisonRefus }}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ path('admin_casrelles_list') }}" class="btn btn-primary w-100">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Rejection Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Refuser la demande</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="raisonRefus" class="form-label fw-bold">Motif du refus:</label>
+                        <textarea class="form-control" id="raisonRefus" name="raisonRefus" rows="4" 
+                                  placeholder="Veuillez indiquer la raison du refus..." required></textarea>
+                        <div class="form-text">Cette raison sera communiquée à l'utilisateur.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" name="action" value="reject" class="btn btn-danger">
+                        <i class="fas fa-times me-2"></i>Confirmer le refus
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

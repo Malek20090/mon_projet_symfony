@@ -9,15 +9,9 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
-        main:
-            lazy: true
-            provider: users_in_memory
-
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
-
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
+        # main:
+        #     pattern: ^/
+        #     security: false
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used

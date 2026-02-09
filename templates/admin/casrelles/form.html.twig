@@ -1,0 +1,143 @@
+{% extends 'admin/base_admin.html.twig' %}
+{% block title %}Cas Réels - {{ action }}{% endblock %}
+{% block admin_content %}
+<div class="page-header-card">
+    <div>
+        <h1>Gestion des Cas Réels</h1>
+        <p>{{ action }} un cas réel</p>
+    </div>
+
+<div class="card-custom">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Formulaire Cas Réel</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="casrellesForm">
+                        <input type="hidden" name="_token" value="{{ csrf_token('casrelles_form') }}">
+                        
+                        <!-- Titre -->
+                        <div class="mb-3">
+                            <label for="titre" class="form-label fw-bold">Titre <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control {% if errors.titre is defined %}is-invalid{% endif %}" 
+                                   id="titre" name="titre" 
+                                   value="{{ cas.titre ?? '' }}"
+                                   placeholder="Entrez le titre du cas"
+                                   maxlength="150">
+                            {% if errors.titre is defined %}
+                                <div class="invalid-feedback">{{ errors.titre }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Type et Montant -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="type" class="form-label fw-bold">Type <span class="text-danger">*</span></label>
+                                <select class="form-select {% if errors.type is defined %}is-invalid{% endif %}" 
+                                        id="type" name="type" required>
+                                    <option value="">Sélectionnez...</option>
+                                    <option value="POSITIF" {% if cas.type == 'POSITIF' %}selected{% endif %}>
+                                        Positif (+)
+                                    </option>
+                                    <option value="NEGATIF" {% if cas.type == 'NEGATIF' %}selected{% endif %}>
+                                        Négatif (-)
+                                    </option>
+                                </select>
+                                {% if errors.type is defined %}
+                                    <div class="invalid-feedback">{{ errors.type }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="montant" class="form-label fw-bold">Montant (DT) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control {% if errors.montant is defined %}is-invalid{% endif %}" 
+                                       id="montant" name="montant" 
+                                       value="{{ cas.montant ?? '' }}"
+                                       placeholder="0.00"
+                                       min="0" step="0.01" required>
+                                {% if errors.montant is defined %}
+                                    <div class="invalid-feedback">{{ errors.montant }}</div>
+                                {% endif %}
+                            </div>
+
+                        <!-- Solution -->
+                        <div class="mb-3">
+                            <label for="solution" class="form-label fw-bold">Solution <span class="text-danger">*</span></label>
+                            <select class="form-select {% if errors.solution is defined %}is-invalid{% endif %}" 
+                                    id="solution" name="solution" required>
+                                <option value="">Sélectionnez...</option>
+                                <option value="FONDS_SECURITE" {% if cas.solution == 'FONDS_SECURITE' %}selected{% endif %}>
+                                    Fonds de Sécurité
+                                </option>
+                                <option value="EPARGNE" {% if cas.solution == 'EPARGNE' %}selected{% endif %}>
+                                    Épargne
+                                </option>
+                                <option value="FAMILLE" {% if cas.solution == 'FAMILLE' %}selected{% endif %}>
+                                    Famille
+                                </option>
+                                <option value="COMPTE" {% if cas.solution == 'COMPTE' %}selected{% endif %}>
+                                    Compte
+                                </option>
+                            </select>
+                            {% if errors.solution is defined %}
+                                <div class="invalid-feedback">{{ errors.solution }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Compte d'épargne -->
+                        <div class="mb-3">
+                            <label for="epargne_id" class="form-label">Compte d'épargne</label>
+                            <select class="form-select {% if errors.epargne_id is defined %}is-invalid{% endif %}" 
+                                    id="epargne_id" name="epargne_id">
+                                <option value="">Sélectionnez un compte (optionnel)</option>
+                                {% for epargne in epargnes %}
+                                    <option value="{{ epargne.id }}" {% if cas.epargne and cas.epargne.id == epargne.id %}selected{% endif %}>
+                                        Compte #{{ epargne.id }} - Solde: {{ epargne.sold|default(0) }} DT
+                                        (Créé: {{ epargne.dateCreation|date('d/m/Y') }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if errors.epargne_id is defined %}
+                                <div class="invalid-feedback">{{ errors.epargne_id }}</div>
+                            {% endif %}
+                            <div class="form-text">Sélectionnez un compte si vous avez choisi "Épargne" comme solution.</div>
+
+                        <!-- Date d'effet -->
+                        <div class="mb-3">
+                            <label for="dateEffet" class="form-label fw-bold">Date d'effet <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control {% if errors.dateEffet is defined %}is-invalid{% endif %}" 
+                                   id="dateEffet" name="dateEffet" 
+                                   value="{{ cas.dateEffet ? cas.dateEffet|date('Y-m-d') : '' }}"
+                                   required>
+                            {% if errors.dateEffet is defined %}
+                                <div class="invalid-feedback">{{ errors.dateEffet }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control {% if errors.description is defined %}is-invalid{% endif %}" 
+                                      id="description" name="description" 
+                                      rows="4"
+                                      placeholder="Entrez une description (optionnel)">{{ cas.description ?? '' }}</textarea>
+                            {% if errors.description is defined %}
+                                <div class="invalid-feedback">{{ errors.description }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>{{ action }}
+                            </button>
+                            <a href="{{ path('admin_casrelles_list') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                            </a>
+                        </div>
+                    </form>
+                </div>
+        </div>
+</div>
+{% endblock %}
