@@ -27,17 +27,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private string $password;
 
-    #[ORM\Column(type: 'json')]
-    private array $roles = [];
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $role = null;
 
     #[ORM\Column(type: 'date')]
     private \DateTime $dateInscription;
 
     #[ORM\Column]
     private float $soldeTotal = 0;
-    
-    #[ORM\Column(length: 255, nullable: true)]
-private ?string $image = null;
+
+    /** Not persisted - column 'image' does not exist in user table. Add migration if you need to store it. */
+    private ?string $image = null;
 
 public function getImage(): ?string
 {
@@ -63,7 +63,6 @@ public function setImage(?string $image): self
         {
         $this->transactions = new ArrayCollection();
         $this->dateInscription = new \DateTime();
-        $this->roles = [];
         $this->soldeTotal = 0;
     }
     /**
@@ -96,14 +95,25 @@ public function setImage(?string $image): self
 
     public function getRoles(): array
     {
-        $roles = $this->roles;
+        $roles = $this->role ? [$this->role] : [];
         $roles[] = 'ROLE_USER';
         return array_unique($roles);
     }
 
     public function setRoles(array $roles): self
     {
-        $this->roles = $roles;
+        $this->role = $roles[0] ?? null;
+        return $this;
+    }
+
+    public function getRole(): ?string
+    {
+        return $this->role;
+    }
+
+    public function setRole(?string $role): self
+    {
+        $this->role = $role;
         return $this;
     }
 

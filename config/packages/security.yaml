@@ -29,11 +29,15 @@ security:
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/$, roles: PUBLIC_ACCESS }
+
+        # Salary & Expense module (Revenue, Expense, dashboard) - public for testing
+        - { path: ^/salary-expense, roles: PUBLIC_ACCESS }
+        - { path: ^/revenue, roles: PUBLIC_ACCESS }
+        - { path: ^/expense, roles: PUBLIC_ACCESS }
 
         - { path: ^/transaction, roles: ROLE_ADMIN }
         - { path: ^/user, roles: ROLE_ADMIN }
 
         - { path: ^/salary, roles: ROLE_SALARY }
         - { path: ^/etudiant, roles: ROLE_ETUDIANT }
-
-        
