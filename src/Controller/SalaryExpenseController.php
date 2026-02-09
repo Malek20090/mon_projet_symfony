@@ -75,4 +75,64 @@ class SalaryExpenseController extends AbstractController
             'formExpense' => $formExpense,
         ]);
     }
+
+    #[Route('/revenue/{id}/edit', name: 'revenue_edit', methods: ['GET', 'POST'])]
+    public function editRevenue(Request $request, Revenue $revenue, EntityManagerInterface $entityManager): Response
+    {
+        $form = $this->createForm(RevenueType::class, $revenue);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+            $this->addFlash('success', 'Revenu mis à jour.');
+            return $this->redirectToRoute('app_salary_expense_index');
+        }
+
+        return $this->render('salary_expense/edit_revenue.html.twig', [
+            'revenue' => $revenue,
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/revenue/{id}/delete', name: 'revenue_delete', methods: ['POST'])]
+    public function deleteRevenue(Request $request, Revenue $revenue, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete' . $revenue->getId(), $request->request->get('_token', ''))) {
+            $entityManager->remove($revenue);
+            $entityManager->flush();
+            $this->addFlash('success', 'Revenu supprimé.');
+        }
+
+        return $this->redirectToRoute('app_salary_expense_index');
+    }
+
+    #[Route('/expense/{id}/edit', name: 'expense_edit', methods: ['GET', 'POST'])]
+    public function editExpense(Request $request, Expense $expense, EntityManagerInterface $entityManager): Response
+    {
+        $form = $this->createForm(ExpenseType::class, $expense);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+            $this->addFlash('success', 'Dépense mise à jour.');
+            return $this->redirectToRoute('app_salary_expense_index');
+        }
+
+        return $this->render('salary_expense/edit_expense.html.twig', [
+            'expense' => $expense,
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/expense/{id}/delete', name: 'expense_delete', methods: ['POST'])]
+    public function deleteExpense(Request $request, Expense $expense, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('delete' . $expense->getId(), $request->request->get('_token', ''))) {
+            $entityManager->remove($expense);
+            $entityManager->flush();
+            $this->addFlash('success', 'Dépense supprimée.');
+        }
+
+        return $this->redirectToRoute('app_salary_expense_index');
+    }
 }
