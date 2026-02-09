@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Salary & Expense | Decide${% endblock %}
+{% block title %}Revenu & Expense | Decide${% endblock %}
 
 {% block body %}
 
 <!-- Header / Breadcrumb -->
 <div class="container-fluid bg-breadcrumb">
     <div class="container text-center py-5">
-        <h1 class="display-4 text-white wow fadeInDown">Salary & Expense</h1>
+        <h1 class="display-4 text-white wow fadeInDown">Revenu & Expense</h1>
         <p class="text-white-50 wow fadeInUp">Unified income and expense management module</p>
     </div>
 </div>
@@ -25,7 +25,7 @@
         <!-- Title -->
         <div class="text-center mx-auto pb-5 wow fadeInUp" style="max-width: 900px;">
             <h4 class="text-uppercase text-primary">Decide$ Module</h4>
-            <h1 class="display-5 mb-3">Salary & Expense Management</h1>
+            <h1 class="display-5 mb-3">Revenu & Expense Management</h1>
             <p>Track your income, manage your expenses, and visualize your financial balance in one place.</p>
         </div>
 
@@ -36,7 +36,7 @@
                     <i class="fas fa-wallet fa-2x text-primary mb-3"></i>
                     <h5>Total Income</h5>
                     <h2 class="text-primary">{{ totalIncome|number_format(2, '.', ' ') }} TND</h2>
-                    <small class="text-muted">Sum of salaries</small>
+                    <small class="text-muted">Somme des revenus</small>
                 </div>
             </div>
             <div class="col-md-6 col-xl-3 wow fadeInUp" data-wow-delay="0.1s">
@@ -69,7 +69,7 @@
         <ul class="nav nav-pills justify-content-center mb-4 wow fadeInUp" id="salaryExpenseTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active rounded-pill px-4 py-2 me-2" id="salary-tab" data-bs-toggle="pill" data-bs-target="#salary" type="button" role="tab">
-                    <i class="fas fa-wallet me-2"></i>Salaries
+                    <i class="fas fa-wallet me-2"></i>Revenus
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -85,20 +85,20 @@
                 <div class="row g-4">
                     <div class="col-lg-5">
                         <div class="service-item rounded p-4 wow fadeInUp">
-                            <h4 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Add Salary</h4>
+                            <h4 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Ajouter un revenu</h4>
                             {{ form_start(formRevenue, { 'attr': { 'class': '' } }) }}
                                 <div class="mb-3">{{ form_row(formRevenue.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Amount (TND)' }) }}</div>
                                 <div class="mb-3">{{ form_row(formRevenue.type, { 'attr': { 'class': 'form-select' } }) }}</div>
                                 <div class="mb-3">{{ form_row(formRevenue.receivedAt, { 'attr': { 'class': 'form-control' }, 'label': 'Payment Date' }) }}</div>
                                 <div class="mb-3">{{ form_row(formRevenue.description, { 'attr': { 'class': 'form-control' }, 'required': false }) }}</div>
                                 <div class="mb-3">{{ form_row(formRevenue.user, { 'attr': { 'class': 'form-select' } }) }}</div>
-                                <button type="submit" class="btn btn-primary rounded-pill w-100"><i class="fas fa-plus-circle me-2"></i>Add Salary</button>
+                                <button type="submit" class="btn btn-primary rounded-pill w-100"><i class="fas fa-plus-circle me-2"></i>Ajouter un revenu</button>
                             {{ form_end(formRevenue) }}
                         </div>
                     </div>
                     <div class="col-lg-7">
                         <div class="service-item rounded p-4 wow fadeInUp">
-                            <h4 class="mb-3"><i class="fas fa-history text-primary me-2"></i>Salary History</h4>
+                            <h4 class="mb-3"><i class="fas fa-history text-primary me-2"></i>Historique des revenus</h4>
                             <div class="table-responsive">
                                 <table class="table table-bordered align-middle">
                                     <thead class="table-light">
@@ -118,15 +118,15 @@
                                                 <td class="text-primary fw-bold">{{ revenue.amount|number_format(2, '.', ' ') }} TND</td>
                                                 <td>{{ revenue.type }}</td>
                                                 <td>
-                                                    <a href="{{ path('app_revenue_edit', { id: revenue.id }) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                                                    <form method="post" action="{{ path('app_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer ce revenu ?');">
+                                                    <a href="{{ path('app_salary_expense_revenue_edit', { id: revenue.id }) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
+                                                    <form method="post" action="{{ path('app_salary_expense_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer ce revenu ?');">
                                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ revenue.id) }}">
                                                         <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                                                     </form>
                                                 </td>
                                             </tr>
                                         {% else %}
-                                            <tr><td colspan="5" class="text-center text-muted">No salaries yet.</td></tr>
+                                            <tr><td colspan="5" class="text-center text-muted">Aucun revenu pour le moment.</td></tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
@@ -176,8 +176,8 @@
                                                 <td>{{ expense.category }}</td>
                                                 <td>{{ expense.description|default('-') }}</td>
                                                 <td>
-                                                    <a href="{{ path('app_expense_edit', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                                                    <form method="post" action="{{ path('app_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer cette dépense ?');">
+                                                    <a href="{{ path('app_salary_expense_expense_edit', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
+                                                    <form method="post" action="{{ path('app_salary_expense_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer cette dépense ?');">
                                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ expense.id) }}">
                                                         <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                                                     </form>

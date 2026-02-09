@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Decide$ | Salary & Expense Module{% endblock %}</title>
+    <title>{% block title %}Decide$ | Revenu & Expense Module{% endblock %}</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>💰</text></svg>">
 
     <!-- Google Fonts -->
@@ -53,8 +53,6 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0">
                 <a href="{{ path('app_salary_expense_index') }}" class="nav-item nav-link {{ app.request.attributes.get('_route') == 'app_salary_expense_index' ? 'active' : '' }}">Home</a>
-                <a href="{{ path('app_revenue_index') }}" class="nav-item nav-link">Revenus</a>
-                <a href="{{ path('app_expense_index') }}" class="nav-item nav-link">Dépenses</a>
                 <a href="{{ path('app_transaction_index') }}" class="nav-item nav-link">Transactions</a>
                 <a href="{{ path('app_user_index') }}" class="nav-item nav-link">Users</a>
             </div>
@@ -62,7 +60,7 @@
             <div class="d-none d-xl-flex me-3">
                 <div class="d-flex flex-column pe-3 border-end border-primary">
                     <span class="text-body">Finance personnelle</span>
-                    <span class="text-primary">Gestion du salaire</span>
+                    <span class="text-primary">Gestion des revenus</span>
                 </div>
             </div>
 
@@ -103,8 +101,8 @@
             <div class="col-md-6 col-lg-6 col-xl-3">
                 <div class="footer-item d-flex flex-column">
                     <h4 class="text-white mb-4">Platform</h4>
-                    <a href="{{ path('app_revenue_index') }}" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-angle-right me-2"></i> Salary Management</a>
-                    <a href="{{ path('app_expense_index') }}" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-angle-right me-2"></i> Expense Tracking</a>
+                    <a href="{{ path('app_salary_expense_index') }}" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-angle-right me-2"></i> Revenu & Expense Management</a>
+                    <a href="{{ path('app_transaction_index') }}" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-angle-right me-2"></i> Transactions</a>
                     <a href="#" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-angle-right me-2"></i> Savings Goals</a>
                     <a href="#" class="text-white-50 text-decoration-none mb-2"><i class="fas fa-angle-right me-2"></i> Financial Dashboard</a>
                 </div>
@@ -112,7 +110,7 @@
             <div class="col-md-6 col-lg-6 col-xl-3">
                 <div class="footer-item d-flex flex-column">
                     <h4 class="text-white mb-4">Key Features</h4>
-                    <p class="text-white mb-2">✔ Monthly Salary Tracking</p>
+                    <p class="text-white mb-2">✔ Suivi mensuel des revenus</p>
                     <p class="text-white mb-2">✔ Budget Planning</p>
                     <p class="text-white mb-2">✔ Expense Categorization</p>
                     <p class="text-white mb-2">✔ Financial Security Alerts</p>
