@@ -288,6 +288,9 @@ body {
 
 .pagination {
     display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: center;
     gap: 12px;
     list-style: none;
     padding: 0;
@@ -296,6 +299,9 @@ body {
 
 .pagination li {
     display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
 }
 
 .pagination a,
@@ -475,7 +481,7 @@ body {
 .pagination a,
 .pagination span {
     min-width: 44px;
-    height: 44px;
+    height: 44px !important; /* évite les grandes colonnes verticales */
     border-radius: 14px;
     display: flex;
     align-items: center;

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Expense;
 use App\Entity\Revenue;
+use App\Entity\Transaction;
 use App\Form\ExpenseType;
 use App\Form\RevenueType;
 use App\Repository\ExpenseRepository;
@@ -24,8 +25,31 @@ class SalaryExpenseController extends AbstractController
         ExpenseRepository $expenseRepository,
         EntityManagerInterface $entityManager
     ): Response {
-        $revenues = $revenueRepository->findBy([], ['receivedAt' => 'DESC', 'id' => 'DESC']);
-        $expenses = $expenseRepository->findBy([], ['expenseDate' => 'DESC', 'id' => 'DESC']);
+        // -------- REVENUS : Tri (2 critères) ou Recherche --------
+        $revenueSearch = trim((string) $request->query->get('revenue_search', ''));
+        $revenueSort1 = $request->query->get('revenue_sort1', 'receivedAt');
+        $revenueDir1 = $request->query->get('revenue_dir1', 'DESC');
+        $revenueSort2 = $request->query->get('revenue_sort2', 'amount');
+        $revenueDir2 = $request->query->get('revenue_dir2', 'DESC');
+
+        if ($revenueSearch !== '') {
+            $revenues = $revenueRepository->search($revenueSearch);
+        } else {
+            $revenues = $revenueRepository->sortByTwoCriteria($revenueSort1, $revenueDir1, $revenueSort2, $revenueDir2);
+        }
+
+        // -------- DÉPENSES : Tri (2 critères) ou Recherche --------
+        $expenseSearch = trim((string) $request->query->get('expense_search', ''));
+        $expenseSort1 = $request->query->get('expense_sort1', 'expenseDate');
+        $expenseDir1 = $request->query->get('expense_dir1', 'DESC');
+        $expenseSort2 = $request->query->get('expense_sort2', 'amount');
+        $expenseDir2 = $request->query->get('expense_dir2', 'DESC');
+
+        if ($expenseSearch !== '') {
+            $expenses = $expenseRepository->search($expenseSearch);
+        } else {
+            $expenses = $expenseRepository->sortByTwoCriteria($expenseSort1, $expenseDir1, $expenseSort2, $expenseDir2);
+        }
 
         $totalIncome = array_sum(array_map(fn(Revenue $r) => $r->getAmount(), $revenues));
         $totalExpenses = array_sum(array_map(fn(Expense $e) => $e->getAmount(), $expenses));
@@ -58,9 +82,28 @@ class SalaryExpenseController extends AbstractController
         $formExpense = $this->createForm(ExpenseType::class, $expense);
         $formExpense->handleRequest($request);
         if ($formExpense->isSubmitted() && $formExpense->isValid()) {
+            // 1️⃣ Sauvegarder la dépense
             $entityManager->persist($expense);
+
+            // 2️⃣ Créer la transaction associée
+            $user = $this->getUser();
+            if ($user) {
+                $transaction = new Transaction();
+                $transaction->setType('EXPENSE');
+                $transaction->setMontant($expense->getAmount());
+                $transaction->setDate($expense->getExpenseDate() ?? new \DateTime());
+                $transaction->setDescription($expense->getDescription());
+                $transaction->setModuleSource('SALARY_EXPENSE_MODULE');
+                $transaction->setUser($user);
+                $transaction->setExpense($expense);
+
+                $entityManager->persist($transaction);
+            }
+
+            // 3️⃣ Flush global
             $entityManager->flush();
-            $this->addFlash('success', 'Dépense ajoutée.');
+
+            $this->addFlash('success', 'Dépense ajoutée (transaction créée).');
             return $this->redirectToRoute('app_salary_expense_index');
         }
 

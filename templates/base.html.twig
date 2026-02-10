@@ -53,8 +53,11 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0">
                 <a href="{{ path('app_salary_expense_index') }}" class="nav-item nav-link {{ app.request.attributes.get('_route') == 'app_salary_expense_index' ? 'active' : '' }}">Home</a>
+                <a href="{{ path('app_about') }}" class="nav-item nav-link {{ app.request.attributes.get('_route') == 'app_about' ? 'active' : '' }}">About</a>
+                <a href="{{ path('app_service') }}" class="nav-item nav-link {{ app.request.attributes.get('_route') == 'app_service' ? 'active' : '' }}">Service</a>
+                <a href="{{ path('app_contact') }}" class="nav-item nav-link {{ app.request.attributes.get('_route') == 'app_contact' ? 'active' : '' }}">Contact</a>
                 <a href="{{ path('app_transaction_index') }}" class="nav-item nav-link">Transactions</a>
-                <a href="{{ path('app_user_index') }}" class="nav-item nav-link">Users</a>
+                <a href "{{ path('app_user_index') }}" class="nav-item nav-link">Users</a>
             </div>
 
             <div class="d-none d-xl-flex me-3">
