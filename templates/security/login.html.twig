@@ -1,0 +1,128 @@
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <title>Connexion | FinanceLogo</title>
+
+        <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </head>
+    <script>
+    window.addEventListener('load', () => {
+        document.querySelectorAll('.animate-logo').forEach(el => {
+            el.classList.remove('animate-logo');
+            void el.offsetWidth; // force reflow
+            el.classList.add('animate-logo');
+        });
+    });
+</script>
+    <body>
+
+    <div class="login-page" style="background-image: url('{{ asset('img/a.jpg') }}');">
+        <div class="overlay"></div>
+
+        <div class="login-container">
+
+            <!-- LEFT SIDE -->
+            <div class="login-left">
+                <div class="brand">
+    <img src="{{ asset('img/chat1.png') }}"
+     alt="DECIDE$ Logo"
+     class="brand-logo animate-logo">
+</div>
+
+                <h2>
+                    Accédez à votre espace financier<br>
+                    <span>en toute sécurité</span>
+                </h2>
+
+                <div class="accent-line"></div>
+
+                <p class="description">
+                    Gérez vos actifs, analysez vos performances et sécurisez votre avenir
+                    avec notre plateforme nouvelle génération.
+                </p>
+            </div>
+
+            <!-- RIGHT SIDE -->
+            <div class="login-right">
+                <div class="login-card">
+
+                    <h2>Connexion</h2>
+                    <p class="subtitle">Bienvenue sur votre espace sécurisé</p>
+
+                    {% if error %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            {{ error.messageKey|trans(error.messageData, 'security') }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        <div class="input-group">
+                            <label>Adresse e-mail</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input
+                                    type="email"
+                                    name="_username"
+                                    value="{{ last_username }}"
+                                    placeholder="votre@email.com"
+                                    required
+                                    autofocus
+                                >
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Mot de passe</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input
+                                    type="password"
+                                    name="_password"
+                                    placeholder="••••••••"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <div class="options">
+                            <label class="checkbox-container">
+                                <input type="checkbox" name="_remember_me">
+                                <span class="checkmark"></span>
+                                Se souvenir de moi
+                            </label>
+
+                            <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+                        </div>
+
+                        <button type="submit" class="btn-login">
+                            Se connecter
+                        </button>
+
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                    </form>
+
+                    <div class="divider">
+                        <span>ou</span>
+                    </div>
+
+                    <div class="footer-links">
+                        Nouveau sur la plateforme ?
+                        <a href="{{ path('app_register') }}">Créer un compte</a>
+                    </div>
+
+                    <div class="ssl-info">
+                        <i class="fas fa-shield-alt"></i>
+                        Connexion sécurisée SSL 256-bit
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    </body>
+    </html>

@@ -1,0 +1,200 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Salary & Expense | Decide${% endblock %}
+
+{% block body %}
+
+<!-- Header / Breadcrumb -->
+<div class="container-fluid bg-breadcrumb">
+    <div class="container text-center py-5">
+        <h1 class="display-4 text-white wow fadeInDown">Salary & Expense</h1>
+        <p class="text-white-50 wow fadeInUp">Unified income and expense management module</p>
+    </div>
+</div>
+
+<!-- Module Content -->
+<div class="container-fluid service bg-light py-5">
+    <div class="container py-5">
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <!-- Title -->
+        <div class="text-center mx-auto pb-5 wow fadeInUp" style="max-width: 900px;">
+            <h4 class="text-uppercase text-primary">Decide$ Module</h4>
+            <h1 class="display-5 mb-3">Salary & Expense Management</h1>
+            <p>Track your income, manage your expenses, and visualize your financial balance in one place.</p>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-6 col-xl-3 wow fadeInUp">
+                <div class="service-item rounded p-4 text-center">
+                    <i class="fas fa-wallet fa-2x text-primary mb-3"></i>
+                    <h5>Total Income</h5>
+                    <h2 class="text-primary">{{ totalIncome|number_format(2, '.', ' ') }} TND</h2>
+                    <small class="text-muted">Sum of salaries</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="service-item rounded p-4 text-center">
+                    <i class="fas fa-credit-card fa-2x text-primary mb-3"></i>
+                    <h5>Total Expenses</h5>
+                    <h2 class="text-primary">{{ totalExpenses|number_format(2, '.', ' ') }} TND</h2>
+                    <small class="text-muted">Sum of expenses</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3 wow fadeInUp" data-wow-delay="0.2s">
+                <div class="service-item rounded p-4 text-center">
+                    <i class="fas fa-balance-scale fa-2x text-primary mb-3"></i>
+                    <h5>Net Balance</h5>
+                    <h2 class="text-primary {{ netBalance >= 0 ? 'text-success' : 'text-danger' }}">{{ netBalance|number_format(2, '.', ' ') }} TND</h2>
+                    <small class="text-muted">Income - Expenses</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3 wow fadeInUp" data-wow-delay="0.3s">
+                <div class="service-item rounded p-4 text-center">
+                    <i class="fas fa-calendar-alt fa-2x text-primary mb-3"></i>
+                    <h5>Last Transaction</h5>
+                    <h2 class="text-primary" style="font-size: 1.25rem;">{{ lastTransactionDate ? lastTransactionDate|date('d/m/Y') : '--/--/----' }}</h2>
+                    <small class="text-muted">Latest activity</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-pills justify-content-center mb-4 wow fadeInUp" id="salaryExpenseTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill px-4 py-2 me-2" id="salary-tab" data-bs-toggle="pill" data-bs-target="#salary" type="button" role="tab">
+                    <i class="fas fa-wallet me-2"></i>Salaries
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill px-4 py-2" id="expense-tab" data-bs-toggle="pill" data-bs-target="#expense" type="button" role="tab">
+                    <i class="fas fa-credit-card me-2"></i>Expenses
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="salaryExpenseTabContent">
+            <!-- Salary Tab -->
+            <div class="tab-pane fade show active" id="salary" role="tabpanel">
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <div class="service-item rounded p-4 wow fadeInUp">
+                            <h4 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Add Salary</h4>
+                            {{ form_start(formRevenue, { 'attr': { 'class': '' } }) }}
+                                <div class="mb-3">{{ form_row(formRevenue.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Amount (TND)' }) }}</div>
+                                <div class="mb-3">{{ form_row(formRevenue.type, { 'attr': { 'class': 'form-select' } }) }}</div>
+                                <div class="mb-3">{{ form_row(formRevenue.receivedAt, { 'attr': { 'class': 'form-control' }, 'label': 'Payment Date' }) }}</div>
+                                <div class="mb-3">{{ form_row(formRevenue.description, { 'attr': { 'class': 'form-control' }, 'required': false }) }}</div>
+                                <div class="mb-3">{{ form_row(formRevenue.user, { 'attr': { 'class': 'form-select' } }) }}</div>
+                                <button type="submit" class="btn btn-primary rounded-pill w-100"><i class="fas fa-plus-circle me-2"></i>Add Salary</button>
+                            {{ form_end(formRevenue) }}
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="service-item rounded p-4 wow fadeInUp">
+                            <h4 class="mb-3"><i class="fas fa-history text-primary me-2"></i>Salary History</h4>
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Type</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for revenue in revenues %}
+                                            <tr>
+                                                <td>{{ revenue.id }}</td>
+                                                <td>{{ revenue.receivedAt ? revenue.receivedAt|date('Y-m-d') : '' }}</td>
+                                                <td class="text-primary fw-bold">{{ revenue.amount|number_format(2, '.', ' ') }} TND</td>
+                                                <td>{{ revenue.type }}</td>
+                                                <td>
+                                                    <a href="{{ path('app_revenue_edit', { id: revenue.id }) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
+                                                    <form method="post" action="{{ path('app_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer ce revenu ?');">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ revenue.id) }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% else %}
+                                            <tr><td colspan="5" class="text-center text-muted">No salaries yet.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expense Tab -->
+            <div class="tab-pane fade" id="expense" role="tabpanel">
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <div class="service-item rounded p-4 wow fadeInUp">
+                            <h4 class="mb-3"><i class="fas fa-minus-circle text-primary me-2"></i>Add Expense</h4>
+                            {{ form_start(formExpense, { 'attr': { 'class': '' } }) }}
+                                <div class="mb-3">{{ form_row(formExpense.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Amount (TND)' }) }}</div>
+                                <div class="mb-3">{{ form_row(formExpense.category, { 'attr': { 'class': 'form-select' } }) }}</div>
+                                <div class="mb-3">{{ form_row(formExpense.expenseDate, { 'attr': { 'class': 'form-control' }, 'label': 'Date' }) }}</div>
+                                <div class="mb-3">{{ form_row(formExpense.description, { 'attr': { 'class': 'form-control' }, 'required': false }) }}</div>
+                                <div class="mb-3">{{ form_row(formExpense.revenue, { 'attr': { 'class': 'form-select' } }) }}</div>
+                                <button type="submit" class="btn btn-primary rounded-pill w-100"><i class="fas fa-minus-circle me-2"></i>Add Expense</button>
+                            {{ form_end(formExpense) }}
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="service-item rounded p-4 wow fadeInUp">
+                            <h4 class="mb-3"><i class="fas fa-history text-primary me-2"></i>Expense History</h4>
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Category</th>
+                                            <th>Description</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for expense in expenses %}
+                                            <tr>
+                                                <td>{{ expense.id }}</td>
+                                                <td>{{ expense.expenseDate ? expense.expenseDate|date('Y-m-d') : '' }}</td>
+                                                <td class="text-primary fw-bold">{{ expense.amount|number_format(2, '.', ' ') }} TND</td>
+                                                <td>{{ expense.category }}</td>
+                                                <td>{{ expense.description|default('-') }}</td>
+                                                <td>
+                                                    <a href="{{ path('app_expense_edit', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
+                                                    <form method="post" action="{{ path('app_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer cette dépense ?');">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ expense.id) }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% else %}
+                                            <tr><td colspan="6" class="text-center text-muted">No expenses yet.</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

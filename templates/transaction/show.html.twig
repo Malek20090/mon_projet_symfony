@@ -39,4 +39,64 @@
     <a href="{{ path('app_transaction_edit', {'id': transaction.id}) }}">edit</a>
 
     {{ include('transaction/_delete_form.html.twig') }}
+{% extends 'admin/layout.html.twig' %}
+
+{% block content %}
+
+<h1>Transactions</h1>
+
+<!-- 🔎 FILTRES -->
+<form method="get" class="filter-bar">
+    <select name="type">
+        <option value="">All types</option>
+        <option value="SAVING">Saving</option>
+        <option value="EXPENSE">Expense</option>
+        <option value="INVESTMENT">Investment</option>
+    </select>
+
+    <input type="date" name="from">
+    <input type="date" name="to">
+
+    <button>Filter</button>
+</form>
+
+<!-- ➕ CREATE -->
+<div class="card">
+    <h3>Create New Transaction</h3>
+    {{ form_start(form) }}
+    {{ form_widget(form) }}
+    <button class="btn-primary">Add</button>
+    {{ form_end(form) }}
+</div>
+
+<!-- 📋 TABLE -->
+<div class="card">
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for t in transactions %}
+        <tr>
+            <td>{{ t.id }}</td>
+            <td>{{ t.user.nom }}</td>
+            <td>{{ t.type }}</td>
+            <td>{{ t.montant }} DT</td>
+            <td>{{ t.date|date('Y-m-d') }}</td>
+            <td>{{ t.description }}</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="6">No transactions</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
 {% endblock %}

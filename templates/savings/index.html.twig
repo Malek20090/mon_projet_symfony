@@ -27,6 +27,100 @@
       text-overflow:ellipsis;
       white-space:nowrap;
     }
+
+    /* =========================
+       ✅ PRO TOAST (NO RELOAD)
+       ========================= */
+    .toast-stack{
+      position:fixed;
+      top:84px;
+      right:18px;
+      z-index:99999;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      pointer-events:none;
+    }
+    .pro-toast{
+      pointer-events:auto;
+      min-width:320px;
+      max-width:420px;
+      padding:14px 14px;
+      border-radius:14px;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.08);
+      box-shadow:0 20px 60px rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      transform: translateY(-6px);
+      opacity:0;
+      transition: all .22s ease;
+    }
+    .pro-toast.show{
+      transform: translateY(0);
+      opacity:1;
+    }
+    .pro-toast .icon{
+      width:36px;
+      height:36px;
+      border-radius:10px;
+      display:grid;
+      place-items:center;
+      font-size:18px;
+      flex:0 0 36px;
+    }
+    .pro-toast .content{
+      flex:1;
+      min-width:0;
+    }
+    .pro-toast .title{
+      font-weight:900;
+      font-size:14px;
+      line-height:1.1;
+      margin-bottom:4px;
+      color:#0f1a2b;
+    }
+    .pro-toast .msg{
+      font-size:13px;
+      color:#44515e;
+      line-height:1.35;
+      word-break:break-word;
+    }
+    .pro-toast .meta{
+      margin-top:8px;
+      font-size:11px;
+      color:#7b8794;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .pro-toast .x{
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      font-weight:900;
+      color:#718096;
+      margin-left:10px;
+      padding:2px 6px;
+      border-radius:8px;
+    }
+    .pro-toast .x:hover{ background:rgba(0,0,0,.06); }
+
+    .pro-toast.success .icon{ background:rgba(16,185,129,.14); }
+    .pro-toast.success .icon span{ color:#10b981; }
+
+    .pro-toast.danger .icon{ background:rgba(239,68,68,.14); }
+    .pro-toast.danger .icon span{ color:#ef4444; }
+
+    .pro-toast.warning .icon{ background:rgba(245,158,11,.16); }
+    .pro-toast.warning .icon span{ color:#f59e0b; }
+
+    .pro-toast.info .icon{ background:rgba(59,130,246,.14); }
+    .pro-toast.info .icon span{ color:#3b82f6; }
+
+    /* Optional: keep header exactly like base header (no module header duplication) */
   </style>
 {% endblock %}
 
@@ -52,9 +146,21 @@
 </script>
 
 {# =========================
+   ✅ PRO TOAST STACK (NO RELOAD)
+   ========================= #}
+<div class="toast-stack" id="toastStack"></div>
+
+{# =========================
    PAGE PARTS
    ========================= #}
-{% include 'savings/partials/_header.html.twig' %}
+
+{# ✅ IMPORTANT:
+   To keep THE SAME HEADER as base.html.twig,
+   we must NOT include a second header partial that overrides styling.
+   Leave base.html.twig navbar/header as the only one.
+#}
+
+{# {% include 'savings/partials/_header.html.twig' %} #}
 {% include 'savings/partials/_hero.html.twig' %}
 
 <section class="savings-zone">
@@ -114,6 +220,172 @@
 {% include 'savings/partials/modals/_goal_edit_modal.html.twig' %}
 
 {% include 'savings/partials/_footer.html.twig' %}
+
+{# =========================
+   ✅ AJAX (NO RELOAD) – PRO HANDLER
+   Works for deposit + add_goal + contribute_goal + edit_goal + delete_goal
+   Requires controller to return JSON when XHR.
+   ========================= #}
+<script>
+(function(){
+
+  // --------
+  // Toast UI
+  // --------
+  function toast(type, title, message, meta){
+    const stack = document.getElementById('toastStack');
+    if(!stack) return;
+
+    const t = document.createElement('div');
+    t.className = 'pro-toast ' + (type || 'info');
+
+    const iconMap = {
+      success: '✅',
+      danger:  '⛔',
+      warning: '⚠️',
+      info:    'ℹ️'
+    };
+
+    const now = new Date();
+    const time = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+    t.innerHTML = `
+      <div class="icon"><span>${iconMap[type] || 'ℹ️'}</span></div>
+      <div class="content">
+        <div class="title">${title || 'Notification'}</div>
+        <div class="msg">${message || ''}</div>
+        <div class="meta">
+          <span>• ${time}</span>
+          ${meta ? `<span>• ${meta}</span>` : ``}
+        </div>
+      </div>
+      <button class="x" type="button" aria-label="Close">✕</button>
+    `;
+
+    stack.appendChild(t);
+
+    requestAnimationFrame(() => t.classList.add('show'));
+
+    const kill = () => {
+      t.classList.remove('show');
+      setTimeout(() => t.remove(), 180);
+    };
+
+    t.querySelector('.x').addEventListener('click', kill);
+    setTimeout(kill, 4200);
+  }
+
+  // -----------------------------------
+  // Convert fetch response to safe JSON
+  // -----------------------------------
+  async function safeJson(res){
+    try { return await res.json(); } catch(e){ return null; }
+  }
+
+  // -----------------------------------
+  // Update UI (optional enhancements)
+  // -----------------------------------
+  function updateBalanceIfPresent(newBalance){
+    if(typeof newBalance === 'undefined' || newBalance === null) return;
+
+    // try common ids/classes (no break if not found)
+    const el1 = document.getElementById('uiBalance');
+    if(el1) el1.textContent = Number(newBalance).toFixed(2) + ' TND';
+
+    document.querySelectorAll('[data-balance]').forEach(el => {
+      el.textContent = Number(newBalance).toFixed(2) + ' TND';
+    });
+  }
+
+  // -----------------------------------
+  // Attach AJAX to all POST forms inside module
+  // -----------------------------------
+  function initAjaxForms(){
+    const scope = document.querySelector('.savings-zone');
+    if(!scope) return;
+
+    const forms = Array.from(scope.querySelectorAll('form[method="post"], form[method="POST"]'));
+
+    // Only intercept module actions (avoid login/logout forms if any)
+    const isModuleForm = (f) => {
+      const action = (f.getAttribute('action') || '').toLowerCase();
+      if(!action) return false;
+      return action.includes('/savings') || action.includes('/goal');
+    };
+
+    forms.filter(isModuleForm).forEach(form => {
+      if(form.dataset.ajaxBound === '1') return;
+      form.dataset.ajaxBound = '1';
+
+      form.addEventListener('submit', async (e) => {
+        // IMPORTANT: allow normal submit if user holds Ctrl/Meta (open new tab habit)
+        if(e.ctrlKey || e.metaKey) return;
+
+        e.preventDefault();
+
+        // tiny UX: disable submit buttons while sending
+        const btns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+        btns.forEach(b => b.disabled = true);
+
+        const fd = new FormData(form);
+
+        try{
+          const res = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: fd
+          });
+
+          const data = await safeJson(res);
+
+          // If server didn't return JSON, fallback to normal redirect
+          if(!data){
+            toast('warning', 'Connexion au serveur', "Réponse inattendue. Rechargement sécurisé…");
+            form.submit();
+            return;
+          }
+
+          if(!res.ok || data.ok === false){
+            // professional error copy
+            const title = data.title || "Action refusée";
+            const msg   = data.message || "Vérifie les champs et réessaie.";
+            toast(data.type || 'danger', title, msg, data.code || null);
+            return;
+          }
+
+          // success
+          toast(data.type || 'success', data.title || "Opération réussie", data.message || "Enregistré ✅", data.code || null);
+
+          // optional UI updates
+          if(data.newBalance !== undefined) updateBalanceIfPresent(data.newBalance);
+
+          // if server wants us to refresh specific parts
+          if(data.refresh === 'goals'){
+            // simplest professional way without full reload: re-request page HTML fragment is heavy
+            // we keep UX smooth: just revalidate by doing a soft reload if asked
+            // (you can later replace this by partial rendering)
+          }
+
+          // reset only for some forms (deposit/add_goal)
+          const formType = (fd.get('_form') || '').toString();
+          if(formType === 'deposit' || formType === 'add_goal' || formType === 'contribute_goal'){
+            try{ form.reset(); }catch(e){}
+          }
+
+        }catch(err){
+          toast('danger', 'Connexion impossible', "Erreur réseau. Vérifie ta connexion et réessaie.");
+        }finally{
+          btns.forEach(b => b.disabled = false);
+        }
+      });
+    });
+  }
+
+  initAjaxForms();
+  document.addEventListener('turbo:load', initAjaxForms);
+
+})();
+</script>
 
 {# =========================
    TABS JS (ADD ONCE)
@@ -221,111 +493,210 @@
   };
 </script>
 <script>
+
+
 (function(){
-  // ---------- AUTOPLAN BUTTON (for now)
+
+  // =========================
+  // ✅ TABS (Turbo-safe)
+  // =========================
+  function initSavingsTabs(){
+    const buttons = document.querySelectorAll('.js-tab');
+    const savings = document.getElementById('tab-savings');
+    const goals   = document.getElementById('tab-goals');
+
+    if (!buttons.length || !savings || !goals) return;
+
+    const panels = { savings, goals };
+
+    function showTab(name){
+      // active button
+      buttons.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+
+      // show/hide panels
+      Object.keys(panels).forEach(k => panels[k].classList.toggle('show', k === name));
+
+      // keep url synced
+      try{
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', name);
+        window.history.replaceState({}, '', url.toString());
+      }catch(e){}
+    }
+
+    // bind clicks
+    buttons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const name = btn.dataset.tab;
+        if (!name || !panels[name]) return;
+        showTab(name);
+      });
+    });
+
+    // initial
+    const urlTab = (new URL(window.location.href)).searchParams.get('tab');
+    showTab((urlTab && panels[urlTab]) ? urlTab : 'savings');
+  }
+
+  // run now + when Turbo changes page
+  initSavingsTabs();
+  document.addEventListener('turbo:load', initSavingsTabs);
+
+  // =========================
+  // AUTOPLAN BUTTON (for now)
+  // =========================
   const autoBtn = document.getElementById('btn-autoplan');
-  if(autoBtn){
+  if (autoBtn) {
     autoBtn.addEventListener('click', () => {
       alert("✨ Auto-plan is not implemented yet. Next step: connect it to the controller.");
     });
   }
 
-  // ---------- EDIT MODAL OPEN/CLOSE
-  const overlay = document.getElementById('goalEditOverlay');
+  // =========================
+  // EDIT MODAL OPEN/CLOSE
+  // =========================
+  const overlay  = document.getElementById('goalEditOverlay');
   const closeBtn = document.getElementById('goalEditClose');
-  const cancelBtn = document.getElementById('goalEditCancel');
-  const form = document.getElementById('goalEditForm');
+  const cancelBtn= document.getElementById('goalEditCancel');
+  const form     = document.getElementById('goalEditForm');
 
   function openModal(){
+    if (!overlay) return;
     overlay.style.display = 'flex';
   }
   function closeModal(){
+    if (!overlay) return;
     overlay.style.display = 'none';
   }
 
-  if(closeBtn) closeBtn.addEventListener('click', closeModal);
-  if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
-  if(overlay){
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  if (overlay) {
     overlay.addEventListener('click', (e) => {
-      if(e.target === overlay) closeModal();
+      if (e.target === overlay) closeModal();
     });
   }
 
-  // Fill modal from edit buttons
+  // Fill modal from edit buttons (safe + clean)
   document.querySelectorAll('[data-open-goal-edit]').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.getElementById('edit_id').value   = btn.dataset.goalId || '';
-      document.getElementById('edit_nom').value  = btn.dataset.goalNom || btn.dataset.goalNom === '' ? '' : (btn.getAttribute('data-goal-nom') || '');
-      document.getElementById('edit_nom').value  = btn.getAttribute('data-goal-nom') || '';
-      document.getElementById('edit_cible').value= btn.getAttribute('data-goal-cible') || '';
-      document.getElementById('edit_date').value = btn.getAttribute('data-goal-date') || '';
-      document.getElementById('edit_prio').value = btn.getAttribute('data-goal-prio') || '3';
+      const id    = btn.getAttribute('data-goal-id')    || btn.dataset.goalId    || '';
+      const nom   = btn.getAttribute('data-goal-nom')   || '';
+      const cible = btn.getAttribute('data-goal-cible') || '';
+      const date  = btn.getAttribute('data-goal-date')  || '';
+      const prio  = btn.getAttribute('data-goal-prio')  || '3';
 
-      // Next step: set controller route
-      // form.action = `/goal/${btn.dataset.goalId}/edit`; // example later
+      const elId   = document.getElementById('edit_id');
+      const elNom  = document.getElementById('edit_nom');
+      const elCibl = document.getElementById('edit_cible');
+      const elDate = document.getElementById('edit_date');
+      const elPrio = document.getElementById('edit_prio');
+
+      if (elId)   elId.value = id;
+      if (elNom)  elNom.value = nom;
+      if (elCibl) elCibl.value = cible;
+      if (elDate) elDate.value = date;
+      if (elPrio) elPrio.value = prio;
+
       openModal();
     });
   });
 
-  // ✅ REAL SUBMIT (NO POPUP)
-// Set form action dynamically when clicking the edit button,
-// then allow normal submit to Symfony controller.
-if(form){
-  // nothing here: we DO NOT prevent submit
-}
-
-
-  // ---------- CLIENT-SIDE FILTER/SORT (works even before controller)
-  const q = new URLSearchParams(window.location.search).get('q') || '';
-  const sort = new URLSearchParams(window.location.search).get('sort') || '';
-  const filter = new URLSearchParams(window.location.search).get('filter') || 'all';
+  // =========================
+  // CLIENT-SIDE FILTER/SORT
+  // =========================
+  const params = new URLSearchParams(window.location.search);
+  const q      = (params.get('q') || '').toLowerCase();
+  const sort   = params.get('sort') || '';
+  const filter = params.get('filter') || 'all';
 
   const list = document.getElementById('goals-list');
-  if(list){
+  if (list) {
     const cards = Array.from(list.querySelectorAll('.goal-card'));
 
-    // filter
     const today = new Date();
     const nearDays = 14;
 
     const filtered = cards.filter(card => {
       const name = (card.dataset.goalName || '').toLowerCase();
-      const pr = parseInt(card.dataset.goalPriority || '0', 10);
-      const dl = (card.dataset.goalDeadline || '').trim();
+      const pr   = parseInt(card.dataset.goalPriority || '0', 10);
+      const dl   = (card.dataset.goalDeadline || '').trim();
 
       // search
-      if(q && !name.includes(q.toLowerCase())) return false;
+      if (q && !name.includes(q)) return false;
 
       // chips
-      if(filter === 'high'){
+      if (filter === 'high') {
         return pr <= 2; // P1 or P2
       }
-      if(filter === 'near'){
-        if(!dl) return false;
+
+      if (filter === 'near') {
+        if (!dl) return false;
         const d = new Date(dl + "T00:00:00");
-        const diff = (d - today) / (1000*60*60*24);
+        const diff = (d - today) / (1000 * 60 * 60 * 24);
         return diff >= 0 && diff <= nearDays;
       }
+
       return true;
     });
 
     // sort
-    let sorted = filtered.slice();
-    if(sort === 'priority_desc'){
-      sorted.sort((a,b) => (parseInt(b.dataset.goalPriority||'0') - parseInt(a.dataset.goalPriority||'0')));
-    }else if(sort === 'deadline_asc'){
+    const sorted = filtered.slice();
+    if (sort === 'priority_desc') {
+      sorted.sort((a,b) => parseInt(b.dataset.goalPriority||'0',10) - parseInt(a.dataset.goalPriority||'0',10));
+    } else if (sort === 'deadline_asc') {
       sorted.sort((a,b) => (a.dataset.goalDeadline||'9999-12-31').localeCompare(b.dataset.goalDeadline||'9999-12-31'));
-    }else if(sort === 'progress_desc'){
-      sorted.sort((a,b) => (parseFloat(b.dataset.goalProgress||'0') - parseFloat(a.dataset.goalProgress||'0')));
-    }else if(sort === 'name_asc'){
+    } else if (sort === 'progress_desc') {
+      sorted.sort((a,b) => parseFloat(b.dataset.goalProgress||'0') - parseFloat(a.dataset.goalProgress||'0'));
+    } else if (sort === 'name_asc') {
       sorted.sort((a,b) => (a.dataset.goalName||'').localeCompare(b.dataset.goalName||''));
     }
 
-    // re-render
+    // re-render (keep tiny-note if it exists)
+    const note = list.querySelector('.tiny-note');
     cards.forEach(c => c.remove());
-    sorted.forEach(c => list.insertBefore(c, list.querySelector('.tiny-note') || null));
+    sorted.forEach(c => list.insertBefore(c, note || null));
   }
+
 })();
+</script>
+<script>
+  function initSavingsTabs(){
+    function setTab(tab){
+      const savings = document.getElementById("tab-savings");
+      const goals   = document.getElementById("tab-goals");
+      if(!savings || !goals) {
+        console.warn("Missing tab panels: tab-savings/tab-goals");
+        return;
+      }
+
+      document.querySelectorAll(".js-tab").forEach(b => {
+        b.classList.toggle("active", b.dataset.tab === tab);
+      });
+
+      savings.classList.toggle("show", tab === "savings");
+      goals.classList.toggle("show", tab === "goals");
+
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    }
+
+    // Click delegation
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest(".js-tab");
+      if(!btn) return;
+      setTab(btn.dataset.tab);
+    });
+
+    // initial tab from URL (default savings)
+    const urlTab = new URL(window.location.href).searchParams.get("tab") || "savings";
+    setTab(urlTab);
+  }
+
+  document.addEventListener("DOMContentLoaded", initSavingsTabs);
+  document.addEventListener("turbo:load", initSavingsTabs);
 </script>
 
 {% endblock %}

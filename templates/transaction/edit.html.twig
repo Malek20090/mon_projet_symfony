@@ -10,4 +10,20 @@
     <a href="{{ path('app_transaction_index') }}">back to list</a>
 
     {{ include('transaction/_delete_form.html.twig') }}
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Edit Transaction{% endblock %}
+
+{% block content %}
+<h1>Edit Transaction</h1>
+
+<div class="card">
+    {{ include('transaction/_form.html.twig', {'button_label': 'Update'}) }}
+</div>
+
+<a href="{{ path('app_transaction_index') }}" class="btn">Back</a>
+
+<div style="margin-top: 10px">
+    {{ include('transaction/_delete_form.html.twig') }}
+</div>
 {% endblock %}

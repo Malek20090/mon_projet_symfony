@@ -1,0 +1,188 @@
+/* =========================================================
+   Decide$ — Savings Export (PDF / Print)
+   File: public/css/savings-export.css
+   Goal: clean + print-friendly + matches your UI
+   ========================================================= */
+
+:root{
+  --c-primary:#00bfe5;
+  --c-navy:#081a3a;
+  --text:#0f1a2b;
+  --muted:#6f7f8c;
+  --border: rgba(8,26,58,.12);
+  --card: rgba(255,255,255,.96);
+  --shadow: 0 16px 30px rgba(8,26,58,.10);
+}
+
+*{ box-sizing:border-box; }
+
+html, body{
+  margin:0;
+  padding:0;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  color: var(--text);
+  background: #f5fbff;
+}
+
+/* page width for print */
+.page{
+  max-width: 980px;
+  margin: 28px auto;
+  padding: 18px;
+}
+
+/* HEADER CARD */
+.header{
+  position: relative;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(0,191,229,.22), transparent 55%),
+    linear-gradient(120deg, rgba(8,26,58,.88), rgba(0,191,229,.55));
+  color:#fff;
+  border-radius: 18px;
+  padding: 22px 22px 18px;
+  box-shadow: var(--shadow);
+  overflow:hidden;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight: 950;
+  font-size: 18px;
+  letter-spacing:.3px;
+  opacity:.95;
+}
+
+.brand .logo{
+  width:34px;
+  height:34px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.16);
+  display:grid;
+  place-items:center;
+  font-weight: 950;
+}
+
+h1{
+  margin: 10px 0 6px;
+  font-size: 34px;
+  letter-spacing:.2px;
+}
+
+.meta{
+  font-size: 13px;
+  opacity: .92;
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.badge{
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.22);
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+/* MAIN CARD */
+.card{
+  margin-top: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  overflow:hidden;
+}
+
+/* TABLE */
+table{
+  width:100%;
+  border-collapse: collapse;
+}
+
+thead th{
+  text-align:left;
+  padding: 14px 14px;
+  font-size: 13px;
+  letter-spacing: .2px;
+  color: var(--c-navy);
+  background: rgba(0,191,229,.10);
+  border-bottom: 1px solid var(--border);
+}
+
+tbody td{
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(8,26,58,.08);
+  font-size: 13.5px;
+}
+
+tbody tr:nth-child(even) td{
+  background: rgba(245,251,255,.75);
+}
+
+.amount{
+  font-weight: 950;
+  color: var(--c-primary);
+  white-space: nowrap;
+}
+
+.type-pill{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 12px;
+  background: rgba(0,191,229,.14);
+  border: 1px solid rgba(0,191,229,.28);
+  color: #0b4d62;
+}
+
+/* FOOTER */
+.footer{
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* PRINT */
+@media print{
+  body{ background:#fff; }
+  .page{ margin:0; max-width:100%; padding:0; }
+  .header, .card{ box-shadow:none; }
+  .header{ border-radius: 0; }
+  .card{ border-radius: 0; }
+  a, button{ display:none !important; } /* hides "Print / Save as PDF" link/button if present */
+}
+.card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+
+table{ width:100%; border-collapse:collapse; }
+th, td{ padding:12px 12px; border-bottom:1px solid rgba(8,26,58,.10); font-size:14px; }
+thead th{ background: rgba(245,251,255,.9); text-align:left; font-weight:950; color:#0b1c3f; }
+tbody tr:hover td{ background: rgba(0,191,229,.06); }
+
+.amount{ font-weight:950; color: var(--c-primary); }
+
+.footer-note{
+  margin-top:10px;
+  font-size:12px;
+  color: var(--muted);
+  text-align:right;
+}
+
+@media print{
+  body{ background:#fff; padding:0; }
+  .print-btn{ display:none; }
+  .header{ box-shadow:none; }
+  .card{ box-shadow:none; }
+}

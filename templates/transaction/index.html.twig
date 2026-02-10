@@ -15,6 +15,52 @@
                 <th>Description</th>
                 <th>ModuleSource</th>
                 <th>actions</th>
+{% extends 'admin/layout.html.twig' %}
+
+{% block content %}
+
+<h1>Transactions</h1>
+
+<!-- FILTRES -->
+<div class="card">
+    <select>
+        <option>All types</option>
+        <option>EPARGNE</option>
+        <option>DEPENSE</option>
+    </select>
+
+    <input type="date">
+    <input type="date">
+</div>
+
+<!-- FORM CREATE -->
+<div class="card">
+    <h3>Create New Transaction</h3>
+
+    {{ form_start(form) }}
+    <div class="form-row">
+        {{ form_widget(form.type) }}
+        {{ form_widget(form.montant) }}
+        {{ form_widget(form.date) }}
+        {{ form_widget(form.description) }}
+        {{ form_widget(form.user) }}
+        <button class="btn-primary">Add</button>
+    </div>
+    {{ form_end(form) }}
+</div>
+
+<!-- TABLE EN BAS -->
+<div class="card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>User</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -22,22 +68,29 @@
             <tr>
                 <td>{{ transaction.id }}</td>
                 <td>{{ transaction.type }}</td>
-                <td>{{ transaction.montant }}</td>
-                <td>{{ transaction.date ? transaction.date|date('Y-m-d') : '' }}</td>
+                <td>{{ transaction.montant }} DT</td>
+                <td>{{ transaction.date|date('Y-m-d') }}</td>
                 <td>{{ transaction.description }}</td>
-                <td>{{ transaction.moduleSource }}</td>
+                <td>{{ transaction.user.nom }}</td>
                 <td>
-                    <a href="{{ path('app_transaction_show', {'id': transaction.id}) }}">show</a>
-                    <a href="{{ path('app_transaction_edit', {'id': transaction.id}) }}">edit</a>
+                    <a href="{{ path('app_transaction_edit', {id: transaction.id}) }}" class="btn-edit">Edit</a>
+                    <form method="post"
+                          action="{{ path('app_transaction_delete', {id: transaction.id}) }}"
+                          style="display:inline">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ transaction.id) }}">
+                        <button class="btn-delete">Delete</button>
+                    </form>
                 </td>
             </tr>
         {% else %}
             <tr>
-                <td colspan="7">no records found</td>
+                <td colspan="7">No transactions found</td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
 
     <a href="{{ path('app_transaction_new') }}">Create new</a>
+</div>
+
 {% endblock %}

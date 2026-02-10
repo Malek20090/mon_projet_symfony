@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la dépense #{{ expense.id }} | Decide${% endblock %}
+
+{% block body %}
+<div class="container-fluid bg-breadcrumb">
+    <div class="container text-center py-5">
+        <h1 class="display-4 text-white wow fadeInDown">Modifier la dépense #{{ expense.id }}</h1>
+        <p class="text-white-50 wow fadeInUp">Mise à jour des informations</p>
+    </div>
+</div>
+
+<div class="container-fluid service bg-light py-5">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="service-item rounded p-4 wow fadeInUp">
+                    <h4 class="mb-4"><i class="fas fa-edit text-primary me-2"></i>Modifier la dépense</h4>
+                    {{ include('expense/_form.html.twig', { button_label: 'Mettre à jour' }) }}
+                </div>
+                <div class="mt-3">
+                    <a href="{{ path('app_expense_index') }}" class="btn btn-secondary rounded-pill me-2"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
+                    <a href="{{ path('app_expense_show', { id: expense.id }) }}" class="btn btn-outline-primary rounded-pill"><i class="fas fa-eye me-2"></i>Voir</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

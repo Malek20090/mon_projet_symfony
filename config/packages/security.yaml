@@ -13,7 +13,30 @@ security:
       pattern: ^/(_(profiler|wdt)|css|images|js)/
       security: false
 
-    # ✅ disable security for everything during this phase
     main:
-      pattern: ^/
-      security: false
+      lazy: true
+      provider: app_user_provider
+
+      form_login:
+        login_path: app_login
+        check_path: app_login
+        success_handler: App\Security\LoginSuccessHandler
+
+      logout:
+        path: app_logout
+        target: app_login
+
+  access_control:
+    - { path: ^/login, roles: PUBLIC_ACCESS }
+    - { path: ^/register, roles: PUBLIC_ACCESS }
+
+    # Admin area
+    - { path: ^/transaction, roles: ROLE_ADMIN }
+    - { path: ^/user, roles: ROLE_ADMIN }
+
+    # Role-based sections
+    - { path: ^/salary, roles: ROLE_SALARY }
+    - { path: ^/etudiant, roles: ROLE_ETUDIANT }
+
+    # (Optionnel) tout le reste nécessite être connecté
+    # - { path: ^/, roles: ROLE_USER }

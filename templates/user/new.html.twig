@@ -1,0 +1,84 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}New User{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        font-family: 'Inter', Arial, sans-serif;
+        background-color: #f3f4f6;
+    }
+
+    h1 {
+        font-size: 26px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 24px;
+    }
+
+    .card {
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        max-width: 520px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .card form > div {
+        margin-bottom: 15px;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        font-size: 14px;
+    }
+
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+    .btn-primary {
+        background-color: #2563eb;
+        color: #ffffff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        background-color: #1d4ed8;
+    }
+
+    a {
+        display: inline-block;
+        margin-top: 18px;
+        color: #374151;
+        font-size: 14px;
+        text-decoration: none;
+    }
+
+    a:hover {
+        color: #2563eb;
+    }
+</style>
+
+<h1>Create User</h1>
+
+<div class="card">
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <button class="btn-primary">Save</button>
+    {{ form_end(form) }}
+</div>
+
+<a href="{{ path('app_user_index') }}">← Back to list</a>
+{% endblock %}

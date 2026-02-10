@@ -8,10 +8,19 @@
     </div>
 
     <div class="hero-actions">
-      <button class="btn-primary2 js-tab" data-tab="savings" type="button">➕ Add Deposit</button>
-      <button class="btn-soft js-tab" data-tab="goals" type="button">🎯 Create Goal</button>
-      <button class="btn-soft" type="button" id="openCalendar">📅 Calendar</button>
-      <button class="btn-soft" type="button" id="openSimulation">📈 What-if?</button>
-    </div>
+  <a class="btn-primary2"
+     href="{{ path('app_savings_index', { tab: 'savings' }) }}#deposit">
+    ➕ Add Deposit
+  </a>
+
+  <a class="btn-soft"
+     href="{{ path('app_savings_index', { tab: 'goals' }) }}#goal-form">
+    🎯 Create Goal
+  </a>
+
+  <button class="btn-soft" type="button" id="openCalendar">📅 Calendar</button>
+  <button class="btn-soft" type="button" id="openSimulation">📈 What-if?</button>
+</div>
+
   </div>
 </section>

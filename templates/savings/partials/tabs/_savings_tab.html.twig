@@ -85,7 +85,10 @@
     </div>
 
     {# ✅ Toolbar submits to index with query params #}
-<form class="table-toolbar" method="get" action="" id="goalToolbarForm">
+<form class="table-toolbar"
+      method="get"
+      action="{{ path('app_savings', {'tab':'goals'}) }}"
+      id="goalToolbarForm">
 
   {# ===== LINE 1 : SEARCH ===== #}
   <div class="toolbar-row">
@@ -110,11 +113,11 @@
             id="goalSortSelect"
             onchange="this.form.submit()">
       {% set sortVal = app.request.get('sort') %}
-      <option value="">Sort by…</option>
-      <option value="priority_desc" {{ sortVal == 'priority_desc' ? 'selected' }}>Priority (high → low)</option>
-      <option value="deadline_asc" {{ sortVal == 'deadline_asc' ? 'selected' }}>Deadline (soonest)</option>
-      <option value="progress_desc" {{ sortVal == 'progress_desc' ? 'selected' }}>Progress (high → low)</option>
-      <option value="name_asc" {{ sortVal == 'name_asc' ? 'selected' }}>Name (A → Z)</option>
+      <option value="" {{ sortVal == '' ? 'selected' : '' }}>Sort by…</option>
+      <option value="priority_desc" {{ sortVal == 'priority_desc' ? 'selected' : '' }}>Priority (high → low)</option>
+      <option value="deadline_asc" {{ sortVal == 'deadline_asc' ? 'selected' : '' }}>Deadline (soonest)</option>
+      <option value="progress_desc" {{ sortVal == 'progress_desc' ? 'selected' : '' }}>Progress (high → low)</option>
+      <option value="name_asc" {{ sortVal == 'name_asc' ? 'selected' : '' }}>Name (A → Z)</option>
     </select>
 
     {% set filterVal = app.request.get('filter')|default('all') %}
@@ -125,10 +128,12 @@
       All
     </button>
 
-    <a class="chip" href="{{ app.request.pathinfo }}">Reset</a>
+    {# reset keeps you on savings tab goals #}
+    <a class="chip" href="{{ path('app_savings', {'tab':'goals'}) }}">Reset</a>
   </div>
 
 </form>
+
 
     <div class="table-wrap">
       <table>

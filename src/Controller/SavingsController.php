@@ -5,6 +5,7 @@ namespace App\Controller;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Security;
@@ -99,7 +100,7 @@ class SavingsController extends AbstractController
         $cols = $conn->fetchFirstColumn("SHOW COLUMNS FROM `financial_goal`");
         $colsLower = array_map('strtolower', $cols);
 
-        $candidates = ['saving_account_id','savingaccount_id','account_id','saving_account'];
+        $candidates = ['saving_account_id', 'savingaccount_id', 'account_id', 'saving_account'];
 
         foreach ($candidates as $cand) {
             if (in_array(strtolower($cand), $colsLower, true)) {
@@ -126,7 +127,7 @@ class SavingsController extends AbstractController
         if ($symUser && method_exists($symUser, 'getUserIdentifier')) {
             $email = $symUser->getUserIdentifier();
             if ($email) {
-                // try id (common)
+                // try id
                 try {
                     $id = $conn->fetchOne("SELECT id FROM `$userTable` WHERE email = :email LIMIT 1", [
                         'email' => $email
@@ -134,7 +135,7 @@ class SavingsController extends AbstractController
                     if ($id) return (int) $id;
                 } catch (\Throwable $e) {}
 
-                // try pk detected (safer)
+                // try detected PK
                 try {
                     $pk = $this->pkColumn($conn, $userTable);
                     $id = $conn->fetchOne("SELECT `$pk` FROM `$userTable` WHERE email = :email LIMIT 1", [
@@ -202,7 +203,87 @@ class SavingsController extends AbstractController
     }
 
     // -------------------------------------------------
-    // Shared actions (used by index() and routes)
+    // Validation helpers
+    // -------------------------------------------------
+
+    private function flashErrors(array $errors): void
+    {
+        foreach ($errors as $e) {
+            $this->addFlash('danger', '❌ ' . $e);
+        }
+    }
+
+    private function parseYmd(string $date): ?string
+    {
+        $date = trim($date);
+        if ($date === '') return null;
+
+        $dt = \DateTimeImmutable::createFromFormat('Y-m-d', $date);
+        if ($dt instanceof \DateTimeImmutable) return $dt->format('Y-m-d');
+
+        try {
+            $dt2 = new \DateTimeImmutable($date);
+            return $dt2->format('Y-m-d');
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    private function validateGoalInputs(string $nom, float $target, float $current, ?string $dateLimite, int $priorite): array
+    {
+        $errors = [];
+
+        $nom = trim($nom);
+        if ($nom === '') $errors[] = "Le nom du goal est obligatoire.";
+        if ($nom !== '' && mb_strlen($nom) < 3) $errors[] = "Le nom doit contenir au moins 3 caractères.";
+        if ($nom !== '' && mb_strlen($nom) > 60) $errors[] = "Le nom ne doit pas dépasser 60 caractères.";
+
+        if ($target <= 0) $errors[] = "Le montant cible doit être > 0.";
+        if ($target > 1000000) $errors[] = "Le montant cible est trop grand (max 1,000,000).";
+
+        if ($current < 0) $errors[] = "Le montant actuel ne peut pas être négatif.";
+        if ($target > 0 && $current > $target) $errors[] = "Le montant actuel ne peut pas dépasser le montant cible.";
+
+        if ($priorite < 1 || $priorite > 5) $errors[] = "La priorité doit être entre 1 et 5.";
+
+        if ($dateLimite !== null) {
+            $dt = \DateTimeImmutable::createFromFormat('Y-m-d', $dateLimite);
+            if (!$dt) {
+                $errors[] = "Date limite invalide.";
+            } else {
+                $today = new \DateTimeImmutable('today');
+                if ($dt < $today) $errors[] = "La date limite doit être aujourd’hui ou dans le futur.";
+            }
+        }
+
+        return $errors;
+    }
+
+    private function validateDeposit(float $amount): array
+    {
+        $errors = [];
+        if ($amount <= 0) $errors[] = "Le montant du dépôt doit être > 0.";
+        if ($amount > 1000000) $errors[] = "Montant trop grand.";
+        return $errors;
+    }
+
+    private function validateRate(float $rate): array
+    {
+        $errors = [];
+        if ($rate < 0 || $rate > 100) $errors[] = "Le taux d’intérêt doit être entre 0 et 100.";
+        return $errors;
+    }
+
+    private function validateContribution(float $add): array
+    {
+        $errors = [];
+        if ($add <= 0) $errors[] = "La contribution doit être > 0.";
+        if ($add > 1000000) $errors[] = "Contribution trop grande.";
+        return $errors;
+    }
+
+    // -------------------------------------------------
+    // DB actions
     // -------------------------------------------------
 
     private function doDeposit(Connection $conn, int $userId, int $accId, string $accUserCol, string $accBalanceCol, string $accPkCol, float $amount, string $desc): void
@@ -211,7 +292,6 @@ class SavingsController extends AbstractController
 
         $conn->beginTransaction();
         try {
-            // 1) Update balance
             $conn->executeStatement(
                 "UPDATE saving_account
                  SET `$accBalanceCol` = `$accBalanceCol` + :a
@@ -219,7 +299,7 @@ class SavingsController extends AbstractController
                 ['a' => $amount, 'id' => $accId, 'uid' => $userId]
             );
 
-            // 2) Insert history row in YOUR existing table: transaction
+            // History row (table: `transaction`)
             $conn->insert('transaction', [
                 'type' => 'EPARGNE',
                 'montant' => $amount,
@@ -232,6 +312,7 @@ class SavingsController extends AbstractController
             $conn->commit();
         } catch (\Throwable $e) {
             $conn->rollBack();
+            throw $e; // important for debugging
         }
     }
 
@@ -283,7 +364,7 @@ class SavingsController extends AbstractController
                 ['a' => $add, 'gid' => $goalId, 'acc' => $accId]
             );
 
-            // optional history:
+            // optional history
             try {
                 $conn->insert('transaction', [
                     'type' => 'GOAL_CONTRIB',
@@ -298,6 +379,7 @@ class SavingsController extends AbstractController
             $conn->commit();
         } catch (\Throwable $e) {
             $conn->rollBack();
+            throw $e;
         }
     }
 
@@ -335,7 +417,6 @@ class SavingsController extends AbstractController
         );
     }
 
-    // ✅ NEW: Transactions helpers for Savings History actions
     private function doDeleteTransaction(Connection $conn, int $userId, int $txId): void
     {
         if ($txId <= 0) return;
@@ -365,6 +446,7 @@ class SavingsController extends AbstractController
         ];
 
         if ($dateRaw !== null && trim($dateRaw) !== '') {
+            // expects input type="datetime-local" => 2026-02-10T12:30
             $data['date'] = str_replace('T', ' ', trim($dateRaw)) . ':00';
         }
 
@@ -372,11 +454,11 @@ class SavingsController extends AbstractController
     }
 
     // ----------------------------
-    // Dashboard (GET + POST)
+    // Dashboard (GET only)
     // ----------------------------
 
-    #[Route('/savings', name: 'app_savings', methods: ['GET', 'POST'])]
-    #[Route('/savings/index', name: 'app_savings_index', methods: ['GET', 'POST'])]
+    #[Route('/savings', name: 'app_savings', methods: ['GET'])]
+    #[Route('/savings/index', name: 'app_savings_index', methods: ['GET'])]
     public function index(Connection $conn, Security $security, Request $request): Response
     {
         $userId = $this->resolveUserId($conn, $security, $request);
@@ -393,68 +475,6 @@ class SavingsController extends AbstractController
         $currentAccount = $accPack['currentAccount'];
         $accId          = $accPack['accId'];
         $accPkCol       = $accPack['accPkCol'];
-
-        // ✅ Handle POST actions here
-        if ($request->isMethod('POST')) {
-            $formType = (string) $request->request->get('_form', '');
-
-            // 1) Deposit
-            if ($formType === 'deposit') {
-                $amount = $this->safeFloat($request->request->get('amount'));
-                $desc   = trim((string) $request->request->get('description', ''));
-
-                $this->doDeposit($conn, $userId, $accId, $accUserCol, $accBalanceCol, $accPkCol, $amount, $desc);
-
-                return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
-            }
-
-            // 2) Add goal
-            if ($formType === 'add_goal') {
-                $nom        = trim((string) $request->request->get('nom'));
-                $target     = $this->safeFloat($request->request->get('montant_cible'));
-                $current    = $this->safeFloat($request->request->get('montant_actuel'));
-                $dateLimite = (string) $request->request->get('date_limite', '');
-                $priorite   = $this->safeInt($request->request->get('priorite'), 3);
-
-                $this->doAddGoal($conn, $accId, $goalAccCol, $nom, $target, $current, $dateLimite, $priorite);
-
-                return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
-            }
-
-            // 3) Contribute to goal
-            if ($formType === 'contribute_goal') {
-                $gid = (int) $request->request->get('goal_id', 0);
-                $add = $this->safeFloat($request->request->get('add_amount'));
-
-                $this->doContributeGoal($conn, $userId, $accId, $goalAccCol, $accUserCol, $accBalanceCol, $accPkCol, $gid, $add);
-
-                return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
-            }
-
-            // 4) Edit goal (optional)
-            if ($formType === 'edit_goal') {
-                $gid        = (int) $request->request->get('goal_id', 0);
-                $nom        = trim((string) $request->request->get('nom', ''));
-                $target     = $this->safeFloat($request->request->get('montant_cible'));
-                $dateLimite = (string) $request->request->get('date_limite', '');
-                $priorite   = $this->safeInt($request->request->get('priorite'), 3);
-
-                $this->doEditGoal($conn, $accId, $goalAccCol, $gid, $nom, $target, $dateLimite, $priorite);
-
-                return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
-            }
-
-            // 5) Delete goal (optional)
-            if ($formType === 'delete_goal') {
-                $gid = (int) $request->request->get('goal_id', 0);
-
-                $this->doDeleteGoal($conn, $accId, $goalAccCol, $gid);
-
-                return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
-            }
-
-            return $this->redirectToRoute('app_savings_index', ['tab' => $tab]);
-        }
 
         // ----------------------------
         // Goals list + search + sort
@@ -506,7 +526,7 @@ class SavingsController extends AbstractController
         ) : [];
 
         // ----------------------------
-        // Stats
+        // Stats (goals)
         // ----------------------------
         $balance = $currentAccount ? $this->safeFloat($currentAccount[$accBalanceCol] ?? 0) : 0.0;
 
@@ -540,130 +560,116 @@ class SavingsController extends AbstractController
         ];
 
         // ----------------------------
-        // Savings History (REAL transactions)
+        // Savings History (search/sort/filter)
         // ----------------------------
-     // ----------------------------
-// Savings History (search/sort/filter)
-// ----------------------------
-$tx_q     = trim((string) $request->query->get('tx_q', ''));
-$tx_sort  = (string) $request->query->get('tx_sort', 'date_desc');
-$tx_range = (string) $request->query->get('tx_range', 'all');
+        $tx_q     = trim((string) $request->query->get('tx_q', ''));
+        $tx_sort  = (string) $request->query->get('tx_sort', 'date_desc');
+        $tx_range = (string) $request->query->get('tx_range', 'all');
 
-$paramsTx = [
-    'uid' => $userId,
-    'src' => 'SAVINGS'
-];
+        $paramsTx = [
+            'uid' => $userId,
+            'src' => 'SAVINGS'
+        ];
 
-$whereTx = "WHERE user_id = :uid AND module_source = :src";
+        $whereTx = "WHERE user_id = :uid AND module_source = :src";
 
-// Range filter
-if ($tx_range === 'today') {
-    $whereTx .= " AND DATE(`date`) = CURDATE() ";
-} elseif ($tx_range === 'week') {
-    $whereTx .= " AND YEARWEEK(`date`, 1) = YEARWEEK(CURDATE(), 1) ";
-} elseif ($tx_range === 'month') {
-    $whereTx .= " AND YEAR(`date`) = YEAR(CURDATE()) AND MONTH(`date`) = MONTH(CURDATE()) ";
-}
+        if ($tx_range === 'today') {
+            $whereTx .= " AND DATE(`date`) = CURDATE() ";
+        } elseif ($tx_range === 'week') {
+            $whereTx .= " AND YEARWEEK(`date`, 1) = YEARWEEK(CURDATE(), 1) ";
+        } elseif ($tx_range === 'month') {
+            $whereTx .= " AND YEAR(`date`) = YEAR(CURDATE()) AND MONTH(`date`) = MONTH(CURDATE()) ";
+        }
 
-// Search filter
-if ($tx_q !== '') {
-    $whereTx .= " AND (
-        CAST(id AS CHAR) LIKE :q OR
-        type LIKE :q OR
-        CAST(montant AS CHAR) LIKE :q OR
-        CAST(`date` AS CHAR) LIKE :q OR
-        description LIKE :q
-    )";
-    $paramsTx['q'] = '%' . $tx_q . '%';
-}
+        if ($tx_q !== '') {
+            $whereTx .= " AND (
+                CAST(id AS CHAR) LIKE :q OR
+                type LIKE :q OR
+                CAST(montant AS CHAR) LIKE :q OR
+                CAST(`date` AS CHAR) LIKE :q OR
+                description LIKE :q
+            )";
+            $paramsTx['q'] = '%' . $tx_q . '%';
+        }
 
-// Sort
-$orderTx = match ($tx_sort) {
-    'date_asc'     => "`date` ASC",
-    'amount_desc'  => "montant DESC",
-    'amount_asc'   => "montant ASC",
-    'desc_asc'     => "description ASC",
-    'desc_desc'    => "description DESC",
-    default        => "`date` DESC",
-};
+        $orderTx = match ($tx_sort) {
+            'date_asc'     => "`date` ASC",
+            'amount_desc'  => "montant DESC",
+            'amount_asc'   => "montant ASC",
+            'desc_asc'     => "description ASC",
+            'desc_desc'    => "description DESC",
+            default        => "`date` DESC",
+        };
 
-$transactions = $conn->fetchAllAssociative(
-    "SELECT id, type, montant, `date`, description
-     FROM `transaction`
-     $whereTx
-     ORDER BY $orderTx",
-    $paramsTx
-);
+        $transactions = $conn->fetchAllAssociative(
+            "SELECT id, type, montant, `date`, description
+             FROM `transaction`
+             $whereTx
+             ORDER BY $orderTx",
+            $paramsTx
+        );
 
-// Optional stats for your modal (works with current filter)
-$tx_stats = [
-    'total' => count($transactions),
-    'sum'   => 0,
-    'avg'   => 0,
-    'max'   => 0,
-];
+        $tx_stats = [
+            'total' => count($transactions),
+            'sum'   => 0,
+            'avg'   => 0,
+            'max'   => 0,
+        ];
 
-if (!empty($transactions)) {
-    $sum = 0.0; $max = 0.0;
-    foreach ($transactions as $t) {
-        $m = (float) ($t['montant'] ?? 0);
-        $sum += $m;
-        if ($m > $max) $max = $m;
-    }
-    $tx_stats['sum'] = $sum;
-    $tx_stats['max'] = $max;
-    $tx_stats['avg'] = $sum / max(1, count($transactions));
-}
+        if (!empty($transactions)) {
+            $sum = 0.0; $max = 0.0;
+            foreach ($transactions as $t) {
+                $m = (float) ($t['montant'] ?? 0);
+                $sum += $m;
+                if ($m > $max) $max = $m;
+            }
+            $tx_stats['sum'] = $sum;
+            $tx_stats['max'] = $max;
+            $tx_stats['avg'] = $sum / max(1, count($transactions));
+        }
 
-// ----------------------------------
-// Stats by ANY attribute (charts)
-// ----------------------------------
-$stat_by = (string) $request->query->get('stat_by', 'type');
+        // ----------------------------
+        // Stats by any attribute (charts)
+        // ----------------------------
+        $stat_by = (string) $request->query->get('stat_by', 'type');
+        $allowedStatBy = ['type', 'day', 'month', 'amount_bucket', 'description'];
+        if (!in_array($stat_by, $allowedStatBy, true)) $stat_by = 'type';
 
-$allowedStatBy = ['type', 'day', 'month', 'amount_bucket', 'description'];
-if (!in_array($stat_by, $allowedStatBy, true)) {
-    $stat_by = 'type';
-}
+        $bucket = function (float $m): string {
+            if ($m < 100) return '< 100';
+            if ($m < 500) return '100 - 499';
+            if ($m < 1000) return '500 - 999';
+            if ($m < 5000) return '1000 - 4999';
+            if ($m < 10000) return '5000 - 9999';
+            return '>= 10000';
+        };
 
-$bucket = function (float $m): string {
-    if ($m < 100) return '< 100';
-    if ($m < 500) return '100 - 499';
-    if ($m < 1000) return '500 - 999';
-    if ($m < 5000) return '1000 - 4999';
-    if ($m < 10000) return '5000 - 9999';
-    return '>= 10000';
-};
+        $statMap = [];
+        foreach ($transactions as $t) {
+            $type = (string) ($t['type'] ?? '');
+            $desc = (string) ($t['description'] ?? '');
+            $m    = (float) ($t['montant'] ?? 0);
+            $dt   = (string) ($t['date'] ?? '');
 
-$statMap = [];
+            $dayKey   = $dt ? substr($dt, 0, 10) : 'Unknown';
+            $monthKey = $dt ? substr($dt, 0, 7)  : 'Unknown';
 
-foreach ($transactions as $t) {
-    $type = (string) ($t['type'] ?? '');
-    $desc = (string) ($t['description'] ?? '');
-    $m    = (float) ($t['montant'] ?? 0);
-    $dt   = (string) ($t['date'] ?? '');
+            $key = match ($stat_by) {
+                'type' => $type !== '' ? $type : 'Unknown',
+                'day' => $dayKey,
+                'month' => $monthKey,
+                'amount_bucket' => $bucket($m),
+                'description' => trim($desc) !== '' ? trim($desc) : 'No description',
+                default => 'Unknown',
+            };
 
-    $dayKey   = $dt ? substr($dt, 0, 10) : 'Unknown';
-    $monthKey = $dt ? substr($dt, 0, 7)  : 'Unknown';
+            if (!isset($statMap[$key])) $statMap[$key] = 0.0;
+            $statMap[$key] += $m;
+        }
 
-    $key = match ($stat_by) {
-        'type' => $type !== '' ? $type : 'Unknown',
-        'day' => $dayKey,
-        'month' => $monthKey,
-        'amount_bucket' => $bucket($m),
-        'description' => trim($desc) !== '' ? trim($desc) : 'No description',
-        default => 'Unknown',
-    };
-
-    if (!isset($statMap[$key])) {
-        $statMap[$key] = 0.0;
-    }
-    $statMap[$key] += $m;
-}
-
-ksort($statMap);
-
-$stat_labels = array_keys($statMap);
-$stat_values = array_values($statMap);
+        ksort($statMap);
+        $stat_labels = array_keys($statMap);
+        $stat_values = array_values($statMap);
 
         return $this->render('savings/index.html.twig', [
             'tab' => $tab,
@@ -681,12 +687,11 @@ $stat_values = array_values($statMap);
             'stat_by' => $stat_by,
             'stat_labels' => $stat_labels,
             'stat_values' => $stat_values,
-
         ]);
     }
 
     // -------------------------------------------------
-    // Routes (used by Twig)
+    // Routes (forms should point here)
     // -------------------------------------------------
 
     #[Route('/savings/deposit', name: 'app_savings_deposit', methods: ['POST'])]
@@ -697,6 +702,60 @@ $stat_values = array_values($statMap);
 
         $amount = $this->safeFloat($request->request->get('amount'));
         $desc   = trim((string) $request->request->get('description', ''));
+
+        $errs = $this->validateDeposit($amount);
+
+        // AJAX => JSON
+        if ($request->isXmlHttpRequest()) {
+            if ($errs) {
+                $msg = implode(' ', $errs);
+                return new JsonResponse([
+                    'ok' => false,
+                    'type' => 'danger',
+                    'title' => 'Montant invalide',
+                    'message' => $msg !== '' ? $msg : "Le dépôt doit être strictement positif (ex: 20.00 TND).",
+                    'code' => 'DEP-VAL-001'
+                ], 422);
+            }
+
+            $this->doDeposit(
+                $conn,
+                $userId,
+                (int) $accPack['accId'],
+                (string) $accPack['accUserCol'],
+                (string) $accPack['accBalanceCol'],
+                (string) $accPack['accPkCol'],
+                $amount,
+                $desc
+            );
+
+            $accId         = (int) $accPack['accId'];
+            $accPkCol      = (string) $accPack['accPkCol'];
+            $accUserCol    = (string) $accPack['accUserCol'];
+            $accBalanceCol = (string) $accPack['accBalanceCol'];
+
+            $newBalance = (float) $conn->fetchOne(
+                "SELECT `$accBalanceCol`
+                 FROM saving_account
+                 WHERE `$accPkCol` = :id AND `$accUserCol` = :uid LIMIT 1",
+                ['id' => $accId, 'uid' => $userId]
+            );
+
+            return new JsonResponse([
+                'ok' => true,
+                'type' => 'success',
+                'title' => 'Dépôt enregistré',
+                'message' => 'Votre dépôt a été ajouté avec succès.',
+                'newBalance' => $newBalance,
+                'code' => 'DEP-OK-200'
+            ]);
+        }
+
+        // normal submit => redirect + flash
+        if ($errs) {
+            $this->flashErrors($errs);
+            return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
+        }
 
         $this->doDeposit(
             $conn,
@@ -709,57 +768,30 @@ $stat_values = array_values($statMap);
             $desc
         );
 
-        return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
-    }
-
-    // ✅ NEW ROUTES: Savings History edit/delete (transactions)
-    #[Route('/savings/tx/{id}/delete', name: 'app_savings_tx_delete', methods: ['POST'])]
-    public function txDelete(Connection $conn, Security $security, Request $request, int $id): Response
-    {
-        $userId = $this->resolveUserId($conn, $security, $request);
-
-        $token = (string) $request->request->get('_token', '');
-        if (!$this->isCsrfTokenValid('delete_tx_' . $id, $token)) {
-            return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
-        }
-
-        $this->doDeleteTransaction($conn, $userId, $id);
-
-        return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
-    }
-
-    #[Route('/savings/tx/{id}/edit', name: 'app_savings_tx_edit', methods: ['POST'])]
-    public function txEdit(Connection $conn, Security $security, Request $request, int $id): Response
-    {
-        $userId = $this->resolveUserId($conn, $security, $request);
-
-        $token = (string) $request->request->get('_token', '');
-        if (!$this->isCsrfTokenValid('edit_tx_' . $id, $token)) {
-            return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
-        }
-
-        $amount = $this->safeFloat($request->request->get('montant'));
-        $desc   = trim((string) $request->request->get('description', ''));
-        $date   = $request->request->get('date'); // can be null
-
-        $this->doEditTransaction($conn, $userId, $id, $amount, $desc, is_string($date) ? $date : null);
-
+        $this->addFlash('success', '✅ Dépôt effectué avec succès.');
         return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
     }
 
     #[Route('/savings/goal/new', name: 'app_goal_new', methods: ['POST'])]
     public function goalNew(Connection $conn, Security $security, Request $request): Response
     {
-        $userId = $this->resolveUserId($conn, $security, $request);
+        $userId  = $this->resolveUserId($conn, $security, $request);
         $accPack = $this->getOrCreateCurrentAccount($conn, $userId);
-
         $goalAccCol = $this->goalAccountFkColumn($conn);
 
-        $nom        = trim((string) $request->request->get('nom'));
-        $target     = $this->safeFloat($request->request->get('montant_cible'));
-        $current    = $this->safeFloat($request->request->get('montant_actuel'));
-        $dateLimite = (string) $request->request->get('date_limite', '');
-        $priorite   = $this->safeInt($request->request->get('priorite'), 3);
+        $nom      = trim((string) $request->request->get('nom'));
+        $target   = $this->safeFloat($request->request->get('montant_cible'));
+        $current  = $this->safeFloat($request->request->get('montant_actuel'));
+        $dateRaw  = (string) $request->request->get('date_limite', '');
+        $priorite = $this->safeInt($request->request->get('priorite'), 3);
+
+        $dateLimite = $this->parseYmd($dateRaw);
+
+        $errs = $this->validateGoalInputs($nom, $target, $current, $dateLimite, $priorite);
+        if ($errs) {
+            $this->flashErrors($errs);
+            return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
+        }
 
         $this->doAddGoal(
             $conn,
@@ -768,24 +800,33 @@ $stat_values = array_values($statMap);
             $nom,
             $target,
             $current,
-            $dateLimite,
+            (string)($dateLimite ?? ''),
             $priorite
         );
 
+        $this->addFlash('success', '✅ Goal ajouté avec succès.');
         return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
     }
 
     #[Route('/savings/goal/{id}/edit', name: 'app_goal_edit', methods: ['POST'])]
     public function goalEdit(Connection $conn, Security $security, Request $request, int $id): Response
     {
-        $userId = $this->resolveUserId($conn, $security, $request);
+        $userId  = $this->resolveUserId($conn, $security, $request);
         $accPack = $this->getOrCreateCurrentAccount($conn, $userId);
         $goalAccCol = $this->goalAccountFkColumn($conn);
 
-        $nom        = trim((string) $request->request->get('nom', ''));
-        $target     = $this->safeFloat($request->request->get('montant_cible'));
-        $dateLimite = (string) $request->request->get('date_limite', '');
-        $priorite   = $this->safeInt($request->request->get('priorite'), 3);
+        $nom      = trim((string) $request->request->get('nom', ''));
+        $target   = $this->safeFloat($request->request->get('montant_cible'));
+        $dateRaw  = (string) $request->request->get('date_limite', '');
+        $priorite = $this->safeInt($request->request->get('priorite'), 3);
+
+        $dateLimite = $this->parseYmd($dateRaw);
+
+        $errs = $this->validateGoalInputs($nom, $target, 0, $dateLimite, $priorite);
+        if ($errs) {
+            $this->flashErrors($errs);
+            return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
+        }
 
         $this->doEditGoal(
             $conn,
@@ -794,39 +835,52 @@ $stat_values = array_values($statMap);
             $id,
             $nom,
             $target,
-            $dateLimite,
+            (string)($dateLimite ?? ''),
             $priorite
         );
 
+        $this->addFlash('success', '✅ Goal modifié avec succès.');
         return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
     }
 
     #[Route('/savings/goal/{id}/delete', name: 'app_goal_delete', methods: ['POST'])]
     public function goalDelete(Connection $conn, Security $security, Request $request, int $id): Response
     {
-        $userId = $this->resolveUserId($conn, $security, $request);
+        $userId  = $this->resolveUserId($conn, $security, $request);
         $accPack = $this->getOrCreateCurrentAccount($conn, $userId);
         $goalAccCol = $this->goalAccountFkColumn($conn);
 
-        $this->doDeleteGoal(
-            $conn,
-            (int) $accPack['accId'],
-            $goalAccCol,
-            $id
-        );
+        if ($id <= 0) {
+            $this->addFlash('danger', '❌ Goal invalide.');
+            return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
+        }
 
+        $this->doDeleteGoal($conn, (int) $accPack['accId'], $goalAccCol, $id);
+
+        $this->addFlash('success', '✅ Goal supprimé.');
         return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
     }
 
     #[Route('/savings/goal/{id}/contribute', name: 'app_goal_contribute', methods: ['POST'])]
     public function goalContribute(Connection $conn, Security $security, Request $request, int $id): Response
     {
-        $userId = $this->resolveUserId($conn, $security, $request);
+        $userId  = $this->resolveUserId($conn, $security, $request);
         $accPack = $this->getOrCreateCurrentAccount($conn, $userId);
-
         $goalAccCol = $this->goalAccountFkColumn($conn);
 
         $add = $this->safeFloat($request->request->get('add_amount'));
+
+        $errs = $this->validateContribution($add);
+        if ($errs) {
+            $this->flashErrors($errs);
+            return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
+        }
+
+        // detect if contributed (simple check)
+        $before = $conn->fetchOne(
+            "SELECT montant_actuel FROM financial_goal WHERE id = :gid AND `$goalAccCol` = :acc LIMIT 1",
+            ['gid' => $id, 'acc' => (int) $accPack['accId']]
+        );
 
         $this->doContributeGoal(
             $conn,
@@ -840,199 +894,224 @@ $stat_values = array_values($statMap);
             $add
         );
 
+        $after = $conn->fetchOne(
+            "SELECT montant_actuel FROM financial_goal WHERE id = :gid AND `$goalAccCol` = :acc LIMIT 1",
+            ['gid' => $id, 'acc' => (int) $accPack['accId']]
+        );
+
+        if ($before !== null && $after !== null && (float) $after == (float) $before) {
+            $this->addFlash('danger', '❌ Contribution refusée (solde insuffisant ou goal invalide).');
+        } else {
+            $this->addFlash('success', '✅ Contribution ajoutée.');
+        }
+
         return $this->redirectToRoute('app_savings_index', ['tab' => 'goals']);
     }
 
-    #[Route('/savings/account/{id}/edit', name: 'app_savings_edit', methods: ['GET', 'POST'])]
-    public function editAccount(int $id): Response
-    {
-        return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
-    }
-
-    #[Route('/savings/account/{id}/delete', name: 'app_savings_delete', methods: ['POST'])]
-    public function deleteAccount(int $id): Response
-    {
-        return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
-    }
     #[Route('/savings/rate/update', name: 'app_savings_rate_update', methods: ['POST'])]
-public function updateRate(Connection $conn, Security $security, Request $request): Response
-{
-    $userId = $this->resolveUserId($conn, $security, $request);
-    $accPack = $this->getOrCreateCurrentAccount($conn, $userId);
+    public function updateRate(Connection $conn, Security $security, Request $request): Response
+    {
+        $userId  = $this->resolveUserId($conn, $security, $request);
+        $accPack = $this->getOrCreateCurrentAccount($conn, $userId);
 
-    $accId      = (int) $accPack['accId'];
-    $accPkCol   = (string) $accPack['accPkCol'];
-    $accUserCol = (string) $accPack['accUserCol'];
+        $accId      = (int) $accPack['accId'];
+        $accPkCol   = (string) $accPack['accPkCol'];
+        $accUserCol = (string) $accPack['accUserCol'];
 
-    // Read and clamp
-    $rate = $this->safeFloat($request->request->get('taux_interet'));
-    $rate = max(0, min(100, $rate)); // 0..100
+        $rate = $this->safeFloat($request->request->get('taux_interet'));
 
-    // Only update if column exists
-    $cols = $conn->fetchFirstColumn("SHOW COLUMNS FROM `saving_account`");
-    $colsLower = array_map('strtolower', $cols);
-
-    // Detect the real column name (taux_interet / tauxInteret / etc.)
-    $rateCol = null;
-    foreach ($cols as $c) {
-        if (strtolower($c) === 'taux_interet' || strtolower($c) === 'tauxinteret') {
-            $rateCol = $c;
-            break;
+        $errs = $this->validateRate($rate);
+        if ($errs) {
+            $this->flashErrors($errs);
+            return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
         }
+
+        $rate = max(0, min(100, $rate));
+
+        $cols = $conn->fetchFirstColumn("SHOW COLUMNS FROM `saving_account`");
+        $rateCol = null;
+        foreach ($cols as $c) {
+            if (strtolower($c) === 'taux_interet' || strtolower($c) === 'tauxinteret') {
+                $rateCol = $c;
+                break;
+            }
+        }
+
+        if ($rateCol && $accId > 0) {
+            $conn->executeStatement(
+                "UPDATE saving_account
+                 SET `$rateCol` = :r
+                 WHERE `$accPkCol` = :id AND `$accUserCol` = :uid",
+                ['r' => $rate, 'id' => $accId, 'uid' => $userId]
+            );
+            $this->addFlash('success', '✅ Taux mis à jour.');
+        } else {
+            $this->addFlash('danger', '❌ Colonne taux_interet introuvable ou compte invalide.');
+        }
+
+        return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
     }
 
-    if ($rateCol && $accId > 0) {
-        $conn->executeStatement(
-            "UPDATE saving_account
-             SET `$rateCol` = :r
-             WHERE `$accPkCol` = :id AND `$accUserCol` = :uid",
-            ['r' => $rate, 'id' => $accId, 'uid' => $userId]
+    // Optional: transaction edit/delete routes (if your Twig has buttons)
+    #[Route('/savings/tx/{id}/delete', name: 'app_savings_tx_delete', methods: ['POST'])]
+    public function txDelete(Connection $conn, Security $security, Request $request, int $id): Response
+    {
+        $userId = $this->resolveUserId($conn, $security, $request);
+        $this->doDeleteTransaction($conn, $userId, $id);
+        $this->addFlash('success', '✅ Transaction supprimée.');
+        return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
+    }
+
+    #[Route('/savings/tx/{id}/edit', name: 'app_savings_tx_edit', methods: ['POST'])]
+    public function txEdit(Connection $conn, Security $security, Request $request, int $id): Response
+    {
+        $userId = $this->resolveUserId($conn, $security, $request);
+
+        $amount = $this->safeFloat($request->request->get('montant'));
+        $desc   = trim((string) $request->request->get('description', ''));
+        $dateRaw = $request->request->get('date'); // datetime-local optional
+
+        if ($amount <= 0) {
+            $this->addFlash('danger', '❌ Montant invalide.');
+            return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
+        }
+
+        $this->doEditTransaction($conn, $userId, $id, $amount, $desc, is_string($dateRaw) ? $dateRaw : null);
+        $this->addFlash('success', '✅ Transaction modifiée.');
+        return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
+    }
+
+    #[Route('/savings/export/csv', name: 'app_savings_export_csv', methods: ['GET'])]
+    public function exportCsv(Connection $conn, Security $security, Request $request): Response
+    {
+        $userId = $this->resolveUserId($conn, $security, $request);
+
+        $q     = trim((string) $request->query->get('tx_q', ''));
+        $sort  = (string) $request->query->get('tx_sort', 'date_desc');
+        $range = (string) $request->query->get('tx_range', 'all');
+
+        $dateWhere = '';
+        $params = ['uid' => $userId, 'src' => 'SAVINGS'];
+
+        if ($range === 'today') {
+            $dateWhere = " AND DATE(`date`) = CURDATE() ";
+        } elseif ($range === 'week') {
+            $dateWhere = " AND YEARWEEK(`date`, 1) = YEARWEEK(CURDATE(), 1) ";
+        } elseif ($range === 'month') {
+            $dateWhere = " AND YEAR(`date`) = YEAR(CURDATE()) AND MONTH(`date`) = MONTH(CURDATE()) ";
+        }
+
+        $searchWhere = '';
+        if ($q !== '') {
+            $searchWhere = " AND (
+                CAST(id AS CHAR) LIKE :q OR
+                type LIKE :q OR
+                CAST(montant AS CHAR) LIKE :q OR
+                CAST(`date` AS CHAR) LIKE :q OR
+                description LIKE :q
+            )";
+            $params['q'] = '%' . $q . '%';
+        }
+
+        $orderBy = match ($sort) {
+            'date_asc' => '`date` ASC',
+            'amount_desc' => 'montant DESC',
+            'amount_asc' => 'montant ASC',
+            'desc_asc' => 'description ASC',
+            'desc_desc' => 'description DESC',
+            default => '`date` DESC',
+        };
+
+        $rows = $conn->fetchAllAssociative(
+            "SELECT id, type, montant, `date`, description
+             FROM `transaction`
+             WHERE user_id = :uid AND module_source = :src
+             $dateWhere
+             $searchWhere
+             ORDER BY $orderBy",
+            $params
         );
-    }
 
-    return $this->redirectToRoute('app_savings_index', ['tab' => 'savings']);
-}
-#[Route('/savings/export/csv', name: 'app_savings_export_csv', methods: ['GET'])]
-public function exportCsv(Connection $conn, Security $security, Request $request): Response
-{
-    $userId = $this->resolveUserId($conn, $security, $request);
+        $out = fopen('php://temp', 'r+');
+        fputcsv($out, ['ID', 'Type', 'Amount', 'Date', 'Description']);
 
-    // Optional filters from UI (same names used in Twig)
-    $q     = trim((string) $request->query->get('tx_q', ''));
-    $sort  = (string) $request->query->get('tx_sort', 'date_desc');
-    $range = (string) $request->query->get('tx_range', 'all');
+        foreach ($rows as $r) {
+            fputcsv($out, [
+                $r['id'] ?? '',
+                $r['type'] ?? '',
+                $r['montant'] ?? '',
+                $r['date'] ?? '',
+                $r['description'] ?? '',
+            ]);
+        }
 
-    // Date range filter
-    $dateWhere = '';
-    $params = ['uid' => $userId, 'src' => 'SAVINGS'];
+        rewind($out);
+        $csv = stream_get_contents($out);
+        fclose($out);
 
-    if ($range === 'today') {
-        $dateWhere = " AND DATE(date) = CURDATE() ";
-    } elseif ($range === 'week') {
-        $dateWhere = " AND YEARWEEK(date, 1) = YEARWEEK(CURDATE(), 1) ";
-    } elseif ($range === 'month') {
-        $dateWhere = " AND YEAR(date) = YEAR(CURDATE()) AND MONTH(date) = MONTH(CURDATE()) ";
-    }
-
-    // Search filter
-    $searchWhere = '';
-    if ($q !== '') {
-        $searchWhere = " AND (
-            CAST(id AS CHAR) LIKE :q OR
-            type LIKE :q OR
-            CAST(montant AS CHAR) LIKE :q OR
-            CAST(date AS CHAR) LIKE :q OR
-            description LIKE :q
-        )";
-        $params['q'] = '%' . $q . '%';
-    }
-
-    // Sorting
-    $orderBy = match ($sort) {
-        'date_asc' => 'date ASC',
-        'amount_desc' => 'montant DESC',
-        'amount_asc' => 'montant ASC',
-        'desc_asc' => 'description ASC',
-        'desc_desc' => 'description DESC',
-        default => 'date DESC',
-    };
-
-    $rows = $conn->fetchAllAssociative(
-        "SELECT id, type, montant, date, description
-         FROM `transaction`
-         WHERE user_id = :uid AND module_source = :src
-         $dateWhere
-         $searchWhere
-         ORDER BY $orderBy",
-        $params
-    );
-
-    // Build CSV
-    $out = fopen('php://temp', 'r+');
-    fputcsv($out, ['ID', 'Type', 'Amount', 'Date', 'Description']);
-
-    foreach ($rows as $r) {
-        fputcsv($out, [
-            $r['id'] ?? '',
-            $r['type'] ?? '',
-            $r['montant'] ?? '',
-            $r['date'] ?? '',
-            $r['description'] ?? '',
+        return new Response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="savings_transactions.csv"',
         ]);
     }
 
-    rewind($out);
-    $csv = stream_get_contents($out);
-    fclose($out);
+    #[Route('/savings/export/pdf', name: 'app_savings_export_pdf', methods: ['GET'])]
+    public function exportPdf(Connection $conn, Security $security, Request $request): Response
+    {
+        $userId = $this->resolveUserId($conn, $security, $request);
 
-    return new Response(
-        $csv,
-        200,
-        [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="savings_transactions.csv"',
-        ]
-    );
-}
-#[Route('/savings/export/pdf', name: 'app_savings_export_pdf', methods: ['GET'])]
-public function exportPdf(Connection $conn, Security $security, Request $request): Response
-{
-    $userId = $this->resolveUserId($conn, $security, $request);
+        $q     = trim((string) $request->query->get('tx_q', ''));
+        $sort  = (string) $request->query->get('tx_sort', 'date_desc');
+        $range = (string) $request->query->get('tx_range', 'all');
 
-    $q     = trim((string) $request->query->get('tx_q', ''));
-    $sort  = (string) $request->query->get('tx_sort', 'date_desc');
-    $range = (string) $request->query->get('tx_range', 'all');
+        $dateWhere = '';
+        $params = ['uid' => $userId, 'src' => 'SAVINGS'];
 
-    $dateWhere = '';
-    $params = ['uid' => $userId, 'src' => 'SAVINGS'];
+        if ($range === 'today') {
+            $dateWhere = " AND DATE(`date`) = CURDATE() ";
+        } elseif ($range === 'week') {
+            $dateWhere = " AND YEARWEEK(`date`, 1) = YEARWEEK(CURDATE(), 1) ";
+        } elseif ($range === 'month') {
+            $dateWhere = " AND YEAR(`date`) = YEAR(CURDATE()) AND MONTH(`date`) = MONTH(CURDATE()) ";
+        }
 
-    if ($range === 'today') {
-        $dateWhere = " AND DATE(date) = CURDATE() ";
-    } elseif ($range === 'week') {
-        $dateWhere = " AND YEARWEEK(date, 1) = YEARWEEK(CURDATE(), 1) ";
-    } elseif ($range === 'month') {
-        $dateWhere = " AND YEAR(date) = YEAR(CURDATE()) AND MONTH(date) = MONTH(CURDATE()) ";
+        $searchWhere = '';
+        if ($q !== '') {
+            $searchWhere = " AND (
+                CAST(id AS CHAR) LIKE :q OR
+                type LIKE :q OR
+                CAST(montant AS CHAR) LIKE :q OR
+                CAST(`date` AS CHAR) LIKE :q OR
+                description LIKE :q
+            )";
+            $params['q'] = '%' . $q . '%';
+        }
+
+        $orderBy = match ($sort) {
+            'date_asc' => '`date` ASC',
+            'amount_desc' => 'montant DESC',
+            'amount_asc' => 'montant ASC',
+            'desc_asc' => 'description ASC',
+            'desc_desc' => 'description DESC',
+            default => '`date` DESC',
+        };
+
+        $rows = $conn->fetchAllAssociative(
+            "SELECT id, type, montant, `date`, description
+             FROM `transaction`
+             WHERE user_id = :uid AND module_source = :src
+             $dateWhere
+             $searchWhere
+             ORDER BY $orderBy",
+            $params
+        );
+
+        return $this->render('savings/print/transactions_pdf.html.twig', [
+            'rows' => $rows,
+            'range' => $range,
+            'q' => $q,
+            'sort' => $sort,
+            'generatedAt' => new \DateTime(),
+        ]);
     }
-
-    $searchWhere = '';
-    if ($q !== '') {
-        $searchWhere = " AND (
-            CAST(id AS CHAR) LIKE :q OR
-            type LIKE :q OR
-            CAST(montant AS CHAR) LIKE :q OR
-            CAST(date AS CHAR) LIKE :q OR
-            description LIKE :q
-        )";
-        $params['q'] = '%' . $q . '%';
-    }
-
-    $orderBy = match ($sort) {
-        'date_asc' => 'date ASC',
-        'amount_desc' => 'montant DESC',
-        'amount_asc' => 'montant ASC',
-        'desc_asc' => 'description ASC',
-        'desc_desc' => 'description DESC',
-        default => 'date DESC',
-    };
-
-    $rows = $conn->fetchAllAssociative(
-        "SELECT id, type, montant, date, description
-         FROM `transaction`
-         WHERE user_id = :uid AND module_source = :src
-         $dateWhere
-         $searchWhere
-         ORDER BY $orderBy",
-        $params
-    );
-
-    // Render a printable template (you create it once)
-    return $this->render('savings/print/transactions_pdf.html.twig', [
-        'rows' => $rows,
-        'range' => $range,
-        'q' => $q,
-        'sort' => $sort,
-        'generatedAt' => new \DateTime(),
-    ]);
-}
-
 }
