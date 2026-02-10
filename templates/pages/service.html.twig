@@ -1,10 +1,178 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Service | Decide$</title>
+    <meta charset="utf-8">
+    <title>Services | Decide$</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
+
+    <!-- Bootstrap -->
+    <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- Animate / Owl -->
+    <link href="{{ asset('lib/animate/animate.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('lib/owlcarousel/assets/owl.carousel.min.css') }}" rel="stylesheet">
+
+    <!-- SAME CSS AS SAVINGS -->
+    <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}">
 </head>
-<body>
-  <h1>Our Services</h1>
-  <p>This is the Service page.</p>
+
+<body class="savings-page">
+
+<!-- ======================================================
+     NAVBAR (FROM PREVIOUS VERSION)
+====================================================== -->
+<header class="topbar" id="top">
+    <div class="container-fluid topbar-inner">
+        <div class="topbar-row topbar-grid">
+
+            <div class="brand">
+                <i class="fa-solid fa-wallet"></i>
+                <span>Decide</span><span>$</span>
+            </div>
+
+            <nav class="nav-links">
+               
+                <a class="active" href="{{ path('app_service') }}">Service</a>
+                                <a href="{{ path('app_contact') }}">Contact</a>
+
+               
+            </nav>
+
+            <div class="right-info">
+                <div class="text-end topbar-text">
+                    <div>Finance personnelle</div>
+                    <b>Gestion du salaire</b>
+                </div>
+
+                <button id="nightBtn" class="pill-btn night-toggle" type="button">
+                    <i class="fa-solid fa-moon"></i>
+                    <span>Night</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</header>
+
+<!-- ======================================================
+     HEADER / BREADCRUMB (ACUAS STYLE)
+====================================================== -->
+<div class="container-fluid bg-breadcrumb services-hero-bg">
+    <div class="container text-center py-5" style="max-width: 900px;">
+        <h4 class="text-white display-4 mb-4 wow fadeInDown">Nos Services</h4>
+        
+    </div>
+</div>
+
+<div class="container modules-layout">
+
+    <div class="row align-items-center">
+
+        <!-- LEFT -->
+        <div class="col-lg-4">
+
+            <div class="module-card active" data-module="epargne">
+    <div class="module-icon">
+        <i class="fas fa-piggy-bank"></i>
+    </div>
+    <h4>Revenu & expenses</h4>
+    <p>
+        Financez vos rêves en créant des cagnottes dédiées
+        (Voyages, Mariage, Immobilier).
+    </p>
+</div>
+
+
+            <div class="module-card active" data-module="epargne">
+    <div class="module-icon">
+        <i class="fas fa-piggy-bank"></i>
+    </div>
+    <h4>Épargne & Projets</h4>
+    <p>
+        Financez vos rêves en créant des cagnottes dédiées
+        (Voyages, Mariage, Immobilier).
+    </p>
+</div>
+
+        </div>
+
+        <!-- CENTER IMAGE -->
+        <div class="col-lg-4 text-center">
+            jpg<img src="{{ asset('img/a7.png') }}" class="img-fluid module-image" alt="Money">
+        </div>
+
+        <!-- RIGHT -->
+        <div class="col-lg-4">
+<a href="{{ path('app_alea') }}" class="module-link">
+            <div class="module-card active" data-module="alea">
+    <div class="module-icon">
+        <i class="fas fa-piggy-bank"></i>
+    </div>
+    <h4>Imprevus & cas réellees</h4>
+    <p>
+        Financez vos rêves en créant des cagnottes dédiées
+        (Voyages, Mariage, Immobilier).
+    </p>
+</div>
+</a>
+
+            <div class="module-card active" data-module="epargne">
+    <div class="module-icon">
+        <i class="fas fa-piggy-bank"></i>
+    </div>
+    <h4>Investissements</h4>
+    <p>
+        Financez vos rêves en créant des cagnottes dédiées
+        (Voyages, Mariage, Immobilier).
+    </p>
+</div>
+
+
+            <div class="module-card active" data-module="epargne">
+    <div class="module-icon">
+        <i class="fas fa-piggy-bank"></i>
+    </div>
+    <h4>Cours & quiz</h4>
+    <p>
+        Financez vos rêves en créant des cagnottes dédiées
+        (Voyages, Mariage, Immobilier).
+    </p>
+</div>
+
+
+        </div>
+
+    </div>
+</div>
+
+<!-- ======================================================
+     FOOTER (FROM PREVIOUS VERSION)
+====================================================== -->
+<footer class="footer">
+    <div class="footer-bottom">
+        © {{ "now"|date("Y") }} Decide$ — All rights reserved.
+    </div>
+</footer>
+
+<!-- ======================================================
+     JS
+====================================================== -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('lib/wow/wow.min.js') }}"></script>
+
+<script>
+new WOW().init();
+</script>
+
 </body>
 </html>

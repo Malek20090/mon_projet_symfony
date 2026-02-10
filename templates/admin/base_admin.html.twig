@@ -39,9 +39,7 @@
             <h3>Decide$</h3>
         </div>
         <nav class="nav">
-            <a href="{{ path('admin_index') }}" class="nav-link {% if app.request.attributes.get('_route') == 'admin_index' %}active{% endif %}">
-                <i class="fas fa-home"></i> <span>Dashboard</span>
-            </a>
+           
             <a href="{{ path('admin_imprevus_list') }}" class="nav-link {% if 'imprevus' in app.request.attributes.get('_route') %}active{% endif %}">
                 <i class="fas fa-exclamation-triangle"></i> <span>Imprévus</span>
             </a>

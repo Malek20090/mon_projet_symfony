@@ -1641,3 +1641,114 @@ header.topbar .topbar-row.topbar-grid .topbar-text{
 #goalToolbarForm .chip{
   flex:0 0 auto !important;
 }
+/* ===============================
+   OUR SERVICES HEADER BACKGROUND
+================================ */
+.services-hero-bg {
+    background: url("../img/n.jpg") center / cover no-repeat;
+    position: relative;
+    min-height: 55vh;          /* ⬅️ réduit la hauteur */
+    display: flex;
+    align-items: center;
+}
+
+/* Overlay plus léger */
+.services-hero-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4); /* ⬅️ moins sombre */
+}
+
+/* Contenu */
+.services-hero-bg .container {
+    position: relative;
+    z-index: 2;
+    padding: 80px 0;           /* ⬅️ moins d’espace vertical */
+}
+/* ===== MODULE BUTTONS ===== */
+.modules-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+}
+
+.module-btn {
+    padding: 14px 22px;
+    border-radius: 10px;
+    border: 2px solid #0d6efd;
+    background: #fff;
+    color: #0d6efd;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.module-btn:hover {
+    background: #0d6efd;
+    color: #fff;
+}
+
+.module-btn.active {
+    background: #0d6efd;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+}
+
+/* ===== MODULE CONTENT ===== */
+.modules-layout {
+    padding-top: 60px;
+}
+
+/* Card */
+.module-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.module-card:active {
+    transform: scale(0.98);
+}
+
+
+.module-card h4 {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.module-card p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Icon */
+.module-icon {
+    width: 60px;
+    height: 60px;
+    background: #00c6f2;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.module-card.active .module-icon {
+    background: #fff;
+    color: #00c6f2;
+}
+
+
+
+/* Hover (subtil) */
+.module-card:hover {
+    transform: translateY(-4px);
+}
+.module-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
