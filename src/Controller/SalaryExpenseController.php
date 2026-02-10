@@ -72,6 +72,12 @@ class SalaryExpenseController extends AbstractController
         $formRevenue = $this->createForm(RevenueType::class, $revenue);
         $formRevenue->handleRequest($request);
         if ($formRevenue->isSubmitted() && $formRevenue->isValid()) {
+            $user = $this->getUser();
+            if (!$user) {
+                $this->addFlash('error', 'Vous devez être connecté pour ajouter un revenu.');
+                return $this->redirectToRoute('app_salary_expense_index');
+            }
+            $revenue->setUser($user);
             $entityManager->persist($revenue);
             $entityManager->flush();
             $this->addFlash('success', 'Revenu ajouté.');

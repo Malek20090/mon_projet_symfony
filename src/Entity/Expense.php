@@ -21,10 +21,16 @@ class Expense
     #[Assert\PositiveOrZero(message: 'Le montant doit être positif.')]
     private ?float $amount = null;
 
-    #[ORM\Column(length: 100)]
+    /**
+     * Logical "category" field, stored in DB column "category".
+     */
+    #[ORM\Column(name: 'category', length: 100)]
     private ?string $category = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    /**
+     * Logical "expenseDate" field, stored in DB column "expense_date".
+     */
+    #[ORM\Column(name: 'expense_date', type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $expenseDate = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -59,9 +65,28 @@ class Expense
         return $this->amount;
     }
 
-    public function setAmount(float $amount): self
+    public function setAmount(float $amount): static
     {
         $this->amount = $amount;
+
+        return $this;
+    }
+
+    /**
+     * Backwards‑compatibility alias.
+     */
+    public function getMontant(): ?float
+    {
+        return $this->amount;
+    }
+
+    /**
+     * Backwards‑compatibility alias.
+     */
+    public function setMontant(float $montant): static
+    {
+        $this->amount = $montant;
+
         return $this;
     }
 
@@ -70,9 +95,10 @@ class Expense
         return $this->category;
     }
 
-    public function setCategory(string $category): self
+    public function setCategory(string $category): static
     {
         $this->category = $category;
+
         return $this;
     }
 
@@ -81,9 +107,28 @@ class Expense
         return $this->expenseDate;
     }
 
-    public function setExpenseDate(\DateTimeInterface $expenseDate): self
+    public function setExpenseDate(\DateTimeInterface $expenseDate): static
     {
         $this->expenseDate = $expenseDate;
+
+        return $this;
+    }
+
+    /**
+     * Backwards‑compatibility alias.
+     */
+    public function getDate(): ?\DateTimeInterface
+    {
+        return $this->expenseDate;
+    }
+
+    /**
+     * Backwards‑compatibility alias.
+     */
+    public function setDate(\DateTimeInterface $date): static
+    {
+        $this->expenseDate = $date;
+
         return $this;
     }
 
@@ -92,9 +137,10 @@ class Expense
         return $this->description;
     }
 
-    public function setDescription(?string $description): self
+    public function setDescription(?string $description): static
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -103,9 +149,10 @@ class Expense
         return $this->revenue;
     }
 
-    public function setRevenue(?Revenue $revenue): self
+    public function setRevenue(?Revenue $revenue): static
     {
         $this->revenue = $revenue;
+
         return $this;
     }
 }

@@ -1793,20 +1793,21 @@ header.topbar .topbar-row.topbar-grid .topbar-text{
 }
 
 
+/* ================= SERVICE HERO ================= */
 .services-hero-bg {
     background: url("../img/n.jpg") center / cover no-repeat;
     position: relative;
-    min-height: 55vh;          /* ⬅️ réduit la hauteur */
+    min-height: 55vh;
     display: flex;
     align-items: center;
 }
 
-/* Overlay plus léger */
 .services-hero-bg::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4); /* ⬅️ moins sombre */
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
 }
 
 /* Contenu */
@@ -1829,7 +1830,8 @@ header.topbar .topbar-row.topbar-grid .topbar-text{
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4); /* ⬅️ moins sombre */
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
 }
 .about-hero-bg .container {
     position: relative;
@@ -1837,7 +1839,7 @@ header.topbar .topbar-row.topbar-grid .topbar-text{
     padding: 80px 0;           /* ⬅️ moins d’espace vertical */
 }
 .about-hero-bg {
-    background: url("../img/n.jpg") center / cover no-repeat;
+    background: url("../img/a8.jpg") center / cover no-repeat;
     position: relative;
     min-height: 55vh;          /* ⬅️ réduit la hauteur */
     display: flex;
@@ -1847,7 +1849,8 @@ header.topbar .topbar-row.topbar-grid .topbar-text{
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4); /* ⬅️ moins sombre */
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
 }
 .contact-hero-bg .container {
     position: relative;
@@ -1952,4 +1955,9 @@ header.topbar .topbar-row.topbar-grid .topbar-text{
     text-decoration: none;
     color: inherit;
     display: block;
+}
+/* ===== FIX ICON SIZE (uniforme pour tous les modules) ===== */
+.module-icon i {
+    font-size: 26px;      /* même taille visuelle */
+    line-height: 1;
 }

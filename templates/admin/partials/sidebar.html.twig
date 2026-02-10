@@ -1,0 +1,72 @@
+<div class="sidebar">
+    <div class="brand">
+        <h3><i class="fas fa-wallet me-2"></i>Decide$</h3>
+    </div>
+    <nav class="nav">
+        <a href="{{ path('admin_index') }}" class="nav-link {% if app.request.attributes.get('_route') == 'admin_index' %}active{% endif %}">
+            <i class="fas fa-home"></i> <span>Dashboard</span>
+        </a>
+        <a href="{{ path('admin_imprevus_list') }}" class="nav-link {% if 'imprevus' in app.request.attributes.get('_route') %}active{% endif %}">
+            <i class="fas fa-exclamation-triangle"></i> <span>Imprévus</span>
+        </a>
+        <a href="{{ path('admin_casrelles_list') }}" class="nav-link {% if 'casrelles' in app.request.attributes.get('_route') %}active{% endif %}">
+            <i class="fas fa-clipboard-list"></i> <span>Cas Réels</span>
+        </a>
+    </nav>
+</div>
+
+    
+    <nav class="mt-4">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if app.request.get('_route') == 'admin_index' %}active{% endif %}" href="{{ path('admin_index') }}">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Revenus</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Dépenses</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-piggy-bank"></i>
+                    <span>Epargne</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Investissements</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if app.request.get('_route') == 'app_alea' %}active{% endif %}" href="{{ path('app_alea') }}">
+                    <i class="fas fa-bolt"></i>
+                    <span>Aléas</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'admin_imprevus' in app.request.get('_route') %}active{% endif %}" href="{{ path('admin_imprevus_list') }}">
+                    <i class="fas fa-bolt"></i>
+                    <span>Gérer Imprévus</span>
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+    
+    <div class="mt-auto p-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none">
+            <i class="fas fa-sign-out-alt me-2"></i>
+            <span>Déconnexion</span>
+        </a>
+    </div>

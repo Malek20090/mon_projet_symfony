@@ -1,0 +1,132 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Imprévus | Decide${% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Imprévus</h1>
+            <p class="mb-0">Gestion des imprévus financiers</p>
+        </div>
+        <a href="{{ path('admin_imprevus_add') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Nouvel imprévu</a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <div class="card-custom mb-4">
+        <form method="GET" action="{{ path('admin_imprevus_list') }}" class="row g-3">
+            <div class="col-md-5">
+                <label for="search" class="form-label">Rechercher</label>
+                <input type="text" class="form-control" id="search" name="search"
+                       value="{{ search ?? '' }}" placeholder="Titre, type, message...">
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">Trier par</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="id" {% if sort == 'id' %}selected{% endif %}>ID</option>
+                    <option value="titre" {% if sort == 'titre' %}selected{% endif %}>Titre</option>
+                    <option value="budget" {% if sort == 'budget' %}selected{% endif %}>Budget</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="order" class="form-label">Ordre</label>
+                <select class="form-select" id="order" name="order">
+                    <option value="desc" {% if order == 'desc' %}selected{% endif %}>Décroissant</option>
+                    <option value="asc" {% if order == 'asc' %}selected{% endif %}>Croissant</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="fas fa-search me-1"></i>Rechercher</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-custom">
+        <div class="table-responsive">
+            <table class="table table-custom table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Titre</th>
+                        <th>Type</th>
+                        <th>Budget</th>
+                        <th>Message éducatif</th>
+                        <th style="width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in imprevus %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            <td><strong>{{ item.titre }}</strong></td>
+                            <td>
+                                {% if item.type == 'POSITIF' %}
+                                    <span class="badge bg-success">POSITIF</span>
+                                {% else %}
+                                    <span class="badge bg-danger">NÉGATIF</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-primary fw-bold">{{ item.budget|number_format(2, ',', ' ') }} DT</td>
+                            <td>{{ item.messageEducatif|default('-') }}</td>
+                            <td>
+                                <a href="{{ path('admin_imprevus_edit', { id: item.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="fas fa-edit"></i></a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                        onclick="confirmDelete({{ item.id }}, '{{ item.titre|e('js') }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">Aucun imprévu.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <a href="{{ path('admin_index') }}" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left me-2"></i>Retour au dashboard</a>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="deleteForm">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Confirmation de suppression</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer l'imprévu suivant ?</p>
+                    <p><strong id="deleteItemTitle"></strong></p>
+                    <input type="hidden" name="_token" id="deleteToken" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i>Supprimer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(id, title) {
+    document.getElementById('deleteItemTitle').textContent = title;
+    document.getElementById('deleteToken').value = '{{ csrf_token('imprevus_delete_PLACEHOLDER') }}'.replace('PLACEHOLDER', id);
+    document.getElementById('deleteForm').action = '{{ path('admin_imprevus_delete', { id: 'PLACEHOLDER' }) }}'.replace('PLACEHOLDER', id);
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

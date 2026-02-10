@@ -17,6 +17,7 @@ class ImprevusRepository extends ServiceEntityRepository
     }
 
     /**
+     * Imprevus par type (POSITIF ou NEGATIF) pour la liste "Risques (-)" / "Opportunites (+)".
      * Imprévus par type (POSITIF ou NEGATIF) pour la liste "Risques (-)" / "Opportunités (+)".
      * @return Imprevus[]
      */
@@ -28,6 +29,41 @@ class ImprevusRepository extends ServiceEntityRepository
             ->orderBy('i.titre', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Search and sort Imprevus for admin.
+     *
+     * @param string $search Search term
+     * @param string $sort Field to sort by
+     * @param string $order Order direction (asc/desc)
+     * @return Imprevus[]
+     */
+    public function findBySearchAndSort(string $search = '', string $sort = 'id', string $order = 'desc'): array
+    {
+        $qb = $this->createQueryBuilder('i');
+
+        // Apply search on multiple fields
+        if (!empty($search)) {
+            $qb->andWhere(
+                $qb->expr()->orX(
+                    $qb->expr()->like('i.titre', ':search'),
+                    $qb->expr()->like('i.type', ':search'),
+                    $qb->expr()->like('i.messageEducatif', ':search')
+                )
+            );
+            $qb->setParameter('search', '%' . $search . '%');
+        }
+
+        // Apply sorting
+        $validSortFields = ['id', 'titre', 'type', 'budget'];
+        if (!in_array($sort, $validSortFields)) {
+            $sort = 'id';
+        }
+        $order = strtolower($order) === 'asc' ? 'ASC' : 'DESC';
+        $qb->orderBy('i.' . $sort, $order);
+
+        return $qb->getQuery()->getResult();
     }
 
     //    /**

@@ -30,6 +30,12 @@ class RevenueController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $user = $this->getUser();
+            if (!$user) {
+                $this->addFlash('error', 'Vous devez être connecté pour ajouter un revenu.');
+                return $this->redirectToRoute('app_revenue_index', [], Response::HTTP_SEE_OTHER);
+            }
+            $revenue->setUser($user);
             $entityManager->persist($revenue);
             $entityManager->flush();
 

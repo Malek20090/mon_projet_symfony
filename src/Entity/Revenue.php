@@ -113,3 +113,4 @@ class Revenue
         return $this;
     }
 }
+

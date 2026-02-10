@@ -36,4 +36,3 @@ security:
         - { path: ^/salary, roles: ROLE_SALARY }
         - { path: ^/etudiant, roles: ROLE_ETUDIANT }
 
-        
