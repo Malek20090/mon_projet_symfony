@@ -33,10 +33,18 @@
         </a>
 
         <ul class="navbar-nav mx-auto gap-4">
-            <li class="nav-item"><a class="nav-link text-white" href="#home">Home</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="#about">About</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="#service">Service</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="#contact">Contact</a></li>
+           <li class="nav-item">
+    <a class="nav-link text-white" href="{{ path('app_home') }}">Home</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link text-white" href="{{ path('app_about') }}">About</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link text-white" href="{{ path('app_service') }}">Service</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link text-white" href="{{ path('app_contact') }}">Contact</a>
+</li>
         </ul>
 
         <a href="#" class="btn btn-info rounded-pill px-4">To Start</a>
@@ -250,10 +258,53 @@
 
 
 <!-- ================= FOOTER ================= -->
-<footer class="bg-dark text-center py-4">
-    <p class="text-white mb-0">
-        © {{ "now"|date("Y") }} Decide$ — All rights reserved
-    </p>
+<footer class="footer-decides">
+    <div class="container">
+
+        <div class="row gy-4">
+
+            <!-- BRAND -->
+            <div class="col-md-4 text-center text-md-start">
+                <h4 class="footer-brand">
+                    <i class="fas fa-wallet text-info me-2"></i> Decide$
+                </h4>
+                <p class="footer-text">
+                    Decide$ helps you manage your salary, control expenses,
+                    and build a secure financial future with confidence.
+                </p>
+            </div>
+
+            <!-- LINKS -->
+            <div class="col-md-4 text-center">
+                <h6 class="footer-title">Quick Links</h6>
+                <ul class="footer-links">
+                    <li><a href="{{ path('app_home') }}">Home</a></li>
+                    <li><a href="{{ path('app_about') }}">About</a></li>
+                    <li><a href="{{ path('app_service') }}">Services</a></li>
+                    <li><a href="{{ path('app_contact') }}">Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- SOCIAL -->
+            <div class="col-md-4 text-center text-md-end">
+                <h6 class="footer-title">Connect with us</h6>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-github"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+
+        </div>
+
+        <hr class="footer-divider">
+
+        <div class="footer-bottom text-center">
+            © {{ "now"|date("Y") }} Decide$ — All rights reserved
+        </div>
+
+    </div>
 </footer>
  <script>
     const heroCarousel = document.getElementById('heroCarousel');

@@ -1641,3 +1641,134 @@ header.topbar .topbar-row.topbar-grid .topbar-text{
 #goalToolbarForm .chip{
   flex:0 0 auto !important;
 }
+/* =========================
+   ABOUT SECTION — IMAGE 1 STYLE
+   ========================= */
+
+.about-decides{
+  background:#f7fbfc;
+  padding:80px 0;
+}
+
+.about-container{
+  max-width:1200px;
+  margin:auto;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:60px;
+  align-items:center;
+  padding:0 24px;
+}
+
+/* IMAGE */
+.about-image{
+  position:relative;
+}
+
+.about-image img{
+  width:100%;
+  border-radius:12px;
+  object-fit:cover;
+}
+
+/* badge */
+.experience-badge{
+  position:absolute;
+  top:0;
+  left:0;
+  background:#1b3f8b;
+  color:#fff;
+  padding:14px 28px;
+  font-weight:700;
+  font-size:20px;
+  border-radius:0 0 12px 0;
+}
+
+/* CONTENT */
+.about-content h2{
+  font-family: Georgia, "Times New Roman", serif;
+  font-size:52px;
+  color:#0b1c3f;
+  line-height:1.15;
+  margin-bottom:20px;
+}
+
+.about-desc{
+  color:#6b7c8a;
+  font-size:16px;
+  margin-bottom:32px;
+  max-width:520px;
+}
+
+/* cards */
+.about-card{
+  display:flex;
+  gap:18px;
+  background:#f0f8f8;
+  padding:22px 26px;
+  border-radius:14px;
+  margin-bottom:18px;
+}
+
+.about-card h4{
+  margin:0 0 6px;
+  color:#0b1c3f;
+  font-weight:700;
+}
+
+.about-card p{
+  margin:0;
+  font-size:14px;
+  color:#6b7c8a;
+  line-height:1.6;
+}
+
+/* icon */
+.icon-circle{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  background:#00c6ef;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:22px;
+  flex-shrink:0;
+}
+
+/* button */
+.about-btn{
+  display:inline-block;
+  margin-top:26px;
+  padding:14px 34px;
+  background:#1b3f8b;
+  color:#fff;
+  border-radius:999px;
+  font-weight:600;
+  text-decoration:none;
+}
+
+/* responsive */
+@media (max-width: 900px){
+  .about-container{
+    grid-template-columns:1fr;
+  }
+
+  .about-content h2{
+    font-size:38px;
+  }
+}
+.hero-bg{
+    position: relative;
+    height: calc(100vh - 90px);
+    background-image: url("img/a1.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8%;
+    color: #fff;
+}
