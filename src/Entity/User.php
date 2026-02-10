@@ -28,10 +28,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $password;
 
     /**
-     * Single role stored in DB (column `role`), exposed as array for UserInterface::getRoles()
+     * Roles stored as JSON (Doctrine expects a `roles` column).
      */
-   #[ORM\Column(type: 'json')]
-private array $roles = [];
+    #[ORM\Column(type: 'json')]
+    private array $roles = [];
+
+    /**
+     * Legacy single-role column already present in DB (`role`).
+     * We keep it mapped for compatibility with existing data/other modules.
+     */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $role = null;
 
 
     #[ORM\Column(type: 'date', nullable: true)]
@@ -95,19 +102,26 @@ private array $roles = [];
         return (string) ($this->email ?? '');
     }
 
-   public function getRoles(): array
-{
-    $roles = $this->roles;
-    $roles[] = 'ROLE_USER';
-    return array_unique($roles);
-}
+    public function getRoles(): array
+    {
+        $roles = $this->roles ?? [];
+
+        // include legacy single-role column if set
+        if ($this->role) {
+            $roles[] = $this->role;
+        }
+
+        $roles[] = 'ROLE_USER';
+
+        return array_values(array_unique($roles));
+    }
 
 
-   public function setRoles(array $roles): self
-{
-    $this->roles = $roles;
-    return $this;
-}
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
+        return $this;
+    }
 
     public function getRole(): ?string
     {
