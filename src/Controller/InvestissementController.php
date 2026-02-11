@@ -50,9 +50,9 @@ public function new(
         $investissement->setQuantity($quantity);
         $investissement->setCreatedAt(new \DateTime());
         //user 
-        //$investissement->setUserId($this->getUser());
+        $investissement->setUserId($this->getUser());
 
-        //
+        
         $entityManager->persist($investissement);
         $entityManager->flush();
 

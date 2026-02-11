@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin - Investissements{% endblock %}
+
+{% block body %}
+
+<h1>Admin - Tous les investissements</h1>
+
+<a href="{{ path('admin_dashboard') }}">⬅ Retour Dashboard</a>
+<a href="{{ path('admin_investissement_create') }}">
+    <button>➕ Créer un investissement</button>
+</a>
+
+<br><br>
+
+
+<br><br>
+
+<table border="1" cellpadding="10" width="100%">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Crypto</th>
+            <th>Montant investi</th>
+            <th>Prix d'achat</th>
+            <th>Quantité</th>
+            <th>Gain / Perte</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for inv in investissements %}
+            {% set gain = calculator.calculateGain(inv) %}
+
+            <tr>
+                <td>
+                    {% if inv.userId %}
+                        {{ inv.userId.email }}
+                    {% else %}
+                        <span style="color:red;">User supprimé</span>
+                    {% endif %}
+                </td>
+
+                <td>{{ inv.crypto.name }}</td>
+                <td>{{ inv.amountInvested }}</td>
+                <td>{{ inv.buyPrice }}</td>
+                <td>{{ inv.quantity|number_format(8) }}</td>
+
+                <td style="color: {{ gain >= 0 ? 'green' : 'red' }}; font-weight:bold;">
+                    {{ gain|number_format(2) }}
+                </td>
+
+                <td>
+                    <!-- Bouton Modifier -->
+                    <a href="{{ path('admin_investissement_adjust', { id: inv.id }) }}">
+                        <button>✏️ Ajuster</button>
+                    </a>
+
+
+                    <!-- Bouton Supprimer -->
+                    <form method="post"
+                          action="{{ path('admin_investissement_delete', { id: inv.id }) }}"
+                          onsubmit="return confirm('Supprimer cet investissement ?');"
+                          style="display:inline;">
+                        <button style="color:red;">❌ Supprimer</button>
+                    </form>
+                </td>
+            </tr>
+
+        {% else %}
+            <tr>
+                <td colspan="7">Aucun investissement</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

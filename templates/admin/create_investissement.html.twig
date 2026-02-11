@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer Investissement{% endblock %}
+
+{% block body %}
+
+<h1>Créer un investissement (Admin)</h1>
+
+<a href="{{ path('admin_investissements') }}">⬅ Retour</a>
+
+<br><br>
+
+{{ form_start(form) }}
+    {{ form_row(form.userId) }}
+    {{ form_row(form.crypto) }}
+    {{ form_row(form.amountInvested) }}
+    <button type="submit">Créer</button>
+{{ form_end(form) }}
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajuster Investissement{% endblock %}
+
+{% block body %}
+
+<h1>Ajuster Investissement (Admin)</h1>
+
+<a href="{{ path('admin_investissements') }}">⬅ Retour</a>
+
+<br><br>
+
+<p>
+    <strong>Crypto :</strong> {{ investissement.crypto.name }} <br>
+    <strong>Montant actuel :</strong> {{ investissement.amountInvested }} USD
+</p>
+
+<form method="post">
+    <label>Montant à ajouter ou retirer :</label>
+    <input type="number" step="0.01" name="amount" required>
+    <button type="submit">Valider</button>
+</form>
+
+{% for message in app.flashes('error') %}
+    <div style="color:red;">{{ message }}</div>
+{% endfor %}
+
+{% endblock %}

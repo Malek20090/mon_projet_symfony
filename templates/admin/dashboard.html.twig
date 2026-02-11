@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<h1>Dashboard Admin</h1>
+
+<ul>
+    <li><a href="{{ path('admin_investissements') }}">Gérer les investissements</a></li>
+    <li><a href="{{ path('admin_objectifs') }}">Gérer les objectifs</a></li>
+</ul>
+{% endblock %}

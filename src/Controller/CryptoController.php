@@ -29,7 +29,18 @@ public function index(
     $sort = $request->query->get('sort');
     $search = $request->query->get('search');
 
-    $investissements = $investissementRepository->findAll();
+    $user = $this->getUser();
+
+    if ($this->isGranted('ROLE_ADMIN')) {
+    // 👑 Admin voit tout
+         $investissements = $investissementRepository->findAll();
+    } else {
+    // 👤 User voit seulement ses investissements
+         $investissements = $investissementRepository->findBy([
+         'user_id' => $user
+    ]);
+}
+
 
     // 🔍 filtre par nom de crypto
     $investissements = $calculator->filterByCryptoName($investissements, $search);

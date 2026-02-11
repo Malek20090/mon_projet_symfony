@@ -3,43 +3,243 @@
 {% block title %}Mes objectifs{% endblock %}
 
 {% block body %}
-<h1>Mes objectifs</h1>
 
-<a href="{{ path('objectif_new') }}">
-    <button>➕ Créer un objectif</button>
-</a>
+<style>
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #0f172a, #1e1b4b 50%, #0f172a);
+        font-family: 'Inter', sans-serif;
+        color: #e2e8f0;
+    }
 
-<br><br>
+    .page-container {
+        max-width: 1200px;
+        margin: 60px auto;
+        padding: 40px;
+        background: linear-gradient(145deg, #1e293b, #1e1b4b);
+        border-radius: 22px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    }
 
-<table border="1" cellpadding="10" width="100%">
-    <thead>
-        <tr>
-            <th>Nom</th>
-            <th>Montant actuel (USD)</th>
-            <th>Multiplicateur</th>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+    }
 
-            <th>
-                Montant cible (USD)
-                <a href="{{ path('objectif_index', { sort: 'target', order: 'asc' }) }}">⬆</a>
-                <a href="{{ path('objectif_index', { sort: 'target', order: 'desc' }) }}">⬇</a>
-            </th>
+    .page-title {
+        font-size: 32px;
+        font-weight: 800;
+        color: #c4b5fd;
+    }
 
-            <th>Statut</th>
+    .btn-primary {
+        background: linear-gradient(135deg, #7c3aed, #06b6d4);
+        color: white;
+        padding: 12px 22px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 25px rgba(124, 58, 237, 0.5);
+    }
 
-            <th>
-                Progression
-                <a href="{{ path('objectif_index', { sort: 'progress', order: 'asc' }) }}">⬆</a>
-                <a href="{{ path('objectif_index', { sort: 'progress', order: 'desc' }) }}">⬇</a>
-            </th>
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(124, 58, 237, 0.7);
+    }
 
-            <th>Actions</th>
-        </tr>
-    </thead>
+    .objectives-table {
+        width: 100%;
+        border-collapse: collapse;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #0f172a;
+    }
 
-    <tbody>
+    .objectives-table thead {
+        background: linear-gradient(90deg, #312e81, #1e40af);
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: .7px;
+        color: #cbd5e1;
+    }
+
+    .objectives-table th {
+        padding: 18px 16px;
+    }
+
+    .objectives-table td {
+        padding: 18px 16px;
+        font-weight: 500;
+        color: #e2e8f0;
+    }
+
+    .objectives-table tbody tr {
+        border-bottom: 1px solid #1e293b;
+        transition: all 0.25s ease;
+    }
+
+    .objectives-table tbody tr:nth-child(even) {
+        background: #111827;
+    }
+
+    .objectives-table tbody tr:hover {
+        background: #1e293b;
+        transform: scale(1.01);
+    }
+
+    /* Couleurs colonnes */
+    .objectives-table td:nth-child(2) {
+        color: #34d399;
+        font-weight: 600;
+    }
+
+    .objectives-table td:nth-child(3) {
+        color: #a78bfa;
+        font-weight: 600;
+    }
+
+    .objectives-table td:nth-child(4) {
+        color: #38bdf8;
+        font-weight: 600;
+    }
+
+    .status-complete {
+        color: #22c55e;
+        font-weight: 700;
+    }
+
+    .status-progress {
+        color: #facc15;
+        font-weight: 600;
+    }
+
+    .progress-container {
+        min-width: 220px;
+    }
+
+    .progress-bar-bg {
+        background: #1e293b;
+        border-radius: 30px;
+        height: 12px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 30px;
+        transition: width .5s ease;
+    }
+
+    .progress-text {
+        font-size: 12px;
+        margin-top: 6px;
+        color: #94a3b8;
+    }
+
+    .btn-action {
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: none;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-right: 6px;
+        transition: all 0.25s ease;
+    }
+
+    .btn-edit {
+        background: #1e3a8a;
+        color: #93c5fd;
+    }
+
+    .btn-edit:hover {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-delete {
+        background: #7f1d1d;
+        color: #fca5a5;
+    }
+
+    .btn-delete:hover {
+        background: #b91c1c;
+        color: white;
+    }
+
+    .empty-row {
+        text-align: center;
+        padding: 50px;
+        font-weight: 600;
+        color: #94a3b8;
+        background: #0f172a;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-top: 35px;
+        color: #a78bfa;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+
+    .sort-link {
+        text-decoration: none;
+        margin-left: 6px;
+        color: #94a3b8;
+        font-size: 12px;
+    }
+
+    .sort-link:hover {
+        color: white;
+    }
+</style>
+
+
+
+
+<div class="page-container">
+
+    <div class="page-header">
+        <div class="page-title">🎯 Mes objectifs</div>
+        <a href="{{ path('objectif_new') }}">
+            <button class="btn-primary">➕ Créer un objectif</button>
+        </a>
+    </div>
+
+    <table class="objectives-table">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Montant actuel</th>
+                <th>Multiplicateur</th>
+                <th>
+                    Montant cible
+                    <a class="sort-link" href="{{ path('objectif_index', { sort: 'target', order: 'asc' }) }}">⬆</a>
+                    <a class="sort-link" href="{{ path('objectif_index', { sort: 'target', order: 'desc' }) }}">⬇</a>
+                </th>
+                <th>Statut</th>
+                <th>
+                    Progression
+                    <a class="sort-link" href="{{ path('objectif_index', { sort: 'progress', order: 'asc' }) }}">⬆</a>
+                    <a class="sort-link" href="{{ path('objectif_index', { sort: 'progress', order: 'desc' }) }}">⬇</a>
+                </th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
         {% for objectif in objectifs %}
             {% set currentAmount = calculator.calculateCurrentAmountForObjectif(objectif) %}
-
             {% set progress = 0 %}
             {% if objectif.targetAmount > 0 %}
                 {% set progress = (currentAmount / objectif.targetAmount) * 100 %}
@@ -47,60 +247,59 @@
             {% set progress = progress > 100 ? 100 : progress %}
 
             <tr>
-                <td>{{ objectif.name }}</td>
-                <td>{{ currentAmount|number_format(2) }}</td>
+                <td><strong>{{ objectif.name }}</strong></td>
+                <td>${{ currentAmount|number_format(2) }}</td>
                 <td>x{{ objectif.targetMultiplier }}</td>
-                <td>{{ objectif.targetAmount|number_format(2) }}</td>
+                <td>${{ objectif.targetAmount|number_format(2) }}</td>
 
                 <td>
                     {% if objectif.isCompleted %}
-                        <span style="color:green; font-weight:bold;">✔ Atteint</span>
+                        <span class="status-complete">✔ Atteint</span>
                     {% else %}
-                        <span style="color:orange;">⏳ En cours</span>
+                        <span class="status-progress">⏳ En cours</span>
                     {% endif %}
                 </td>
 
                 <td>
-                    <div style="min-width:180px;">
-                        <div style="
-                            background:#e0e0e0;
-                            border-radius:5px;
-                            height:18px;
-                            overflow:hidden;
-                        ">
-                            <div style="
-                                width: {{ progress }}%;
-                                height:100%;
-                                background-color: {{ objectif.isCompleted ? '#4CAF50' : '#FFA500' }};
-                                transition: width .4s ease;
-                            "></div>
+                    <div class="progress-container">
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill"
+                                 style="
+                                    width: {{ progress }}%;
+                                    background-color: {{ objectif.isCompleted ? '#16a34a' : '#f59e0b' }};
+                                 ">
+                            </div>
                         </div>
-                        <small>{{ progress|number_format(1) }}%</small>
+                        <div class="progress-text">
+                            {{ progress|number_format(1) }}%
+                        </div>
                     </div>
                 </td>
 
                 <td>
                     <a href="{{ path('objectif_edit', { id: objectif.id }) }}">
-                        <button>✏️ Modifier</button>
+                        <button class="btn-action btn-edit">✏ Modifier</button>
                     </a>
 
                     <form method="post"
                           action="{{ path('objectif_delete', { id: objectif.id }) }}"
                           style="display:inline-block"
                           onsubmit="return confirm('Supprimer cet objectif ?');">
-                        <button style="color:red;">❌ Supprimer</button>
+                        <button class="btn-action btn-delete">❌ Supprimer</button>
                     </form>
                 </td>
             </tr>
+
         {% else %}
             <tr>
-                <td colspan="7">Aucun objectif</td>
+                <td colspan="7" class="empty-row">Aucun objectif pour le moment</td>
             </tr>
         {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
 
-<br>
+    <a class="back-link" href="{{ path('crypto_index') }}">⬅ Retour aux investissements</a>
 
-<a href="{{ path('crypto_index') }}">⬅ Investissements</a>
+</div>
+
 {% endblock %}

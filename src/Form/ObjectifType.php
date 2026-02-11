@@ -31,7 +31,8 @@ class ObjectifType extends AbstractType
                 ],
             ]);
 
-        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) use ($options) {
+
             $objectif = $event->getData();
             $form = $event->getForm();
 
@@ -51,13 +52,22 @@ class ObjectifType extends AbstractType
                 'multiple' => true,
                 'expanded' => true,
                 'label' => 'Investissements disponibles',
-                'query_builder' => function (InvestissementRepository $repo) use ($objectif) {
+                'query_builder' => function (InvestissementRepository $repo) use ($objectif, $options) {
 
-                    // 🔥 base : investissements libres
-                    $qb = $repo->createQueryBuilder('i')
-                        ->where('i.objectif IS NULL');
+                    $qb = $repo->createQueryBuilder('i');
 
-                    // ✅ uniquement si l’objectif existe déjà (édition)
+                    // 👑 ADMIN → voit tous les investissements libres
+                    if ($options['is_admin']) {
+                        $qb->where('i.objectif IS NULL');
+                    } 
+                    // 👤 USER → voit seulement SES investissements libres
+                    else {
+                        $qb->where('i.objectif IS NULL')
+                           ->andWhere('i.user_id = :user')
+                           ->setParameter('user', $options['current_user']);
+                    }
+
+                    // 🔄 En édition → garder ceux déjà liés à cet objectif
                     if ($objectif->getId() !== null) {
                         $qb->orWhere('i.objectif = :objectif')
                            ->setParameter('objectif', $objectif);
@@ -73,6 +83,9 @@ class ObjectifType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Objectif::class,
+            'current_user' => null,
+            'is_admin' => false,
         ]);
     }
 }
+        

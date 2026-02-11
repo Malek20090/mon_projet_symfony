@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin - Objectifs{% endblock %}
+
+{% block body %}
+
+<h1>Admin - Tous les objectifs</h1>
+
+<a href="{{ path('admin_dashboard') }}">⬅ Retour Dashboard</a>
+
+<br><br>
+
+<table border="1" cellpadding="10" width="100%">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Montant actuel</th>
+            <th>Multiplicateur</th>
+            <th>Montant cible</th>
+            <th>Statut</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for obj in objectifs %}
+            {% set currentAmount = calculator.calculateCurrentAmountForObjectif(obj) %}
+            <tr>
+                <td>{{ obj.name }}</td>
+
+```
+            <td>{{ currentAmount|number_format(2) }}</td>
+            <td>x{{ obj.targetMultiplier }}</td>
+            <td>{{ obj.targetAmount|number_format(2) }}</td>
+
+            <td>
+                {% if obj.isCompleted %}
+                    <span style="color:green;">✔ Atteint</span>
+                {% else %}
+                    <span style="color:orange;">⏳ En cours</span>
+                {% endif %}
+            </td>
+
+            <td>
+                <form method="post"
+                      action="{{ path('admin_objectif_delete', {id: obj.id}) }}"
+                      onsubmit="return confirm('Confirmer la suppression ?');">
+
+                    <input type="hidden"
+                           name="_token"
+                           value="{{ csrf_token('delete_objectif_' ~ obj.id) }}">
+
+                    <button type="submit" style="color:white; background:red; border:none; padding:5px 10px; cursor:pointer;">
+                        Supprimer
+                    </button>
+                </form>
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="6">Aucun objectif</td>
+        </tr>
+    {% endfor %}
+</tbody>
+```
+
+</table>
+
+{% endblock %}

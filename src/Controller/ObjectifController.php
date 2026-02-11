@@ -22,7 +22,11 @@ class ObjectifController extends AbstractController
     ): Response {
         $objectif = new Objectif();
 
-        $form = $this->createForm(ObjectifType::class, $objectif);
+        $form = $this->createForm(ObjectifType::class, $objectif, [
+    'current_user' => $this->getUser(),
+    'is_admin' => $this->isGranted('ROLE_ADMIN'),
+]);
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -73,7 +77,20 @@ public function index(
     $sort = $request->query->get('sort'); // progression | target
     $order = $request->query->get('order', 'desc'); // asc | desc
 
+    $user = $this->getUser();
+
+if ($this->isGranted('ROLE_ADMIN')) {
     $objectifs = $objectifRepository->findAll();
+} else {
+    $objectifs = $objectifRepository->createQueryBuilder('o')
+        ->join('o.investissements', 'i')
+        ->where('i.user_id = :user')
+        ->setParameter('user', $user)
+        ->groupBy('o.id')
+        ->getQuery()
+        ->getResult();
+}
+
 
     // 🔄 tri par montant cible
     if ($sort === 'target') {
@@ -133,7 +150,11 @@ public function edit(
         $originalInvestissements[] = $investissement;
     }
 
-    $form = $this->createForm(ObjectifType::class, $objectif);
+    $form = $this->createForm(ObjectifType::class, $objectif, [
+    'current_user' => $this->getUser(),
+    'is_admin' => $this->isGranted('ROLE_ADMIN'),
+]);
+
     $form->handleRequest($request);
 
     if ($form->isSubmitted() && $form->isValid()) {
