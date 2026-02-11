@@ -25,6 +25,23 @@ class SalaryExpenseController extends AbstractController
         ExpenseRepository $expenseRepository,
         EntityManagerInterface $entityManager
     ): Response {
+        $user = $this->getUser();
+
+if (!$user) {
+    return $this->redirectToRoute('app_login');
+}
+
+// ✅ On récupère uniquement les données du user connecté
+$revenues = $revenueRepository->findBy(
+    ['user' => $user],
+    ['receivedAt' => 'DESC']
+);
+
+$expenses = $expenseRepository->findBy(
+    ['user' => $user],
+    ['expenseDate' => 'DESC']
+);
+
         // -------- REVENUS : Tri (2 critères) ou Recherche --------
         $revenueSearch = trim((string) $request->query->get('revenue_search', ''));
         $revenueSort1 = $request->query->get('revenue_sort1', 'receivedAt');
@@ -32,11 +49,7 @@ class SalaryExpenseController extends AbstractController
         $revenueSort2 = $request->query->get('revenue_sort2', 'amount');
         $revenueDir2 = $request->query->get('revenue_dir2', 'DESC');
 
-        if ($revenueSearch !== '') {
-            $revenues = $revenueRepository->search($revenueSearch);
-        } else {
-            $revenues = $revenueRepository->sortByTwoCriteria($revenueSort1, $revenueDir1, $revenueSort2, $revenueDir2);
-        }
+       
 
         // -------- DÉPENSES : Tri (2 critères) ou Recherche --------
         $expenseSearch = trim((string) $request->query->get('expense_search', ''));
@@ -45,11 +58,7 @@ class SalaryExpenseController extends AbstractController
         $expenseSort2 = $request->query->get('expense_sort2', 'amount');
         $expenseDir2 = $request->query->get('expense_dir2', 'DESC');
 
-        if ($expenseSearch !== '') {
-            $expenses = $expenseRepository->search($expenseSearch);
-        } else {
-            $expenses = $expenseRepository->sortByTwoCriteria($expenseSort1, $expenseDir1, $expenseSort2, $expenseDir2);
-        }
+       
 
         $totalIncome = array_sum(array_map(fn(Revenue $r) => $r->getAmount(), $revenues));
         $totalExpenses = array_sum(array_map(fn(Expense $e) => $e->getAmount(), $expenses));
@@ -72,47 +81,72 @@ class SalaryExpenseController extends AbstractController
         $formRevenue = $this->createForm(RevenueType::class, $revenue);
         $formRevenue->handleRequest($request);
         if ($formRevenue->isSubmitted() && $formRevenue->isValid()) {
-            $user = $this->getUser();
-            if (!$user) {
-                $this->addFlash('error', 'Vous devez être connecté pour ajouter un revenu.');
-                return $this->redirectToRoute('app_salary_expense_index');
-            }
-            $revenue->setUser($user);
-            $entityManager->persist($revenue);
-            $entityManager->flush();
-            $this->addFlash('success', 'Revenu ajouté.');
-            return $this->redirectToRoute('app_salary_expense_index');
-        }
 
-        $expense = new Expense();
-        $formExpense = $this->createForm(ExpenseType::class, $expense);
-        $formExpense->handleRequest($request);
-        if ($formExpense->isSubmitted() && $formExpense->isValid()) {
-            // 1️⃣ Sauvegarder la dépense
-            $entityManager->persist($expense);
+    $user = $this->getUser();
+    if (!$user) {
+        $this->addFlash('error', 'Vous devez être connecté.');
+        return $this->redirectToRoute('app_salary_expense_index');
+    }
 
-            // 2️⃣ Créer la transaction associée
-            $user = $this->getUser();
-            if ($user) {
-                $transaction = new Transaction();
-                $transaction->setType('EXPENSE');
-                $transaction->setMontant($expense->getAmount());
-                $transaction->setDate($expense->getExpenseDate() ?? new \DateTime());
-                $transaction->setDescription($expense->getDescription());
-                $transaction->setModuleSource('SALARY_EXPENSE_MODULE');
-                $transaction->setUser($user);
-                $transaction->setExpense($expense);
+    // 1️⃣ Lier revenu au user
+    $revenue->setUser($user);
+    $entityManager->persist($revenue);
 
-                $entityManager->persist($transaction);
-            }
+    // 2️⃣ Ajouter le montant au soldeTotal
+    $newSolde = $user->getSoldeTotal() + $revenue->getAmount();
+    $user->setSoldeTotal($newSolde);
 
-            // 3️⃣ Flush global
-            $entityManager->flush();
+    // 3️⃣ Flush
+    $entityManager->flush();
 
-            $this->addFlash('success', 'Dépense ajoutée (transaction créée).');
-            return $this->redirectToRoute('app_salary_expense_index');
-        }
+    $this->addFlash('success', 'Revenu ajouté et solde mis à jour.');
 
+    return $this->redirectToRoute('app_salary_expense_index');
+}
+
+
+       $expense = new Expense();
+$formExpense = $this->createForm(ExpenseType::class, $expense);
+$formExpense->handleRequest($request);
+
+if ($formExpense->isSubmitted() && $formExpense->isValid()) {
+
+    $user = $this->getUser();
+
+    if (!$user) {
+        $this->addFlash('error', 'Vous devez être connecté.');
+        return $this->redirectToRoute('app_salary_expense_index');
+    }
+
+    // 🔹 Lier la dépense au user
+    $expense->setUser($user);
+    $entityManager->persist($expense);
+
+    // 🔹 Soustraire du soldeTotal
+    $user->setSoldeTotal(
+        $user->getSoldeTotal() - $expense->getAmount()
+    );
+
+    // 🔹 Créer transaction
+    $transaction = new Transaction();
+    $transaction->setType('EXPENSE');
+    $transaction->setMontant($expense->getAmount());
+    $transaction->setDate($expense->getExpenseDate() ?? new \DateTime());
+    $transaction->setDescription($expense->getDescription());
+    $transaction->setModuleSource('SALARY_EXPENSE_MODULE');
+    $transaction->setUser($user);
+    $transaction->setExpense($expense);
+
+    $entityManager->persist($transaction);
+
+    $entityManager->flush();
+
+    $this->addFlash('success', 'Dépense ajoutée et solde mis à jour.');
+
+    return $this->redirectToRoute('app_salary_expense_index');
+}
+
+        
         return $this->render('salary_expense/index.html.twig', [
             'revenues' => $revenues,
             'expenses' => $expenses,
@@ -147,6 +181,13 @@ class SalaryExpenseController extends AbstractController
     public function deleteRevenue(Request $request, Revenue $revenue, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete' . $revenue->getId(), $request->request->get('_token', ''))) {
+            $user = $revenue->getUser();
+if ($user) {
+    $user->setSoldeTotal(
+        $user->getSoldeTotal() - $revenue->getAmount()
+    );
+}
+
             $entityManager->remove($revenue);
             $entityManager->flush();
             $this->addFlash('success', 'Revenu supprimé.');

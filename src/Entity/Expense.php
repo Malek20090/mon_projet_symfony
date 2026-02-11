@@ -7,7 +7,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
-
+use App\Entity\User;
 #[ORM\Entity(repositoryClass: ExpenseRepository::class)]
 class Expense
 {
@@ -155,4 +155,19 @@ class Expense
 
         return $this;
     }
+    #[ORM\ManyToOne(targetEntity: User::class)]
+#[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+private ?User $user = null;
+
+public function getUser(): ?User
+{
+    return $this->user;
+}
+
+public function setUser(?User $user): self
+{
+    $this->user = $user;
+    return $this;
+}
+    
 }

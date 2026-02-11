@@ -34,6 +34,11 @@
                 <i class="fas fa-file-invoice-dollar"></i> <span>Transactions</span>
             </a>
 
+            <a href="{{ path('admin_dashboard') }}"
+               class="{{ 'admin_dashboard' in _route or 'admin_cours' in _route or 'admin_quiz' in _route ? 'active' : '' }}">
+                <i class="fas fa-graduation-cap"></i> <span>Cours & Quiz</span>
+            </a>
+
             <a href="{{ path('admin_imprevus_list') }}"
                class="{{ 'admin_imprevus' in _route ? 'active' : '' }}">
                 <i class="fas fa-exclamation-triangle"></i> <span>Imprévus</span>

@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Quiz du Cours: {{ cour.titre }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('css/home.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('student_cours_index') }}">Accueil</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('student_cours_index') }}">Cours</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('student_cours_show', {'id': cour.id}) }}">{{ cour.titre }}</a></li>
+            <li class="breadcrumb-item active">Quiz</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="fas fa-book"></i> {{ cour.titre }}
+            </h3>
+        </div>
+        <div class="card-body">
+            <h4 class="text-success mb-4">
+                <i class="fas fa-question-circle"></i> Quiz disponibles ({{ quizzes|length }})
+            </h4>
+
+            {% if quizzes|length > 0 %}
+                <div class="list-group">
+                    {% for quiz in quizzes %}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-2">{{ quiz.question }}</h5>
+                                    <div class="mb-2">
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-star"></i> {{ quiz.pointsValeur }} points
+                                        </span>
+                                        <span class="badge bg-info ms-2">
+                                            <i class="fas fa-list"></i> {{ quiz.choixReponses|length }} choix
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="ms-3">
+                                    <a href="{{ path('student_quiz_pass', {'id': quiz.id}) }}" class="btn btn-success">
+                                        <i class="fas fa-play"></i> Passer
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Aucun quiz disponible pour ce cours.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="text-center">
+        <a href="{{ path('student_cours_show', {'id': cour.id}) }}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Retour au cours
+        </a>
+    </div>
+</div>
+{% endblock %}

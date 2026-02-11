@@ -214,7 +214,6 @@ body.savings-page{
   background-repeat:no-repeat !important;
   background-color:transparent !important;
 }
-
 .savings-page .hero::before{
   content:"";
   position:absolute;
@@ -256,6 +255,69 @@ body.savings-page{
   box-shadow:0 14px 28px rgba(0,191,229,.28);
 }
 .savings-page .btn-primary2:hover{ transform: translateY(-1px); box-shadow:0 18px 34px rgba(0,191,229,.34); }
+
+/* =========================
+   ALEA PAGE — same hero style as Savings
+   ========================= */
+.alea-page .hero{
+  position:relative;
+  padding:64px 0 44px;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+  min-height:420px;
+  overflow:hidden;
+  color:#fff;
+  background-color:#081a3a;
+  background-image: url("/img/savings-banner.jpg?v=20260207") !important;
+  background-position:center !important;
+  background-size:cover !important;
+  background-repeat:no-repeat !important;
+}
+.alea-page .hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(120deg, rgba(8,26,58,.62), rgba(0,191,229,.38)) !important;
+  z-index:1;
+  pointer-events:none;
+}
+.alea-page .hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 20% 0%, rgba(0,191,229,.25), transparent 55%);
+  z-index:2;
+  pointer-events:none;
+}
+.alea-page .hero .wrap{ position:relative; z-index:3; }
+.alea-page .hero h1{ font-size:2.5rem; font-weight:800; margin-bottom:0.5rem; color:#fff; }
+.alea-page .hero p{ color:rgba(255,255,255,.9); margin-bottom:1rem; }
+.alea-page .hero .breadcrumbs{ color:rgba(255,255,255,.75); font-size:0.9rem; margin-bottom:1.25rem; }
+.alea-page .hero .breadcrumbs a{ color:rgba(255,255,255,.9); text-decoration:none; }
+.alea-page .hero .breadcrumbs .active{ color:#fff; font-weight:600; }
+.alea-page .hero-actions{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+.alea-page .btn-soft{
+  padding:10px 18px;
+  border-radius:999px;
+  font-weight:700;
+  border:1px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.14);
+  color:#fff;
+  text-decoration:none !important;
+  display:inline-block;
+}
+.alea-page .btn-soft:hover{ transform: translateY(-1px); background:rgba(255,255,255,.22); color:#fff; }
+.alea-page .btn-primary2{
+  padding:10px 18px;
+  border-radius:999px;
+  font-weight:700;
+  border:none;
+  background:var(--c-primary);
+  color:#fff;
+  text-decoration:none !important;
+  box-shadow:0 14px 28px rgba(0,191,229,.28);
+  display:inline-block;
+}
+.alea-page .btn-primary2:hover{ transform: translateY(-1px); box-shadow:0 18px 34px rgba(0,191,229,.34); color:#fff; }
 
 /* =========================
    MAIN ZONE
@@ -486,7 +548,6 @@ body.savings-page{
   border-color: rgba(0,191,229,.55);
   box-shadow: var(--ring);
 }
-
 .savings-page .help-text{
   font-size:12px;
   color:#6a7b89;

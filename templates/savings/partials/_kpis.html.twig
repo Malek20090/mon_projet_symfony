@@ -1,0 +1,37 @@
+<div class="kpi-grid">
+  <div class="stat-card">
+    <div>
+      <h4>Savings Balance</h4>
+      <div class="small">Current account balance</div>
+      <div class="value">{{ stats.balance|default(sa_balance)|default(0) }} TND</div>
+    </div>
+    <div class="icon-bubble">🐷</div>
+  </div>
+
+  <div class="stat-card">
+    <div>
+      <h4>Active Goals</h4>
+      <div class="small">Goals in progress</div>
+      <div class="value">{{ stats.activeGoals|default(goals|length)|default(0) }}</div>
+    </div>
+    <div class="icon-bubble">🎯</div>
+  </div>
+
+  <div class="stat-card">
+    <div>
+      <h4>Goals Progress</h4>
+      <div class="small">Average completion</div>
+      <div class="value">{{ stats.avgProgress|default(0) }}%</div>
+    </div>
+    <div class="icon-bubble">📊</div>
+  </div>
+
+  <div class="stat-card">
+    <div>
+      <h4>Nearest Deadline</h4>
+      <div class="small">Closest goal date</div>
+      <div class="value"><span class="date-value">{{ stats.nearestDeadline|default('--/--/----') }}</span></div>
+    </div>
+    <div class="icon-bubble">📅</div>
+  </div>
+</div>

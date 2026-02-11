@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}FinancialGoal{% endblock %}
+
+{% block body %}
+    <h1>FinancialGoal</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ financial_goal.id }}</td>
+            </tr>
+            <tr>
+                <th>Nom</th>
+                <td>{{ financial_goal.nom }}</td>
+            </tr>
+            <tr>
+                <th>MontantCible</th>
+                <td>{{ financial_goal.montantCible }}</td>
+            </tr>
+            <tr>
+                <th>MontantActuel</th>
+                <td>{{ financial_goal.montantActuel }}</td>
+            </tr>
+            <tr>
+                <th>DateLimite</th>
+                <td>{{ financial_goal.dateLimite ? financial_goal.dateLimite|date('Y-m-d') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Priorite</th>
+                <td>{{ financial_goal.priorite }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_financial_goal_index') }}">back to list</a>
+
+    <a href="{{ path('app_financial_goal_edit', {'id': financial_goal.id}) }}">edit</a>
+
+    {{ include('financial_goal/_delete_form.html.twig') }}
+{% endblock %}

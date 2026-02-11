@@ -1,0 +1,696 @@
+{# templates/savings/index.html.twig — same header & footer as Contact, Service, About #}
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}Savings & Goals | Decide${% endblock %}
+
+{# ✅ IMPORTANT: page scope for CSS #}
+{% block body_class %}savings-page{% endblock %}
+
+{# ✅ IMPORTANT: load your module css LAST (so it overrides template/bootstrap) #}
+{% block stylesheets %}
+  <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}?v=1000">
+
+  {# ✅ HARD FIX: prevent Goals table from stretching cards/pages #}
+  <style>
+    .savings-page .table-wrap{
+      overflow-x:auto;
+      max-width:100%;
+    }
+    .savings-page .table-wrap table{
+      width:100% !important;
+      table-layout:fixed !important;
+      max-width:100% !important;
+    }
+    .savings-page .table-wrap th,
+    .savings-page .table-wrap td{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    /* =========================
+       ✅ PRO TOAST (NO RELOAD)
+       ========================= */
+    .toast-stack{
+      position:fixed;
+      top:84px;
+      right:18px;
+      z-index:99999;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      pointer-events:none;
+    }
+    .pro-toast{
+      pointer-events:auto;
+      min-width:320px;
+      max-width:420px;
+      padding:14px 14px;
+      border-radius:14px;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.08);
+      box-shadow:0 20px 60px rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      transform: translateY(-6px);
+      opacity:0;
+      transition: all .22s ease;
+    }
+    .pro-toast.show{
+      transform: translateY(0);
+      opacity:1;
+    }
+    .pro-toast .icon{
+      width:36px;
+      height:36px;
+      border-radius:10px;
+      display:grid;
+      place-items:center;
+      font-size:18px;
+      flex:0 0 36px;
+    }
+    .pro-toast .content{
+      flex:1;
+      min-width:0;
+    }
+    .pro-toast .title{
+      font-weight:900;
+      font-size:14px;
+      line-height:1.1;
+      margin-bottom:4px;
+      color:#0f1a2b;
+    }
+    .pro-toast .msg{
+      font-size:13px;
+      color:#44515e;
+      line-height:1.35;
+      word-break:break-word;
+    }
+    .pro-toast .meta{
+      margin-top:8px;
+      font-size:11px;
+      color:#7b8794;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .pro-toast .x{
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      font-weight:900;
+      color:#718096;
+      margin-left:10px;
+      padding:2px 6px;
+      border-radius:8px;
+    }
+    .pro-toast .x:hover{ background:rgba(0,0,0,.06); }
+
+    .pro-toast.success .icon{ background:rgba(16,185,129,.14); }
+    .pro-toast.success .icon span{ color:#10b981; }
+
+    .pro-toast.danger .icon{ background:rgba(239,68,68,.14); }
+    .pro-toast.danger .icon span{ color:#ef4444; }
+
+    .pro-toast.warning .icon{ background:rgba(245,158,11,.16); }
+    .pro-toast.warning .icon span{ color:#f59e0b; }
+
+    .pro-toast.info .icon{ background:rgba(59,130,246,.14); }
+    .pro-toast.info .icon span{ color:#3b82f6; }
+
+    /* Optional: keep header exactly like base header (no module header duplication) */
+  </style>
+{% endblock %}
+
+{% block body %}
+
+{# =========================
+   SAFETY DEFAULTS
+   ========================= #}
+{% set tab = tab|default('savings') %}
+{% set stats = stats|default({}) %}
+{% set savingAccount = savingAccount|default({}) %}
+{% set transactions = transactions|default([]) %}
+{% set goals = goals|default([]) %}
+
+{# small helpers for safe fields #}
+{% set sa_balance = savingAccount.sold|default(savingAccount.solde|default(0)) %}
+{% set sa_rate = savingAccount.taux_interet|default(savingAccount.tauxInteret|default(0)) %}
+{% set sa_created = savingAccount.date_creation|default(savingAccount.dateCreation|default(null)) %}
+
+{# JS needs this route pattern (do NOT remove) #}
+<script>
+  window.__goalEditUrlPattern = "{{ path('app_goal_edit', {id: '__ID__'}) }}";
+</script>
+
+{# =========================
+   ✅ PRO TOAST STACK (NO RELOAD)
+   ========================= #}
+<div class="toast-stack" id="toastStack"></div>
+
+{# =========================
+   PAGE PARTS
+   ========================= #}
+
+{# Header is in base_pages.html.twig (same as Contact, Service, About) #}
+{% include 'savings/partials/_hero.html.twig' %}
+
+<section class="savings-zone">
+  <div class="container">
+
+    <div class="section-title">
+      <div class="kicker">DECIDE$ MODULE</div>
+      <h2>Manage Savings & Financial Goals</h2>
+      <p>Simple dashboard. Clear actions. Visible progress.</p>
+    </div>
+
+    {# KPIs #}
+    {% include 'savings/partials/_kpis.html.twig' with {
+      stats: stats,
+      sa_balance: sa_balance,
+      sa_rate: sa_rate,
+      goals: goals
+    } %}
+
+    {# Smart panels (alerts, insights, gamification...) #}
+    {% include 'savings/partials/_smart_panels.html.twig' with {
+      sa_rate: sa_rate
+    } %}
+
+    {# Tabs buttons #}
+    {% include 'savings/partials/_tabs.html.twig' with { tab: tab } %}
+
+    {# =========================
+       TAB PANELS
+       ✅ DO NOT add another .container inside tabs
+       because it breaks layout/width/grids.
+       ========================= #}
+
+    {# TAB: SAVINGS #}
+    <div id="tab-savings" class="tab-panel {{ tab == 'savings' ? 'show' : '' }}">
+      {% include 'savings/partials/tabs/_savings_tab.html.twig' with {
+        sa_balance: sa_balance,
+        sa_rate: sa_rate,
+        sa_created: sa_created,
+        transactions: transactions
+      } %}
+    </div>
+
+    {# TAB: GOALS #}
+    <div id="tab-goals" class="tab-panel {{ tab == 'goals' ? 'show' : '' }}">
+      {% include 'savings/partials/tabs/_goals_tab.html.twig' with { goals: goals } %}
+    </div>
+
+  </div>
+</section>
+
+{# =========================
+   MODALS (keep outside tabs)
+   ========================= #}
+{% include 'savings/partials/modals/_calendar_modal.html.twig' %}
+{% include 'savings/partials/modals/_sim_modal.html.twig' %}
+{% include 'savings/partials/modals/_goal_edit_modal.html.twig' %}
+
+{# Footer is in base_pages.html.twig (same as Contact, Service, About) #}
+
+{# =========================
+   ✅ AJAX (NO RELOAD) – PRO HANDLER
+   Works for deposit + add_goal + contribute_goal + edit_goal + delete_goal
+   Requires controller to return JSON when XHR.
+   ========================= #}
+<script>
+(function(){
+
+  // --------
+  // Toast UI
+  // --------
+  function toast(type, title, message, meta){
+    const stack = document.getElementById('toastStack');
+    if(!stack) return;
+
+    const t = document.createElement('div');
+    t.className = 'pro-toast ' + (type || 'info');
+
+    const iconMap = {
+      success: '✅',
+      danger:  '⛔',
+      warning: '⚠️',
+      info:    'ℹ️'
+    };
+
+    const now = new Date();
+    const time = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+    t.innerHTML = `
+      <div class="icon"><span>${iconMap[type] || 'ℹ️'}</span></div>
+      <div class="content">
+        <div class="title">${title || 'Notification'}</div>
+        <div class="msg">${message || ''}</div>
+        <div class="meta">
+          <span>• ${time}</span>
+          ${meta ? `<span>• ${meta}</span>` : ``}
+        </div>
+      </div>
+      <button class="x" type="button" aria-label="Close">✕</button>
+    `;
+
+    stack.appendChild(t);
+
+    requestAnimationFrame(() => t.classList.add('show'));
+
+    const kill = () => {
+      t.classList.remove('show');
+      setTimeout(() => t.remove(), 180);
+    };
+
+    t.querySelector('.x').addEventListener('click', kill);
+    setTimeout(kill, 4200);
+  }
+
+  // -----------------------------------
+  // Convert fetch response to safe JSON
+  // -----------------------------------
+  async function safeJson(res){
+    try { return await res.json(); } catch(e){ return null; }
+  }
+
+  // -----------------------------------
+  // Update UI (optional enhancements)
+  // -----------------------------------
+  function updateBalanceIfPresent(newBalance){
+    if(typeof newBalance === 'undefined' || newBalance === null) return;
+
+    // try common ids/classes (no break if not found)
+    const el1 = document.getElementById('uiBalance');
+    if(el1) el1.textContent = Number(newBalance).toFixed(2) + ' TND';
+
+    document.querySelectorAll('[data-balance]').forEach(el => {
+      el.textContent = Number(newBalance).toFixed(2) + ' TND';
+    });
+  }
+
+  // -----------------------------------
+  // Attach AJAX to all POST forms inside module
+  // -----------------------------------
+  function initAjaxForms(){
+    const scope = document.querySelector('.savings-zone');
+    if(!scope) return;
+
+    const forms = Array.from(scope.querySelectorAll('form[method="post"], form[method="POST"]'));
+
+    // Only intercept module actions (avoid login/logout forms if any)
+    const isModuleForm = (f) => {
+      const action = (f.getAttribute('action') || '').toLowerCase();
+      if(!action) return false;
+      return action.includes('/savings') || action.includes('/goal');
+    };
+
+    forms.filter(isModuleForm).forEach(form => {
+      if(form.dataset.ajaxBound === '1') return;
+      form.dataset.ajaxBound = '1';
+
+      form.addEventListener('submit', async (e) => {
+        // IMPORTANT: allow normal submit if user holds Ctrl/Meta (open new tab habit)
+        if(e.ctrlKey || e.metaKey) return;
+
+        e.preventDefault();
+
+        // tiny UX: disable submit buttons while sending
+        const btns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+        btns.forEach(b => b.disabled = true);
+
+        const fd = new FormData(form);
+
+        try{
+          const res = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: fd
+          });
+
+          const data = await safeJson(res);
+
+          // If server didn't return JSON, fallback to normal redirect
+          if(!data){
+            toast('warning', 'Connexion au serveur', "Réponse inattendue. Rechargement sécurisé…");
+            form.submit();
+            return;
+          }
+
+          if(!res.ok || data.ok === false){
+            // professional error copy
+            const title = data.title || "Action refusée";
+            const msg   = data.message || "Vérifie les champs et réessaie.";
+            toast(data.type || 'danger', title, msg, data.code || null);
+            return;
+          }
+
+          // success
+          toast(data.type || 'success', data.title || "Opération réussie", data.message || "Enregistré ✅", data.code || null);
+
+          // optional UI updates
+          if(data.newBalance !== undefined) updateBalanceIfPresent(data.newBalance);
+
+          // if server wants us to refresh specific parts
+          if(data.refresh === 'goals'){
+            // simplest professional way without full reload: re-request page HTML fragment is heavy
+            // we keep UX smooth: just revalidate by doing a soft reload if asked
+            // (you can later replace this by partial rendering)
+          }
+
+          // reset only for some forms (deposit/add_goal)
+          const formType = (fd.get('_form') || '').toString();
+          if(formType === 'deposit' || formType === 'add_goal' || formType === 'contribute_goal'){
+            try{ form.reset(); }catch(e){}
+          }
+
+        }catch(err){
+          toast('danger', 'Connexion impossible', "Erreur réseau. Vérifie ta connexion et réessaie.");
+        }finally{
+          btns.forEach(b => b.disabled = false);
+        }
+      });
+    });
+  }
+
+  initAjaxForms();
+  document.addEventListener('turbo:load', initAjaxForms);
+
+})();
+</script>
+
+{# =========================
+   TABS JS (ADD ONCE)
+   ========================= #}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.js-tab');
+
+    const panels = {
+      savings: document.getElementById('tab-savings'),
+      goals: document.getElementById('tab-goals'),
+    };
+
+    // Safety: if tabs partial is not present, do nothing
+    if (!buttons.length || (!panels.savings && !panels.goals)) return;
+
+    function showTab(name) {
+      // Active pill
+      buttons.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+
+      // Panels
+      Object.keys(panels).forEach(k => {
+        if (!panels[k]) return;
+        panels[k].classList.toggle('show', k === name);
+      });
+
+      // Keep URL in sync (?tab=savings|goals)
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', name);
+        window.history.replaceState({}, '', url.toString());
+      } catch (e) {}
+    }
+
+    // Click handlers
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.tab;
+        if (!name || !panels[name]) return;
+        showTab(name);
+      });
+    });
+
+    // Initial tab: URL > existing active > default savings
+    const urlTab = (new URL(window.location.href)).searchParams.get('tab');
+    if (urlTab && panels[urlTab]) {
+      showTab(urlTab);
+    } else {
+      const activeBtn = document.querySelector('.js-tab.active');
+      showTab(activeBtn ? activeBtn.dataset.tab : 'savings');
+    }
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const statLabels = {{ stat_labels|default([])|json_encode|raw }};
+  const statValues = {{ stat_values|default([])|json_encode|raw }};
+
+  let barChartInstance = null;
+  let pieChartInstance = null;
+
+  function renderCharts() {
+    const barEl = document.getElementById('barChart');
+    const pieEl = document.getElementById('pieChart');
+    if (!barEl || !pieEl) return;
+
+    if (barChartInstance) barChartInstance.destroy();
+    if (pieChartInstance) pieChartInstance.destroy();
+
+    barChartInstance = new Chart(barEl, {
+      type: 'bar',
+      data: {
+        labels: statLabels,
+        datasets: [{ label: 'Total (TND)', data: statValues }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    pieChartInstance = new Chart(pieEl, {
+      type: 'doughnut',
+      data: {
+        labels: statLabels,
+        datasets: [{ data: statValues }]
+      },
+      options: { responsive: true }
+    });
+  }
+
+  document.addEventListener('shown.bs.modal', function(e) {
+    if (e.target && e.target.id === 'statsModal') {
+      renderCharts();
+    }
+  });
+</script>
+
+<script>
+  window.openGoalEdit = function(id){
+    const url = (window.__goalEditUrlPattern || '').replace('__ID__', id);
+    if(url) window.location.href = url;
+  };
+</script>
+<script>
+
+
+(function(){
+
+  // =========================
+  // ✅ TABS (Turbo-safe)
+  // =========================
+  function initSavingsTabs(){
+    const buttons = document.querySelectorAll('.js-tab');
+    const savings = document.getElementById('tab-savings');
+    const goals   = document.getElementById('tab-goals');
+
+    if (!buttons.length || !savings || !goals) return;
+
+    const panels = { savings, goals };
+
+    function showTab(name){
+      // active button
+      buttons.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+
+      // show/hide panels
+      Object.keys(panels).forEach(k => panels[k].classList.toggle('show', k === name));
+
+      // keep url synced
+      try{
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', name);
+        window.history.replaceState({}, '', url.toString());
+      }catch(e){}
+    }
+
+    // bind clicks
+    buttons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const name = btn.dataset.tab;
+        if (!name || !panels[name]) return;
+        showTab(name);
+      });
+    });
+
+    // initial
+    const urlTab = (new URL(window.location.href)).searchParams.get('tab');
+    showTab((urlTab && panels[urlTab]) ? urlTab : 'savings');
+  }
+
+  // run now + when Turbo changes page
+  initSavingsTabs();
+  document.addEventListener('turbo:load', initSavingsTabs);
+
+  // =========================
+  // AUTOPLAN BUTTON (for now)
+  // =========================
+  const autoBtn = document.getElementById('btn-autoplan');
+  if (autoBtn) {
+    autoBtn.addEventListener('click', () => {
+      alert("✨ Auto-plan is not implemented yet. Next step: connect it to the controller.");
+    });
+  }
+
+  // =========================
+  // EDIT MODAL OPEN/CLOSE
+  // =========================
+  const overlay  = document.getElementById('goalEditOverlay');
+  const closeBtn = document.getElementById('goalEditClose');
+  const cancelBtn= document.getElementById('goalEditCancel');
+  const form     = document.getElementById('goalEditForm');
+
+  function openModal(){
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+  }
+  function closeModal(){
+    if (!overlay) return;
+    overlay.style.display = 'none';
+  }
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+  }
+
+  // Fill modal from edit buttons (safe + clean)
+  document.querySelectorAll('[data-open-goal-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id    = btn.getAttribute('data-goal-id')    || btn.dataset.goalId    || '';
+      const nom   = btn.getAttribute('data-goal-nom')   || '';
+      const cible = btn.getAttribute('data-goal-cible') || '';
+      const date  = btn.getAttribute('data-goal-date')  || '';
+      const prio  = btn.getAttribute('data-goal-prio')  || '3';
+
+      const elId   = document.getElementById('edit_id');
+      const elNom  = document.getElementById('edit_nom');
+      const elCibl = document.getElementById('edit_cible');
+      const elDate = document.getElementById('edit_date');
+      const elPrio = document.getElementById('edit_prio');
+
+      if (elId)   elId.value = id;
+      if (elNom)  elNom.value = nom;
+      if (elCibl) elCibl.value = cible;
+      if (elDate) elDate.value = date;
+      if (elPrio) elPrio.value = prio;
+
+      openModal();
+    });
+  });
+
+  // =========================
+  // CLIENT-SIDE FILTER/SORT
+  // =========================
+  const params = new URLSearchParams(window.location.search);
+  const q      = (params.get('q') || '').toLowerCase();
+  const sort   = params.get('sort') || '';
+  const filter = params.get('filter') || 'all';
+
+  const list = document.getElementById('goals-list');
+  if (list) {
+    const cards = Array.from(list.querySelectorAll('.goal-card'));
+
+    const today = new Date();
+    const nearDays = 14;
+
+    const filtered = cards.filter(card => {
+      const name = (card.dataset.goalName || '').toLowerCase();
+      const pr   = parseInt(card.dataset.goalPriority || '0', 10);
+      const dl   = (card.dataset.goalDeadline || '').trim();
+
+      // search
+      if (q && !name.includes(q)) return false;
+
+      // chips
+      if (filter === 'high') {
+        return pr <= 2; // P1 or P2
+      }
+
+      if (filter === 'near') {
+        if (!dl) return false;
+        const d = new Date(dl + "T00:00:00");
+        const diff = (d - today) / (1000 * 60 * 60 * 24);
+        return diff >= 0 && diff <= nearDays;
+      }
+
+      return true;
+    });
+
+    // sort
+    const sorted = filtered.slice();
+    if (sort === 'priority_desc') {
+      sorted.sort((a,b) => parseInt(b.dataset.goalPriority||'0',10) - parseInt(a.dataset.goalPriority||'0',10));
+    } else if (sort === 'deadline_asc') {
+      sorted.sort((a,b) => (a.dataset.goalDeadline||'9999-12-31').localeCompare(b.dataset.goalDeadline||'9999-12-31'));
+    } else if (sort === 'progress_desc') {
+      sorted.sort((a,b) => parseFloat(b.dataset.goalProgress||'0') - parseFloat(a.dataset.goalProgress||'0'));
+    } else if (sort === 'name_asc') {
+      sorted.sort((a,b) => (a.dataset.goalName||'').localeCompare(b.dataset.goalName||''));
+    }
+
+    // re-render (keep tiny-note if it exists)
+    const note = list.querySelector('.tiny-note');
+    cards.forEach(c => c.remove());
+    sorted.forEach(c => list.insertBefore(c, note || null));
+  }
+
+})();
+</script>
+<script>
+  function initSavingsTabs(){
+    function setTab(tab){
+      const savings = document.getElementById("tab-savings");
+      const goals   = document.getElementById("tab-goals");
+      if(!savings || !goals) {
+        console.warn("Missing tab panels: tab-savings/tab-goals");
+        return;
+      }
+
+      document.querySelectorAll(".js-tab").forEach(b => {
+        b.classList.toggle("active", b.dataset.tab === tab);
+      });
+
+      savings.classList.toggle("show", tab === "savings");
+      goals.classList.toggle("show", tab === "goals");
+
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    }
+
+    // Click delegation
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest(".js-tab");
+      if(!btn) return;
+      setTab(btn.dataset.tab);
+    });
+
+    // initial tab from URL (default savings)
+    const urlTab = new URL(window.location.href).searchParams.get("tab") || "savings";
+    setTab(urlTab);
+  }
+
+  document.addEventListener("DOMContentLoaded", initSavingsTabs);
+  document.addEventListener("turbo:load", initSavingsTabs);
+</script>
+
+{% endblock %}

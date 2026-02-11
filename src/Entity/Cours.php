@@ -29,6 +29,7 @@ class Cours
     private ?string $urlMedia = null;
 
     #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
     private ?User $user = null;
 
     /**

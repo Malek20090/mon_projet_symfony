@@ -1,0 +1,69 @@
+<header class="topbar" id="top">
+  <div class="container-fluid topbar-inner">
+    <div class="topbar-row topbar-grid">
+
+
+      <div class="brand">
+        <i class="fa-solid fa-wallet"></i>
+        <span>Decide</span><span>$</span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="#">Home</a>
+        <a href="#">About</a>
+        <a class="active" href="#">Service</a>
+        <a href="#">Contact</a>
+      </nav>
+
+      <div class="right-info">
+        <div class="text-end topbar-text">
+          <div>Finance personnelle</div>
+          <b>Gestion du salaire</b>
+        </div>
+
+        <!-- ✅ Night button -->
+        <button id="nightBtn" class="pill-btn night-toggle" type="button" aria-pressed="false">
+          <i class="fa-solid fa-moon"></i>
+          <span>Night</span>
+        </button>
+
+        <a class="pill-btn back-btn" href="{{ path('app_savings') }}">
+          <i class="fa-solid fa-arrow-left"></i> back
+        </a>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+{# ✅ inline fallback JS (works even if app.js is not loaded) #}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("nightBtn");
+    if (!btn) return;
+
+    // restore
+    if (localStorage.getItem("decides_night") === "1") {
+      document.body.classList.add("night");
+    }
+
+    function sync() {
+      const isNight = document.body.classList.contains("night");
+      btn.setAttribute("aria-pressed", isNight ? "true" : "false");
+
+      const span = btn.querySelector("span");
+      if (span) span.textContent = isNight ? "Day" : "Night";
+
+      const icon = btn.querySelector("i");
+      if (icon) icon.className = isNight ? "fa-solid fa-sun" : "fa-solid fa-moon";
+    }
+
+    sync();
+
+    btn.addEventListener("click", function () {
+      document.body.classList.toggle("night");
+      localStorage.setItem("decides_night", document.body.classList.contains("night") ? "1" : "0");
+      sync();
+    });
+  });
+</script>

@@ -1,0 +1,232 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Catalogue des Cours{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('css/home.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<!-- Hero Section -->
+<section class="hero-section bg-gradient-primary text-white py-5 mb-5 position-relative overflow-hidden">
+    <div class="background-pattern"></div>
+    <div class="container position-relative">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold animate__animated animate__bounceIn">
+                    <i class="fas fa-book me-3 animate__animated animate__zoomIn animate__delay-1s"></i> Catalogue des Cours
+                </h1>
+                <p class="lead animate__animated animate__fadeInLeft animate__delay-1s">
+                    Explorez nos cours de formation financière et boostez vos compétences en gestion budgétaire.
+                </p>
+                <div class="mt-4 animate__animated animate__fadeInUp animate__delay-2s">
+                    <span class="badge bg-light text-primary fs-6 px-3 py-2 me-2 animate__animated animate__pulse animate__infinite">
+                        <i class="fas fa-graduation-cap"></i> Apprentissage Interactif
+                    </span>
+                    <span class="badge bg-light text-primary fs-6 px-3 py-2 animate__animated animate__pulse animate__infinite">
+                        <i class="fas fa-chart-line"></i> Gestion Financière
+                    </span>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center animate__animated animate__zoomIn animate__delay-1s">
+                <i class="fas fa-books fa-6x text-white opacity-75 floating-icon"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="text-center mb-5">
+        <p class="text-muted">Découvrez une variété de cours adaptés à votre niveau</p>
+    </div>
+
+    <div class="d-flex justify-content-center mb-4">
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-sort"></i> Trier par
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                <li><a class="dropdown-item" href="{{ path('student_cours_index', { sort: 'titre', order: (sortBy == 'titre' and order == 'ASC') ? 'DESC' : 'ASC' }) }}">
+                    Titre {% if sortBy == 'titre' %}<i class="fas fa-sort-{{ order == 'ASC' ? 'up' : 'down' }}"></i>{% endif %}
+                </a></li>
+                <li><a class="dropdown-item" href="{{ path('student_cours_index', { sort: 'typeMedia', order: (sortBy == 'typeMedia' and order == 'ASC') ? 'DESC' : 'ASC' }) }}">
+                    Type Media {% if sortBy == 'typeMedia' %}<i class="fas fa-sort-{{ order == 'ASC' ? 'up' : 'down' }}"></i>{% endif %}
+                </a></li>
+            </ul>
+        </div>
+    </div>
+
+    {% if cours|length > 0 %}
+        <div class="row g-4">
+            {% for cour in cours %}
+                <div class="col-md-6 col-lg-4 animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index * 0.1 }}s;">
+                    <div class="card h-100 shadow-sm border-0 hover-card">
+                        {% if cour.urlMedia %}
+                            <div class="card-img-top-container" style="height: 200px; overflow: hidden; background: linear-gradient(135deg, #1e3fa3, #00cfff);">
+                                {% if cour.typeMedia == 'video' %}
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-white">
+                                        <i class="fas fa-video fa-4x animate__animated animate__pulse animate__infinite"></i>
+                                    </div>
+                                {% elseif cour.typeMedia == 'image' %}
+                                    <img src="{{ cour.urlMedia }}" class="img-fluid w-100 h-100" style="object-fit: cover;" alt="{{ cour.titre }}">
+                                {% else %}
+                                    <div class="d-flex align-items-center justify-content-center h-100 text-white">
+                                        <i class="fas fa-file-alt fa-4x"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="card-img-top-container d-flex align-items-center justify-content-center" style="height: 200px; background: linear-gradient(135deg, #1e3fa3, #00cfff);">
+                                <i class="fas fa-book fa-4x text-white animate__animated animate__bounceIn"></i>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-primary fw-bold">{{ cour.titre }}</h5>
+                            <p class="card-text text-muted flex-grow-1">
+                                {{ cour.contenuTexte|slice(0, 120) }}{% if cour.contenuTexte|length > 120 %}...{% endif %}
+                            </p>
+                            <div class="mb-3">
+                                <span class="badge bg-info text-white px-3 py-2 rounded-pill">
+                                    <i class="fas fa-{{ cour.typeMedia == 'video' ? 'video' : (cour.typeMedia == 'image' ? 'image' : 'file-alt') }} me-1"></i>
+                                    {{ cour.typeMedia|upper }}
+                                </span>
+                                {% if cour.quizzes|length > 0 %}
+                                    <span class="badge bg-success text-white px-3 py-2 rounded-pill ms-2">
+                                        <i class="fas fa-question-circle me-1"></i> {{ cour.quizzes|length }} Quiz{{ cour.quizzes|length > 1 ? 's' : '' }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="mt-auto">
+                                <a href="{{ path('student_cours_show', {'id': cour.id}) }}" class="btn btn-primary w-100 rounded-pill fw-bold">
+                                    <i class="fas fa-eye me-2"></i> Voir le cours
+                                </a>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5 animate__animated animate__zoomIn">
+            <div class="empty-state-icon mb-4">
+                <i class="fas fa-books fa-6x text-muted animate__animated animate__bounceIn animate__infinite"></i>
+            </div>
+            <h3 class="text-muted mb-3 animate__animated animate__fadeIn animate__delay-1s">Aucun cours disponible pour le moment</h3>
+            <p class="text-muted mb-4 animate__animated animate__fadeIn animate__delay-2s">Les cours seront bientôt disponibles. Restez à l'écoute !</p>
+            <a href="{{ path('student_cours_index') }}" class="btn btn-primary btn-lg rounded-pill px-4 animate__animated animate__bounceIn animate__delay-3s">
+                <i class="fas fa-home me-2"></i> Retour à l'accueil
+            </a>
+        </div>
+    {% endif %}
+
+    <div class="mt-5 text-center">
+        <a href="{{ path('app_home') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour à l'accueil
+        </a>
+    </div>
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #1e3fa3 0%, #00cfff 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.hero-section {
+    border-radius: 0 0 50px 50px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.background-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                      radial-gradient(circle at 40% 40%, rgba(255,255,255,0.05) 0%, transparent 50%);
+    background-size: 300px 300px, 200px 200px, 400px 400px;
+    animation: patternMove 20s ease-in-out infinite;
+}
+
+@keyframes patternMove {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(30px, -30px) rotate(90deg); }
+    50% { transform: translate(-20px, 20px) rotate(180deg); }
+    75% { transform: translate(20px, 30px) rotate(270deg); }
+}
+
+.floating-icon {
+    animation: floating 6s ease-in-out infinite;
+}
+
+@keyframes floating {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-20px) rotate(5deg); }
+    50% { transform: translateY(-40px) rotate(0deg); }
+    75% { transform: translateY(-20px) rotate(-5deg); }
+}
+
+.hover-card {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.hover-card:hover {
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: 0 25px 60px rgba(30, 63, 163, 0.3), 0 0 30px rgba(0, 207, 255, 0.2) !important;
+}
+
+.card {
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.card-img-top-container {
+    border-radius: 15px 15px 0 0;
+}
+
+.empty-state-icon {
+    animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-15px) scale(1.05); }
+}
+
+.btn-primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(13, 110, 253, 0.4);
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        border-radius: 0 0 30px 30px;
+        padding: 3rem 0;
+    }
+
+    .display-4 {
+        font-size: 2.5rem;
+    }
+
+    .fa-6x {
+        font-size: 4rem;
+    }
+
+    .background-pattern {
+        background-size: 200px 200px, 150px 150px, 250px 250px;
+    }
+}
+</style>
+{% endblock %}

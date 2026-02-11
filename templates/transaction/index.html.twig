@@ -1,3 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Transaction index{% endblock %}
+
+{% block body %}
+    <h1>Transaction index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Type</th>
+                <th>Montant</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>ModuleSource</th>
+                <th>actions</th>
 {% extends 'admin/layout.html.twig' %}
 
 {% block content %}
@@ -72,6 +89,8 @@
         {% endfor %}
         </tbody>
     </table>
+
+    <a href="{{ path('app_transaction_new') }}">Create new</a>
 </div>
 
 {% endblock %}
