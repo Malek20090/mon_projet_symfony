@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\InvestissementRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: InvestissementRepository::class)]
 class Investissement
@@ -15,7 +16,13 @@ class Investissement
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Assert\NotNull(message: 'Le montant est obligatoire.')]
+    #[Assert\GreaterThanOrEqual(
+    value: 1,
+    message: 'Le montant investi doit être au minimum de 1 dollar.'
+    )]
     private ?float $amountInvested = null;
+
 
     #[ORM\Column]
     private ?float $buyPrice = null;

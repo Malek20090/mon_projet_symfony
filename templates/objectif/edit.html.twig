@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier objectif{% endblock %}
+
+{% block body %}
+<h1>Modifier l’objectif : {{ objectif.name }}</h1>
+
+{{ form_start(form) }}
+    {{ form_row(form.name) }}
+    {{ form_row(form.targetMultiplier) }}
+
+    <h3>Investissements</h3>
+    {{ form_row(form.investissements) }}
+
+    <button type="submit">💾 Enregistrer</button>
+{{ form_end(form) }}
+
+<a href="{{ path('objectif_index') }}">⬅ Retour aux objectifs</a>
+{% endblock %}

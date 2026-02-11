@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvel objectif{% endblock %}
+
+{% block body %}
+<h1>Créer un objectif</h1>
+
+{{ form_start(form) }}
+    {{ form_row(form.name) }}
+    {{ form_row(form.targetMultiplier) }}
+
+    <h3>Investissements à inclure</h3>
+    {{ form_row(form.investissements) }}
+
+    <button type="submit">Créer l’objectif</button>
+{{ form_end(form) }}
+
+
+<a href="{{ path('objectif_index') }}">⬅ Retour aux objectifs</a>
+
+{% endblock %}

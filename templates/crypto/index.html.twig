@@ -1,0 +1,125 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Cryptos{% endblock %}
+
+{% block body %}
+<h1>Liste des cryptomonnaies</h1>
+
+<table border="1" cellpadding="10">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Symbole</th>
+            <th>Prix actuel (USD)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for crypto in cryptos %}
+            <tr>
+                <td>{{ crypto.name }}</td>
+                <td>{{ crypto.symbol }}</td>
+                <td>{{ crypto.currentprice }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">Aucune crypto trouvée</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<form method="post" action="{{ path('crypto_update_prices') }}">
+    <button type="submit">🔄 Mettre à jour les prix</button>
+</form>
+
+<a href="{{ path('investissement_new') }}">
+    <button>➕ Faire un investissement</button>
+</a>
+
+<h2>Mes investissements</h2>
+<h3>Rechercher un investissement</h3>
+
+<form method="get" action="{{ path('crypto_index') }}">
+    <input
+        type="text"
+        name="search"
+        placeholder="Nom de la crypto (ex: Bitcoin)"
+        value="{{ currentSearch }}"
+    >
+
+    {# conserver le tri actif #}
+    {% if currentSort %}
+        <input type="hidden" name="sort" value="{{ currentSort }}">
+    {% endif %}
+
+    <button type="submit">🔍 Rechercher</button>
+</form>
+
+<br>
+
+<table border="1" cellpadding="10">
+    <thead>
+        <tr>
+            <th>Crypto</th>
+            <th>Montant investi (USD)</th>
+            <th>Prix d'achat</th>
+            <th>Quantité</th>
+            <th>Gain / Perte (USD)</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for investissement in investissements %}
+            {% set gain = calculator.calculateGain(investissement) %}
+
+
+            <tr>
+                <td>{{ investissement.crypto.name }}</td>
+                <td>{{ investissement.amountInvested }}</td>
+                <td>{{ investissement.buyPrice }}</td>
+                <td>{{ investissement.quantity|number_format(8) }}</td>
+                <td
+                    style="
+                        color: {{ gain >= 0 ? 'green' : 'red' }};
+                        font-weight: bold;
+                    "
+                >
+                    {{ gain|number_format(2) }}
+                </td>
+                <td>
+                    <!-- Bouton Ajuster -->
+                    <a href="{{ path('investissement_adjust', { id: investissement.id }) }}">
+                        <button>✏️ Ajuster</button>
+                    </a>
+
+                    <!-- Bouton Supprimer -->
+                    <form
+                        method="post"
+                        action="{{ path('investissement_delete', { id: investissement.id }) }}"
+                        onsubmit="return confirm('Supprimer cet investissement ?');"
+                        style="display:inline;"
+                    >
+                        <button type="submit" style="color:red;">
+                            ❌ Supprimer
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="6">Aucun investissement</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<h3>Trier les investissements</h3>
+
+<a href="{{ path('crypto_index', { sort: 'amount_desc' }) }}">💰 Montant ⬇</a> |
+<a href="{{ path('crypto_index', { sort: 'amount_asc' }) }}">💰 Montant ⬆</a> |
+<a href="{{ path('crypto_index', { sort: 'gain_desc' }) }}">📈 Gain ⬇</a> |
+<a href="{{ path('crypto_index', { sort: 'gain_asc' }) }}">📉 Perte ⬆</a>
+
+<br><br>
+
+<a href="{{ path('objectif_index') }}">⬅ objectif</a>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes objectifs{% endblock %}
+
+{% block body %}
+<h1>Mes objectifs</h1>
+
+<a href="{{ path('objectif_new') }}">
+    <button>➕ Créer un objectif</button>
+</a>
+
+<br><br>
+
+<table border="1" cellpadding="10" width="100%">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Montant actuel (USD)</th>
+            <th>Multiplicateur</th>
+
+            <th>
+                Montant cible (USD)
+                <a href="{{ path('objectif_index', { sort: 'target', order: 'asc' }) }}">⬆</a>
+                <a href="{{ path('objectif_index', { sort: 'target', order: 'desc' }) }}">⬇</a>
+            </th>
+
+            <th>Statut</th>
+
+            <th>
+                Progression
+                <a href="{{ path('objectif_index', { sort: 'progress', order: 'asc' }) }}">⬆</a>
+                <a href="{{ path('objectif_index', { sort: 'progress', order: 'desc' }) }}">⬇</a>
+            </th>
+
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for objectif in objectifs %}
+            {% set currentAmount = calculator.calculateCurrentAmountForObjectif(objectif) %}
+
+            {% set progress = 0 %}
+            {% if objectif.targetAmount > 0 %}
+                {% set progress = (currentAmount / objectif.targetAmount) * 100 %}
+            {% endif %}
+            {% set progress = progress > 100 ? 100 : progress %}
+
+            <tr>
+                <td>{{ objectif.name }}</td>
+                <td>{{ currentAmount|number_format(2) }}</td>
+                <td>x{{ objectif.targetMultiplier }}</td>
+                <td>{{ objectif.targetAmount|number_format(2) }}</td>
+
+                <td>
+                    {% if objectif.isCompleted %}
+                        <span style="color:green; font-weight:bold;">✔ Atteint</span>
+                    {% else %}
+                        <span style="color:orange;">⏳ En cours</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    <div style="min-width:180px;">
+                        <div style="
+                            background:#e0e0e0;
+                            border-radius:5px;
+                            height:18px;
+                            overflow:hidden;
+                        ">
+                            <div style="
+                                width: {{ progress }}%;
+                                height:100%;
+                                background-color: {{ objectif.isCompleted ? '#4CAF50' : '#FFA500' }};
+                                transition: width .4s ease;
+                            "></div>
+                        </div>
+                        <small>{{ progress|number_format(1) }}%</small>
+                    </div>
+                </td>
+
+                <td>
+                    <a href="{{ path('objectif_edit', { id: objectif.id }) }}">
+                        <button>✏️ Modifier</button>
+                    </a>
+
+                    <form method="post"
+                          action="{{ path('objectif_delete', { id: objectif.id }) }}"
+                          style="display:inline-block"
+                          onsubmit="return confirm('Supprimer cet objectif ?');">
+                        <button style="color:red;">❌ Supprimer</button>
+                    </form>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="7">Aucun objectif</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<br>
+
+<a href="{{ path('crypto_index') }}">⬅ Investissements</a>
+{% endblock %}

@@ -8,6 +8,15 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
+use Symfony\Component\Validator\Constraints as Assert;
+
+
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
+#[UniqueEntity(
+    fields: ['name'],
+    message: 'Un objectif avec ce nom existe déjà.'
+)]
 #[ORM\Entity(repositoryClass: ObjectifRepository::class)]
 class Objectif
 {
@@ -16,11 +25,19 @@ class Objectif
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)]
+    #[Assert\NotBlank(message: 'Le nom est obligatoire.')]
     private ?string $name = null;
 
+
     #[ORM\Column]
-    private ?float $targetMultiplier = null;
+    #[Assert\NotNull(message: 'Le multiplicateur est obligatoire.')]
+    #[Assert\GreaterThanOrEqual(
+    value: 1.00001,
+    message: 'Le multiplicateur doit être supérieur ou égal à 1.01.'
+    )]
+private ?float $targetMultiplier = null;
+
 
     #[ORM\Column]
     private ?float $initialAmount = null;
@@ -38,7 +55,12 @@ class Objectif
      * @var Collection<int, Investissement>
      */
     #[ORM\OneToMany(targetEntity: Investissement::class, mappedBy: 'objectif')]
-    private Collection $investissements;
+    #[Assert\Count(
+    min: 1,
+    minMessage: "Vous devez sélectionner au moins un investissement."
+)]
+private Collection $investissements;
+
 
     public function __construct()
     {

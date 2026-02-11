@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvel investissement{% endblock %}
+
+{% block body %}
+<h1>Faire un investissement</h1>
+
+{{ form_start(form) }}
+    {{ form_row(form.crypto) }}
+    {{ form_row(form.amountInvested) }}
+
+    <p>
+        <strong>Quantité achetée :</strong>
+        <span id="quantity">0</span>
+    </p>
+
+    <button type="submit">Valider</button>
+{{ form_end(form) }}
+
+<a href="{{ path('crypto_index') }}">⬅ Retour aux cryptos</a>
+
+<script>
+    const cryptoPrices = {{ cryptoPrices|raw }};
+
+    const cryptoSelect = document.getElementById('investissement_crypto');
+    const amountInput = document.getElementById('investissement_amountInvested');
+    const quantitySpan = document.getElementById('quantity');
+
+    function updateQuantity() {
+        const cryptoId = cryptoSelect.value;
+        const amount = parseFloat(amountInput.value);
+
+        if (cryptoId && amount && cryptoPrices[cryptoId]) {
+            const quantity = amount / cryptoPrices[cryptoId];
+            quantitySpan.textContent = quantity.toFixed(8);
+        } else {
+            quantitySpan.textContent = '0';
+        }
+    }
+
+    cryptoSelect.addEventListener('change', updateQuantity);
+    amountInput.addEventListener('input', updateQuantity);
+</script>
+{% endblock %}
