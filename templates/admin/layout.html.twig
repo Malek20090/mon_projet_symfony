@@ -64,6 +64,16 @@
                class="{{ _route starts with 'app_reports' ? 'active' : '' }}">
                 <i class="fas fa-chart-line"></i> <span>Rapports</span>
             </a>
+
+            <a href="{{ path('admin_investissements') }}"
+               class="{{ _route starts with 'admin_investissements' ? 'active' : '' }}">
+                <i class="fas fa-chart-line"></i> <span>Investissements</span>
+            </a>
+           
+            <a href="{{ path('admin_objectifs') }}"
+               class="{{ _route starts with 'admin_objectifs' ? 'active' : '' }}">
+                <i class="fas fa-bullseye"></i> <span>Objectifs</span>
+            </a>
            
            <a href="{{ path('admin_goals_admin_goals_index')
 }}"

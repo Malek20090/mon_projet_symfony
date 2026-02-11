@@ -93,6 +93,7 @@ h1{
   border-radius: 18px;
   box-shadow: var(--shadow);
   overflow:hidden;
+  padding:16px;
 }
 
 /* TABLE */
@@ -149,30 +150,27 @@ tbody tr:nth-child(even) td{
   flex-wrap:wrap;
 }
 
-/* PRINT */
-@media print{
-  body{ background:#fff; }
-  .page{ margin:0; max-width:100%; padding:0; }
-  .header, .card{ box-shadow:none; }
-  .header{ border-radius: 0; }
-  .card{ border-radius: 0; }
-  a, button{ display:none !important; } /* hides "Print / Save as PDF" link/button if present */
-}
-.card{
+/* Print button */
+.print-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 16px;
+  border-radius:999px;
+  border:1px solid rgba(0,191,229,.35);
   background:#fff;
-  border:1px solid var(--border);
-  border-radius:18px;
-  padding:16px;
-  box-shadow:var(--shadow);
+  color:#0b4d62;
+  font-weight:700;
+  font-size:13px;
+  cursor:pointer;
+  box-shadow:0 8px 18px rgba(8,26,58,.08);
+}
+.print-btn:hover{
+  transform: translateY(-1px);
+  box-shadow:0 12px 24px rgba(8,26,58,.12);
 }
 
-table{ width:100%; border-collapse:collapse; }
-th, td{ padding:12px 12px; border-bottom:1px solid rgba(8,26,58,.10); font-size:14px; }
-thead th{ background: rgba(245,251,255,.9); text-align:left; font-weight:950; color:#0b1c3f; }
-tbody tr:hover td{ background: rgba(0,191,229,.06); }
-
-.amount{ font-weight:950; color: var(--c-primary); }
-
+/* Footer note under table */
 .footer-note{
   margin-top:10px;
   font-size:12px;
@@ -180,9 +178,12 @@ tbody tr:hover td{ background: rgba(0,191,229,.06); }
   text-align:right;
 }
 
+/* PRINT */
 @media print{
   body{ background:#fff; padding:0; }
-  .print-btn{ display:none; }
-  .header{ box-shadow:none; }
-  .card{ box-shadow:none; }
+  .page{ margin:0; max-width:100%; padding:0; }
+  .header, .card{ box-shadow:none; }
+  .header, .card{ border-radius: 0; }
+  .print-btn{ display:none !important; }
+  a, button{ display:none !important; } /* hides "Print / Save as PDF" link/button if present */
 }

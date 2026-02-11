@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20260211163131 extends AbstractMigration
+final class Version20260211203255 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -27,7 +27,7 @@ final class Version20260211163131 extends AbstractMigration
         $this->addSql('CREATE TABLE financial_goal (id INT AUTO_INCREMENT NOT NULL, nom VARCHAR(255) NOT NULL, montant_cible DOUBLE PRECISION NOT NULL, montant_actuel DOUBLE PRECISION NOT NULL, date_limite DATE DEFAULT NULL, priorite INT DEFAULT NULL, saving_account_id INT NOT NULL, INDEX IDX_2CB34D6A54BD4B2C (saving_account_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('CREATE TABLE imprevus (id INT AUTO_INCREMENT NOT NULL, titre VARCHAR(150) NOT NULL, type VARCHAR(10) NOT NULL, budget DOUBLE PRECISION NOT NULL, message_educatif LONGTEXT DEFAULT NULL, PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('CREATE TABLE investissement (id INT AUTO_INCREMENT NOT NULL, amount_invested DOUBLE PRECISION NOT NULL, buy_price DOUBLE PRECISION NOT NULL, quantity DOUBLE PRECISION NOT NULL, created_at DATE NOT NULL, crypto_id INT DEFAULT NULL, objectif_id INT DEFAULT NULL, user_id INT DEFAULT NULL, INDEX IDX_B8E64E01E9571A63 (crypto_id), INDEX IDX_B8E64E01157D1AD4 (objectif_id), INDEX IDX_B8E64E01A76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
-        $this->addSql('CREATE TABLE objectif (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(255) NOT NULL, target_multiplier DOUBLE PRECISION NOT NULL, initial_amount DOUBLE PRECISION NOT NULL, target_amount DOUBLE PRECISION NOT NULL, is_completed TINYINT NOT NULL, created_at DATE NOT NULL, PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
+        $this->addSql('CREATE TABLE objectif (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(255) NOT NULL, target_multiplier DOUBLE PRECISION NOT NULL, initial_amount DOUBLE PRECISION NOT NULL, target_amount DOUBLE PRECISION NOT NULL, is_completed TINYINT NOT NULL, created_at DATE NOT NULL, UNIQUE INDEX UNIQ_E2F868515E237E06 (name), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('CREATE TABLE quiz (id INT AUTO_INCREMENT NOT NULL, question LONGTEXT NOT NULL, choix_reponses JSON NOT NULL, reponse_correcte VARCHAR(100) NOT NULL, points_valeur INT NOT NULL, cours_id INT DEFAULT NULL, user_id INT DEFAULT NULL, INDEX IDX_A412FA927ECF78B0 (cours_id), INDEX IDX_A412FA92A76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('CREATE TABLE revenue (id INT AUTO_INCREMENT NOT NULL, amount DOUBLE PRECISION NOT NULL, type VARCHAR(20) NOT NULL, received_at DATE NOT NULL, description VARCHAR(255) DEFAULT NULL, created_at DATETIME NOT NULL, user_id INT NOT NULL, INDEX IDX_E9116C85A76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('CREATE TABLE saving_account (id INT AUTO_INCREMENT NOT NULL, sold DOUBLE PRECISION DEFAULT NULL, date_creation DATE DEFAULT NULL, taux_interet DOUBLE PRECISION DEFAULT NULL, user_id INT NOT NULL, INDEX IDX_EF4ED035A76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');

@@ -1,0 +1,120 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvel investissement{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .admin-page {
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .page-header-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid #e2e6ec;
+        }
+        .page-header-card h1 {
+            font-size: 1.625rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+        .page-header-card p {
+            color: #64748b;
+            margin-top: 0.25rem;
+            font-size: 0.9375rem;
+        }
+        .card-custom {
+            background: #fff;
+            padding: 1.5rem 1.75rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 6px 20px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.04);
+            margin-bottom: 1.5rem;
+        }
+        .qty-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .qty-box .value {
+            color: #0d6efd;
+            font-weight: 700;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Faire un investissement</h1>
+            <p>Choisissez une crypto, saisissez le montant, puis vérifiez la quantité estimée.</p>
+        </div>
+        <a href="{{ path('crypto_index') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Retour aux cryptos
+        </a>
+    </div>
+
+    <div class="card-custom">
+        {{ form_start(form) }}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {{ form_row(form.crypto, { 'attr': { 'class': 'form-select' } }) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_row(form.amountInvested, { 'attr': { 'class': 'form-control' } }) }}
+                </div>
+            </div>
+
+            <div class="mt-3 qty-box">
+                <span>Quantité achetée</span>
+                <span id="quantity" class="value">0</span>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check me-2"></i>Valider l'investissement
+                </button>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+
+<script>
+    const cryptoPrices = {{ cryptoPrices|raw }};
+
+    const cryptoSelect = document.getElementById('investissement_crypto');
+    const amountInput = document.getElementById('investissement_amountInvested');
+    const quantitySpan = document.getElementById('quantity');
+
+    function updateQuantity() {
+        const cryptoId = cryptoSelect.value;
+        const amount = parseFloat(amountInput.value);
+
+        if (cryptoId && amount && cryptoPrices[cryptoId]) {
+            const quantity = amount / cryptoPrices[cryptoId];
+            quantitySpan.textContent = quantity.toFixed(8);
+        } else {
+            quantitySpan.textContent = '0';
+        }
+    }
+
+    cryptoSelect.addEventListener('change', updateQuantity);
+    amountInput.addEventListener('input', updateQuantity);
+</script>
+{% endblock %}

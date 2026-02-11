@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier Investissement{% endblock %}
+
+{% block body %}
+
+<h1>Modifier Investissement</h1>
+
+<a href="{{ path('admin_investissements') }}">⬅ Retour</a>
+
+<br><br>
+
+{{ form_start(form) }}
+    {{ form_row(form.crypto) }}
+    {{ form_row(form.amountInvested) }}
+    {{ form_row(form.buyPrice) }}
+    <button type="submit">💾 Enregistrer</button>
+{{ form_end(form) }}
+
+{% endblock %}

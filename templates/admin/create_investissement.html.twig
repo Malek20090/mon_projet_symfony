@@ -1,0 +1,39 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Créer Investissement{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Créer un investissement</h1>
+            <p class="mb-0">Ajouter un investissement au nom d’un utilisateur</p>
+        </div>
+        <a href="{{ path('admin_investissements') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Retour
+        </a>
+    </div>
+
+    <div class="card-custom">
+        {{ form_start(form) }}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {{ form_row(form.userId, { 'attr': { 'class': 'form-select' } }) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_row(form.crypto, { 'attr': { 'class': 'form-select' } }) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_row(form.amountInvested, { 'attr': { 'class': 'form-control' } }) }}
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Créer
+                </button>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

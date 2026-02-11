@@ -166,6 +166,22 @@
       <p>Simple dashboard. Clear actions. Visible progress.</p>
     </div>
 
+    {% for message in app.flashes('success') %}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+    {% for message in app.flashes('danger') %}
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+    {% for message in app.flashes('warning') %}
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+
     {# KPIs #}
     {% include 'savings/partials/_kpis.html.twig' with {
       stats: stats,
@@ -304,6 +320,7 @@
     const isModuleForm = (f) => {
       const action = (f.getAttribute('action') || '').toLowerCase();
       if(!action) return false;
+      if (f.classList.contains('goalContributeForm')) return false;
       return action.includes('/savings') || action.includes('/goal');
     };
 
@@ -332,10 +349,14 @@
 
           const data = await safeJson(res);
 
-          // If server didn't return JSON, fallback to normal redirect
+          // If server didn't return JSON, follow redirect or reload once (avoid double POST)
           if(!data){
-            toast('warning', 'Server connection', "Unexpected response. Safe reload...");
-            form.submit();
+            toast('warning', 'Server connection', "Unexpected response. Reloading...");
+            if (res.redirected && res.url) {
+              window.location.href = res.url;
+            } else {
+              window.location.reload();
+            }
             return;
           }
 
