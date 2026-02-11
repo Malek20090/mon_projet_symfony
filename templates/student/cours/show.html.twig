@@ -1,148 +1,201 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base_pages.html.twig' %}
 
-{% block title %}{{ cour.titre }}{% endblock %}
+{% block title %}{{ cour.titre }} | Decide${% endblock %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    <link href="{{ asset('css/home.css') }}" rel="stylesheet">
+{% block body_class %}alea-page learning-page{% endblock %}
+
+{% block body %}
+    <!-- Educational hero -->
+    <section class="hero">
+        <div class="container wrap">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="learning-hero-tag">
+                        <i class="fas fa-graduation-cap"></i> Course module
+                    </div>
+                    <h1>{{ cour.titre }}</h1>
+                    <p>A module designed to strengthen your financial management skills step by step.</p>
+                    <div class="d-flex flex-wrap gap-2 mt-3 course-badges">
+                        <span class="badge bg-primary-soft">
+                            <i class="fas fa-book-open me-1"></i> Guided reading
+                        </span>
+                        {% if cour.typeMedia == 'video' %}
+                            <span class="badge bg-info-soft">
+                                <i class="fas fa-video me-1"></i> Video support
+                            </span>
+                        {% elseif cour.typeMedia == 'image' %}
+                            <span class="badge bg-info-soft">
+                                <i class="fas fa-image me-1"></i> Visual support
+                            </span>
+                        {% elseif cour.urlMedia %}
+                            <span class="badge bg-info-soft">
+                                <i class="fas fa-file-alt me-1"></i> Ressource externe
+                            </span>
+                        {% endif %}
+                        {% if cour.quizzes|length > 0 %}
+                            <span class="badge bg-success-soft">
+                                <i class="fas fa-question-circle me-1"></i> {{ cour.quizzes|length }} related quiz{{ cour.quizzes|length > 1 ? 'zes' : '' }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    {% if cour.quizzes|length > 0 %}
+                        <a href="{{ path('student_cours_quiz', {'id': cour.id}) }}" class="btn btn-success rounded-pill px-4 mb-2">
+                            <i class="fas fa-play-circle me-1"></i> Start quizzes
+                        </a>
+                    {% endif %}
+                    <div class="small text-white-50">
+                        <i class="fas fa-lightbulb me-1"></i> Conseil : prenez des notes au fil de votre lecture.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container py-5">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('student_cours_index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('student_cours_index') }}">Course</a></li>
+                <li class="breadcrumb-item active">{{ cour.titre }}</li>
+            </ol>
+        </nav>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Carte contenu -->
+                <div class="course-content-card mb-4">
+                    <div class="course-content">
+                        {{ cour.contenuTexte|raw|nl2br }}
+                    </div>
+                </div>
+
+                <!-- Embedded related media -->
+                {% if cour.urlMedia %}
+                    <div class="media-container {% if cour.typeMedia == 'video' %}video{% elseif cour.typeMedia == 'image' %}image{% endif %}">
+                        {% if cour.typeMedia == 'video' %}
+                            <div class="ratio ratio-16x9">
+                                {% if 'youtube.com' in cour.urlMedia or 'youtu.be' in cour.urlMedia %}
+                                    {% set videoId = cour.urlMedia|split('v=')[1]|split('&')[0] %}
+                                    <iframe src="https://www.youtube.com/embed/{{ videoId }}" allowfullscreen></iframe>
+                                {% elseif 'vimeo.com' in cour.urlMedia %}
+                                    {% set videoId = cour.urlMedia|split('/')|last %}
+                                    <iframe src="https://player.vimeo.com/video/{{ videoId }}" allowfullscreen></iframe>
+                                {% else %}
+                                    <video controls style="width: 100%; border-radius: 8px;">
+                                        <source src="{{ cour.urlMedia }}" type="video/mp4">
+                                        Your browser does not support video playback.
+                                    </video>
+                                {% endif %}
+                            </div>
+                        {% elseif cour.typeMedia == 'image' %}
+                            <img src="{{ cour.urlMedia }}" class="img-fluid" alt="{{ cour.titre }}">
+                        {% else %}
+                            <div class="p-3 text-white">
+                                <p class="mb-2">Related media :</p>
+                                <a href="{{ cour.urlMedia }}" target="_blank" class="btn btn-light">
+                                    <i class="fas fa-external-link-alt"></i> Open media
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <!-- Navigation -->
+                <div class="text-center mt-4 mb-2">
+                    {% if cour.quizzes|length > 0 %}
+                        <a href="{{ path('student_cours_quiz', {'id': cour.id}) }}" class="btn btn-success me-2 rounded-pill px-4">
+                            <i class="fas fa-question-circle"></i> Course quiz ({{ cour.quizzes|length }})
+                        </a>
+                    {% endif %}
+                    <a href="{{ path('student_cours_index') }}" class="btn btn-outline-primary rounded-pill px-4">
+                        <i class="fas fa-arrow-left"></i> Back to course list
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <style>
-        .course-content {
-            background: #fff;
+        .course-content-card {
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.06);
             padding: 2rem;
+        }
+
+        .course-content {
             line-height: 1.8;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: #333;
         }
-        .course-content h1, .course-content h2, .course-content h3 {
+
+        .course-content h1,
+        .course-content h2,
+        .course-content h3 {
             color: #1e3fa3;
             margin-top: 2rem;
             margin-bottom: 1rem;
         }
+
         .course-content h2 {
             color: #d32f2f;
             font-size: 1.5rem;
             font-weight: bold;
         }
-        .course-content strong {
-            font-weight: bold;
-        }
+
         .course-content .note {
             background-color: #e8f5e9;
             border-left: 4px solid #4caf50;
             padding: 1rem;
             margin: 1.5rem 0;
-            border-radius: 4px;
-        }
-        .course-content .note strong {
-            color: #2e7d32;
-        }
-        .media-container {
-            background: #1e1e1e;
             border-radius: 8px;
+        }
+
+        .media-container {
+            border-radius: 16px;
             padding: 1.5rem;
             margin: 2rem 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            background: #0b1c3f;
         }
-        .media-container.video {
-            background: #000;
-        }
+
         .media-container.image {
-            background: #f5f5f5;
-            padding: 0;
+            background: #f5f7fb;
             text-align: center;
+            padding: 1.5rem;
         }
-        .media-container iframe {
-            width: 100%;
-            border: none;
-            border-radius: 8px;
-        }
+
+        .media-container iframe,
         .media-container img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
+            border-radius: 12px;
         }
-        .terminal-prompt {
-            color: #4caf50;
+
+        .course-badges .badge {
+            border-radius: 999px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
         }
-        .terminal-path {
-            color: #2196f3;
+
+        .bg-primary-soft {
+            background: rgba(13, 110, 253, 0.15);
+            color: #e3f2fd;
         }
-        .terminal-command {
-            color: #fff;
+
+        .bg-info-soft {
+            background: rgba(0, 198, 239, 0.15);
+            color: #e0f7fa;
         }
-        .terminal-output {
-            color: #fff;
-            background: rgba(255, 235, 59, 0.2);
-            padding: 0.25rem 0.5rem;
-            border-radius: 3px;
+
+        .bg-success-soft {
+            background: rgba(25, 135, 84, 0.15);
+            color: #e8f5e9;
         }
     </style>
 {% endblock %}
 
-{% block body %}
-<div class="container mt-4">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ path('student_cours_index') }}">Accueil</a></li>
-            <li class="breadcrumb-item"><a href="{{ path('student_cours_index') }}">Cours</a></li>
-            <li class="breadcrumb-item active">{{ cour.titre }}</li>
-        </ol>
-    </nav>
 
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <!-- Titre du cours -->
-            <h1 class="mb-4" style="color: #1e3fa3; font-weight: bold;">{{ cour.titre }}</h1>
 
-            <!-- Contenu du cours -->
-            <div class="course-content">
-                {{ cour.contenuTexte|raw|nl2br }}
-            </div>
 
-            <!-- Média associé intégré -->
-            {% if cour.urlMedia %}
-                <div class="media-container {% if cour.typeMedia == 'video' %}video{% elseif cour.typeMedia == 'image' %}image{% endif %}">
-                    {% if cour.typeMedia == 'video' %}
-                        <div class="ratio ratio-16x9">
-                            {% if 'youtube.com' in cour.urlMedia or 'youtu.be' in cour.urlMedia %}
-                                {% set videoId = cour.urlMedia|split('v=')[1]|split('&')[0] %}
-                                <iframe src="https://www.youtube.com/embed/{{ videoId }}" allowfullscreen style="border-radius: 8px;"></iframe>
-                            {% elseif 'vimeo.com' in cour.urlMedia %}
-                                {% set videoId = cour.urlMedia|split('/')|last %}
-                                <iframe src="https://player.vimeo.com/video/{{ videoId }}" allowfullscreen style="border-radius: 8px;"></iframe>
-                            {% else %}
-                                <video controls style="width: 100%; border-radius: 8px;">
-                                    <source src="{{ cour.urlMedia }}" type="video/mp4">
-                                    Votre navigateur ne supporte pas la lecture de vidéos.
-                                </video>
-                            {% endif %}
-                        </div>
-                    {% elseif cour.typeMedia == 'image' %}
-                        <img src="{{ cour.urlMedia }}" class="img-fluid" alt="{{ cour.titre }}" style="max-width: 100%; height: auto; border-radius: 8px;">
-                    {% else %}
-                        <div class="p-3 text-white">
-                            <p class="mb-2">Média associé :</p>
-                            <a href="{{ cour.urlMedia }}" target="_blank" class="btn btn-light">
-                                <i class="fas fa-external-link-alt"></i> Ouvrir le média
-                            </a>
-                        </div>
-                    {% endif %}
-                </div>
-            {% endif %}
-
-            <!-- Navigation -->
-            <div class="text-center mt-4 mb-4">
-                {% if cour.quizzes|length > 0 %}
-                    <a href="{{ path('student_cours_quiz', {'id': cour.id}) }}" class="btn btn-success me-2">
-                        <i class="fas fa-question-circle"></i> Quiz du cours ({{ cour.quizzes|length }})
-                    </a>
-                {% endif %}
-                <a href="{{ path('student_cours_index') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-arrow-left"></i> Retour à la liste des cours
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}

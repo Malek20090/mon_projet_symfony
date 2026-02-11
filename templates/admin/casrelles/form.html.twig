@@ -1,19 +1,19 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}{{ action }} – Cas Réel | Decide${% endblock %}
+{% block title %}{{ action }} – Real Case | Decide${% endblock %}
 
 {% block content %}
 <div class="admin-page">
     <div class="page-header-card">
         <div>
-            <h1>Cas Réel – {{ action }}</h1>
-            <p class="mb-0">{% if action == 'Ajouter' %}Créer une nouvelle demande{% else %}Modifier la demande{% endif %}</p>
+            <h1>Real Case – {{ action }}</h1>
+            <p class="mb-0">{% if action == 'Add' %}Create une nouvelle demande{% else %}Edit la demande{% endif %}</p>
         </div>
     </div>
 
     {% if errors is defined and errors is not empty %}
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Erreurs de validation</strong>
+            <strong>Errors de validation</strong>
             <ul class="mb-0 mt-2">
                 {% for field, error in errors %}
                     <li>{{ error }}</li>
@@ -26,7 +26,7 @@
     <div class="card-custom">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <h5 class="mb-4"><i class="fas fa-file-alt text-primary me-2"></i>Formulaire Cas Réel</h5>
+                <h5 class="mb-4"><i class="fas fa-file-alt text-primary me-2"></i>Formulaire Real Case</h5>
                 <form method="POST" id="casrellesForm">
                     <input type="hidden" name="_token" value="{{ csrf_token('casrelles_form') }}">
 
@@ -44,9 +44,9 @@
                         <div class="col-md-6 mb-3">
                             <label for="type" class="form-label fw-bold">Type <span class="text-danger">*</span></label>
                             <select class="form-select {% if errors.type is defined %}is-invalid{% endif %}" id="type" name="type" required>
-                                <option value="">Sélectionnez...</option>
-                                <option value="POSITIF" {% if cas.type == 'POSITIF' %}selected{% endif %}>Positif (+)</option>
-                                <option value="NEGATIF" {% if cas.type == 'NEGATIF' %}selected{% endif %}>Négatif (-)</option>
+                                <option value="">Select...</option>
+                                <option value="POSITIF" {% if cas.type == 'POSITIF' %}selected{% endif %}>Positive (+)</option>
+                                <option value="NEGATIF" {% if cas.type == 'NEGATIF' %}selected{% endif %}>Negative (-)</option>
                             </select>
                             {% if errors.type is defined %}
                                 <div class="invalid-feedback">{{ errors.type }}</div>
@@ -66,9 +66,9 @@
                     <div class="mb-3">
                         <label for="solution" class="form-label fw-bold">Solution <span class="text-danger">*</span></label>
                         <select class="form-select {% if errors.solution is defined %}is-invalid{% endif %}" id="solution" name="solution" required>
-                            <option value="">Sélectionnez...</option>
-                            <option value="FONDS_SECURITE" {% if cas.solution == 'FONDS_SECURITE' %}selected{% endif %}>Fonds de Sécurité</option>
-                            <option value="EPARGNE" {% if cas.solution == 'EPARGNE' %}selected{% endif %}>Épargne</option>
+                            <option value="">Select...</option>
+                            <option value="FONDS_SECURITE" {% if cas.solution == 'FONDS_SECURITE' %}selected{% endif %}>Emergency Fund</option>
+                            <option value="EPARGNE" {% if cas.solution == 'EPARGNE' %}selected{% endif %}>Savings</option>
                             <option value="FAMILLE" {% if cas.solution == 'FAMILLE' %}selected{% endif %}>Famille</option>
                             <option value="COMPTE" {% if cas.solution == 'COMPTE' %}selected{% endif %}>Compte</option>
                         </select>
@@ -78,9 +78,9 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="epargne_id" class="form-label">Compte d'épargne</label>
+                        <label for="epargne_id" class="form-label">Savings account</label>
                         <select class="form-select {% if errors.epargne_id is defined %}is-invalid{% endif %}" id="epargne_id" name="epargne_id">
-                            <option value="">Sélectionnez un compte (optionnel)</option>
+                            <option value="">Select un compte (optionnel)</option>
                             {% for epargne in epargnes %}
                                 <option value="{{ epargne.id }}" {% if cas.epargne and cas.epargne.id == epargne.id %}selected{% endif %}>
                                     Compte #{{ epargne.id }} – Solde: {{ epargne.sold|default(0) }} DT
@@ -112,14 +112,16 @@
 
                     <div class="d-flex gap-2 flex-wrap">
                         <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>{{ action }}</button>
-                        <a href="{{ path('admin_casrelles_list') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
+                        <a href="{{ path('admin_casrelles_list') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to list</a>
                     </div>
                 </form>
                 <div class="admin-page-footer mt-4">
-                    <a href="{{ path('admin_index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Retour au dashboard</a>
+                    <a href="{{ path('admin_index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Back to dashboard</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+

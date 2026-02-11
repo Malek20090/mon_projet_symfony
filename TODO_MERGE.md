@@ -1,22 +1,22 @@
-# TODO - Résolution des Conflits de Merge avec main
+﻿# TODO - Résolution des Conflits de Merge avec main
 
-## Objectif: Merger la branche rima-imprevus avec main
+## Goal: Merger la branche rima-imprevus avec main
 
 ### Fichiers à Corriger:
 
 ### 1. src/Entity/User.php
-- [x] Supprimer les doublons de constructors
-- [x] Supprimer les doublons de méthodes addRevenue/removeRevenue
+- [x] Delete les doublons de constructors
+- [x] Delete les doublons de méthodes addRevenue/removeRevenue
 - [x] Corriger la structure PHP
 
 ### 2. src/Entity/Expense.php  
-- [x] Supprimer les doublons de propriétés (montant/category, date/expenseDate)
-- [x] Supprimer les doublons de méthodes setDate, setDescription, setRevenue
+- [x] Delete les doublons de propriétés (montant/category, date/expenseDate)
+- [x] Delete les doublons de méthodes setDate, setDescription, setRevenue
 - [x] Corriger la structure PHP
 
 ### 3. src/Entity/Revenue.php
-- [x] Supprimer les doublons de propriétés (amount, type, receivedAt, description, createdAt)
-- [x] Supprimer les doublons de méthodes
+- [x] Delete les doublons de propriétés (amount, type, receivedAt, description, createdAt)
+- [x] Delete les doublons de méthodes
 - [x] Corriger la structure PHP
 
 ### 4. src/Entity/CasRelles.php
@@ -30,7 +30,7 @@
 ### 6. src/Repository/CasRellesRepository.php
 - [x] Nettoyer les commentaires dupliqués
 
-### 7. src/Repository/ImprevusRepository.php
+### 7. src/Repository/Unexpected EventsRepository.php
 - [x] Nettoyer les commentaires dupliqués
 
 ### Étapes Finales:
@@ -58,4 +58,5 @@
 ## Progression:
 - [x] Démarré: 2024
 - [x] Terminé: ✓
+
 

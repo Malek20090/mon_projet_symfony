@@ -1,18 +1,18 @@
-# Plan CRUD & Métiers - Gestion des Imprévus
+﻿# Plan CRUD & Métiers - Management of Unexpected Events
 
 ## 📋 Vue d'ensemble des Entités
 
-### **Imprevus** (Imprévus Possibles - Admin)
+### **Unexpected Events** (Unexpected Events Possibles - Admin)
 | Champ | Type | Description |
 |-------|------|-------------|
 | id | int | Identifiant unique |
-| titre | string(150) | Nom de l'imprévu (ex: "Panne Voiture") |
+| titre | string(150) | Name de l'imprévu (ex: "Panne Voiture") |
 | type | string(10) | POSITIF ou NEGATIF |
 | budget | float | Montant par défaut |
 | messageEducatif | text | Conseil affiché |
 | casRelles | OneToMany | Lié aux cas réels |
 
-### **CasRelles** (Cas Réels - Utilisateur)
+### **CasRelles** (Real Cases - Utilisateur)
 | Champ | Type | Description |
 |-------|------|-------------|
 | id | int | Identifiant unique |
@@ -29,14 +29,14 @@
 
 ---
 
-## 🔧 CRUD - Imprevus (Admin Dashboard)
+## 🔧 CRUD - Unexpected Events (Admin Dashboard)
 
 ### Routes Admin
 ```
 GET    /admin/imprevus              → Liste avec recherche & tri
 GET    /admin/imprevus/new          → Formulaire création
 POST   /admin/imprevus/new          → Traitement création
-GET    /admin/imprevus/{id}         → Détail
+GET    /admin/imprevus/{id}         → Detail
 GET    /admin/imprevus/{id}/edit    → Formulaire édition
 POST   /admin/imprevus/{id}/edit    → Traitement édition
 POST   /admin/imprevus/{id}/delete  → Suppression
@@ -51,12 +51,12 @@ POST   /admin/imprevus/{id}/delete  → Suppression
 
 ---
 
-## 🔧 CRUD - CasRelles (Gestion Utilisateur)
+## 🔧 CRUD - CasRelles (Management Utilisateur)
 
 ### Routes
 ```
 GET    /alea/cas                   → Liste mes cas réels
-POST   /alea/cas/new               → Créer depuis formulaire
+POST   /alea/cas/new               → Create depuis formulaire
 POST   /alea/cas/{id}/traiter      → Traiter un cas
 POST   /alea/cas/{id}/annuler      → Annuler un cas
 ```
@@ -79,7 +79,7 @@ $casRelles->setResultat('TRAITE');
 
 // Appliquer l'impact
 if ($casRelles->getType() === 'NEGATIF') {
-    // Dépense - diminuer le solde
+    // Expense - diminuer le solde
     $epargne->setSolde($epargne->getSolde() - $casRelles->getMontant());
 } else {
     // Gain - augmenter le solde
@@ -89,7 +89,7 @@ if ($casRelles->getType() === 'NEGATIF') {
 
 ### 2. Score de Résilience
 ```php
-// Calculer score: (Fonds Sécurité / Dépenses Mensuelles) * 100
+// Calculer score: (Fonds Sécurité / Expenses Mensuelles) * 100
 $fondsSecurite = $user->getFondsSecurite();
 $depensesMois = $this->getDepensesMois($user);
 $score = ($fondsSecurite / max($depensesMois, 1)) * 100;
@@ -101,7 +101,7 @@ $score = ($fondsSecurite / max($depensesMois, 1)) * 100;
 if ($score < 50) {
     return "Renforcez votre fonds de sécurité!";
 }
-if ($nbNegatifs > $nbPositifs) {
+if ($nbNegatifs > $nbPositives) {
     return "Trop de dépenses imprévues recently.";
 }
 ```
@@ -110,7 +110,7 @@ if ($nbNegatifs > $nbPositifs) {
 
 ## 📊 DQL - Requêtes Avancées
 
-### ImprevusRepository
+### Unexpected EventsRepository
 ```php
 // Recherche avec LIKE
 public function search(string $query): array
@@ -130,7 +130,7 @@ public function getTopDepenses(User $user, int $limit): array
 
 ## 🎨 Templates Admin (Bootstrap 5)
 
-### Liste Imprevus
+### Liste Unexpected Events
 ```twig
 <table class="table table-hover">
     <thead>
@@ -146,8 +146,8 @@ public function getTopDepenses(User $user, int $limit): array
         <input name="q" placeholder="Rechercher...">
         <select name="type">
             <option value="">Tous types</option>
-            <option value="POSITIF">Positif</option>
-            <option value="NEGATIF">Négatif</option>
+            <option value="POSITIF">Positive</option>
+            <option value="NEGATIF">Negative</option>
         </select>
     </form>
 </table>
@@ -173,10 +173,11 @@ composer require phpoffice/phpspreadsheet
 
 ## 🚀 Ordre de Implémentation
 
-1. **AdminController** - CRUD Imprevus
+1. **AdminController** - CRUD Unexpected Events
 2. **AdminTemplates** - Liste, New, Edit avec KnpPaginator
 3. **CasRellesController** - Traitement des cas
 4. **CasRellesService** - Métiers (impact, score, IA)
 5. **DashboardStats** - Graphiques et statistiques
 6. **Update Alea** - Intégrer les données dynamiques
+
 

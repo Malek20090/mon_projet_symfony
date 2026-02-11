@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -21,6 +21,7 @@
 
     <!-- Page CSS -->
     <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
 </head>
 
 <body>
@@ -73,12 +74,12 @@
                     <span class="hero-tagline">SMART FINANCIAL MANAGEMENT</span>
 
                     <h1 class="hero-title">
-                        Maîtrisez votre Salaire.<br>
-                        <span class="text-info">Dominez vos Dépenses.</span>
+                        Master your salary.<br>
+                        <span class="text-info">Dominez vos Expenses.</span>
                     </h1>
 
                     <p class="hero-description">
-                        Optimisez votre parcours financier grâce à un suivi précis
+                        Optimize your financial journey with accurate tracking
                         et une gestion intelligente.
                     </p>
                 </div>
@@ -94,12 +95,12 @@
                     <span class="hero-tagline">EXPENSE CONTROL</span>
 
                     <h1 class="hero-title">
-                        Suivez Chaque Dépense.<br>
-                        <span class="text-info">Gardez le Contrôle.</span>
+                        Suivez Chaque Expense.<br>
+                        <span class="text-info">Stay in control.</span>
                     </h1>
 
                     <p class="hero-description">
-                        Visualisez vos dépenses en temps réel et évitez
+                        Visualize your expenses in real time and avoid
                         les surprises de fin de mois.
                     </p>
                 </div>
@@ -114,13 +115,13 @@
                     <span class="hero-tagline">FINANCIAL SECURITY</span>
 
                     <h1 class="hero-title">
-                        Construisez votre Sécurité.<br>
+                        Build your security.<br>
                         <span class="text-info">Planifiez l’Avenir.</span>
                     </h1>
 
                     <p class="hero-description">
-                        Des stratégies d’épargne intelligentes pour une
-                        stabilité financière durable.
+                        Smart saving strategies for
+                        long-term financial stability.
                     </p>
                 </div>
 
@@ -275,9 +276,12 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
+<script src="{{ asset('js/theme-toggle.js') }}"></script>
 <script>
     new WOW().init();
 </script>
 
 </body>
 </html>
+
+

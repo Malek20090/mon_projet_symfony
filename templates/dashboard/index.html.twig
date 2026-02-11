@@ -1,11 +1,12 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base.html.twig' %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block body %}
-<h1>Bienvenue {{ app.user.nom }}</h1>
+<h1>Welcome {{ app.user.nom }}</h1>
 
 <p>Email : {{ app.user.email }}</p>
 <p>Solde : {{ app.user.soldeTotal }} DT</p>
-<p>Rôles : {{ app.user.roles|join(', ') }}</p>
+<p>Roles : {{ app.user.roles|join(', ') }}</p>
 {% endblock %}
+

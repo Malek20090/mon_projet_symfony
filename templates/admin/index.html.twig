@@ -1,4 +1,4 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
 {% block title %}Decide$ - Dashboard{% endblock %}
 
@@ -6,7 +6,7 @@
 <div class="admin-page">
 <div class="page-header">
     <h1>Dashboard Financier</h1>
-    <p class="text-muted">Bienvenue sur votre espace de gestion financière</p>
+    <p class="text-muted">Welcome to your financial management space</p>
 </div>
 
 <div class="row mb-4">
@@ -21,7 +21,7 @@
         <div class="card-custom stat-card">
             <div class="stat-icon red"><i class="fas fa-shopping-cart"></i></div>
             <h3>0 DT</h3>
-            <p>Total Dépenses</p>
+            <p>Total Expenses</p>
         </div>
     </div>
     <div class="col-md-4">
@@ -36,7 +36,7 @@
 <div class="row">
     <div class="col-lg-12">
         <div class="card-custom">
-            <h5 class="mb-4"><i class="fas fa-bolt me-2"></i>Imprévus en Base</h5>
+            <h5 class="mb-4"><i class="fas fa-bolt me-2"></i>Unexpected Events en Base</h5>
 
             <table class="table table-hover">
                 <thead>
@@ -61,7 +61,7 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="3" class="text-center">Aucun imprévu</td>
+                            <td colspan="3" class="text-center">No unexpected event</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -71,3 +71,5 @@
 </div>
 </div>
 {% endblock %}
+
+

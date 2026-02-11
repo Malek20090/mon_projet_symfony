@@ -131,6 +131,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getDateInscription(): ?\DateTime
+    {
+        return $this->dateInscription;
+    }
+
+    public function setDateInscription(?\DateTime $dateInscription): self
+    {
+        $this->dateInscription = $dateInscription;
+        return $this;
+    }
+
     /* ================= TRANSACTIONS ================= */
 
     /**

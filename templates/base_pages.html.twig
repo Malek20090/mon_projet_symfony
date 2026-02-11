@@ -11,6 +11,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
     <style>
         body { padding-top: 76px; }
         /* Header: light by default (same as Savings) */
@@ -59,13 +60,13 @@
                 <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_service' ? 'text-info fw-bold' : '' }}" href="{{ path('app_service') }}">Service</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white {{ (app.request.attributes.get('_route') ?? '') starts with 'app_salary_expense' ? 'text-info fw-bold' : '' }}" href="{{ path('app_salary_expense_index') }}">Revenu & Dépenses</a>
+                <a class="nav-link text-white {{ (app.request.attributes.get('_route') ?? '') starts with 'app_salary_expense' ? 'text-info fw-bold' : '' }}" href="{{ path('app_salary_expense_index') }}">Income & Expenses</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link text-white {{ app.request.attributes.get('_route') starts with 'app_savings' ? 'text-info fw-bold' : '' }}" href="{{ path('app_savings') }}">Savings</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_alea' ? 'text-info fw-bold' : '' }}" href="{{ path('app_alea') }}">Imprevus & Cas réels</a>
+                <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_alea' ? 'text-info fw-bold' : '' }}" href="{{ path('app_alea') }}">Unexpected Events & Real Cases</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_contact' ? 'text-info fw-bold' : '' }}" href="{{ path('app_contact') }}">Contact</a>
@@ -103,9 +104,9 @@
                     <li><a href="{{ path('app_home') }}">Home</a></li>
                     <li><a href="{{ path('app_about') }}">About</a></li>
                     <li><a href="{{ path('app_service') }}">Services</a></li>
-                    <li><a href="{{ path('app_salary_expense_index') }}">Revenu & Dépenses</a></li>
+                    <li><a href="{{ path('app_salary_expense_index') }}">Income & Expenses</a></li>
                     <li><a href="{{ path('app_savings') }}">Savings</a></li>
-                    <li><a href="{{ path('app_alea') }}">Imprevus & Cas réels</a></li>
+                    <li><a href="{{ path('app_alea') }}">Unexpected Events & Real Cases</a></li>
                     <li><a href="{{ path('app_contact') }}">Contact</a></li>
                 </ul>
             </div>
@@ -129,17 +130,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
 <script>if (typeof WOW !== 'undefined') { new WOW().init(); }</script>
-<script>
-(function(){
-  var KEY = 'decides_theme_dark';
-  var body = document.getElementById('basePagesBody') || document.body;
-  var btn = document.getElementById('headerDarkModeBtn');
-  function apply(v) { if (v === '1') body.classList.add('theme-dark'); else body.classList.remove('theme-dark'); }
-  function toggle() { var v = body.classList.toggle('theme-dark') ? '1' : '0'; try { localStorage.setItem(KEY, v); } catch(e) {} }
-  try { apply(localStorage.getItem(KEY)); } catch(e) {}
-  if (btn) btn.addEventListener('click', toggle);
-})();
-</script>
+<script src="{{ asset('js/theme-toggle.js') }}"></script>
 {% block javascripts %}{% endblock %}
 </body>
 </html>
+

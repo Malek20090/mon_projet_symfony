@@ -1,12 +1,12 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base.html.twig' %}
 
-{% block title %}Détails du Quiz{% endblock %}
+{% block title %}Details du Quiz{% endblock %}
 
 {% block body %}
 <div class="container mt-5">
     <div class="card shadow">
         <div class="card-header bg-info text-white">
-            <h3 class="mb-0"><i class="fas fa-question-circle"></i> Détails du Quiz</h3>
+            <h3 class="mb-0"><i class="fas fa-question-circle"></i> Details du Quiz</h3>
         </div>
         <div class="card-body">
             <table class="table">
@@ -20,7 +20,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>Choix de réponses</th>
+                        <th>Answer choices</th>
                         <td>
                             {% if quiz.choixReponses|length > 0 %}
                                 <ul class="list-group">
@@ -34,12 +34,12 @@
                                     {% endfor %}
                                 </ul>
                             {% else %}
-                                <span class="text-muted">Aucun choix défini</span>
+                                <span class="text-muted">No options defined</span>
                             {% endif %}
                         </td>
                     </tr>
                     <tr>
-                        <th>Réponse Correcte</th>
+                        <th>Correct answer</th>
                         <td>
                             <span class="badge bg-success fs-6">{{ quiz.reponseCorrecte }}</span>
                         </td>
@@ -51,14 +51,14 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>Cours associé</th>
+                        <th>Related course</th>
                         <td>
                             {% if quiz.cours %}
                                 <a href="{{ path('admin_cours_show', {'id': quiz.cours.id}) }}" class="text-decoration-none">
                                     <i class="fas fa-book"></i> {{ quiz.cours.titre }}
                                 </a>
                             {% else %}
-                                <span class="text-muted">Aucun cours associé</span>
+                                <span class="text-muted">No related course</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -67,11 +67,11 @@
 
             <div class="d-flex justify-content-between mt-4">
                 <a href="{{ path('admin_quiz_index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                    <i class="fas fa-arrow-left"></i> Back to list
                 </a>
                 <div>
                     <a href="{{ path('admin_quiz_edit', {'id': quiz.id}) }}" class="btn btn-warning">
-                        <i class="fas fa-edit"></i> Modifier
+                        <i class="fas fa-edit"></i> Edit
                     </a>
                 </div>
             </div>
@@ -79,3 +79,7 @@
     </div>
 </div>
 {% endblock %}
+
+
+
+

@@ -1,15 +1,15 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Cas Réel | Decide${% endblock %}
+{% block title %}Real Case | Decide${% endblock %}
 
 {% block content %}
 <div class="admin-page">
     <div class="page-header-card">
         <div>
-            <h1>Cas Réel</h1>
+            <h1>Real Case</h1>
             <p class="mb-0">Traitement des demandes des utilisateurs</p>
         </div>
-        <a href="{{ path('admin_casrelles_add') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Nouvelle demande</a>
+        <a href="{{ path('admin_casrelles_add') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>New request</a>
     </div>
 
     {% for message in app.flashes('success') %}
@@ -44,7 +44,7 @@
             <div class="col-md-2">
                 <label for="order" class="form-label">Ordre</label>
                 <select class="form-select" id="order" name="order">
-                    <option value="desc" {% if order == 'desc' %}selected{% endif %}>Décroissant</option>
+                    <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
                     <option value="asc" {% if order == 'asc' %}selected{% endif %}>Croissant</option>
                 </select>
             </div>
@@ -78,7 +78,7 @@
                                 {% if cas.type == 'POSITIF' %}
                                     <span class="badge bg-success">POSITIF</span>
                                 {% else %}
-                                    <span class="badge bg-danger">NÉGATIF</span>
+                                    <span class="badge bg-danger">NEGATIVE</span>
                                 {% endif %}
                             </td>
                             <td class="text-primary fw-bold">{{ cas.montant|number_format(2, ',', ' ') }} DT</td>
@@ -86,30 +86,32 @@
                             <td>{{ cas.dateEffet|date('d/m/Y H:i') }}</td>
                             <td>
                                 {% if cas.resultat == 'VALIDE' %}
-                                    <span class="badge bg-success">Acceptée</span>
+                                    <span class="badge bg-success">Accepted</span>
                                 {% elseif cas.resultat == 'REFUSE' %}
-                                    <span class="badge bg-danger">Refusée</span>
+                                    <span class="badge bg-danger">Rejected</span>
                                 {% else %}
                                     <span class="badge bg-warning">En attente</span>
                                 {% endif %}
                             </td>
                             <td>
                                 <a href="{{ path('admin_casrelles_process', { id: cas.id }) }}" class="btn btn-sm btn-outline-primary" title="Traiter"><i class="fas fa-eye"></i></a>
-                                <a href="{{ path('admin_casrelles_edit', { id: cas.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="fas fa-edit"></i></a>
-                                <form method="post" action="{{ path('admin_casrelles_delete', { id: cas.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer cette demande ?');">
+                                <a href="{{ path('admin_casrelles_edit', { id: cas.id }) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
+                                <form method="post" action="{{ path('admin_casrelles_delete', { id: cas.id }) }}" class="d-inline" onsubmit="return confirm('Delete this request?');">
                                     <input type="hidden" name="_token" value="{{ csrf_token('casrelles_delete_' ~ cas.id) }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fas fa-trash"></i></button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
                                 </form>
                             </td>
                         </tr>
                     {% else %}
-                        <tr><td colspan="8" class="text-center text-muted py-4">Aucune demande.</td></tr>
+                        <tr><td colspan="8" class="text-center text-muted py-4">Noe demande.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 
-    <a href="{{ path('admin_index') }}" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left me-2"></i>Retour au dashboard</a>
+    <a href="{{ path('admin_index') }}" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left me-2"></i>Back to dashboard</a>
 </div>
 {% endblock %}
+
+

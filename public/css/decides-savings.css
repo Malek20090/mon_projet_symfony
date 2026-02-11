@@ -320,6 +320,151 @@ body.savings-page{
 .alea-page .btn-primary2:hover{ transform: translateY(-1px); box-shadow:0 18px 34px rgba(0,191,229,.34); color:#fff; }
 
 /* =========================
+   LEARNING PAGES (Courses & Quiz)
+   ========================= */
+.alea-page.learning-page {
+  background: #f5fbff;
+}
+
+.learning-page .learning-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(0, 198, 239, 0.18);
+  color: #e3f7ff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.learning-page .learning-hero-tag i {
+  font-size: 0.9rem;
+}
+
+.learning-page .hero h1 {
+  font-size: 2.4rem;
+  font-weight: 800;
+}
+
+.learning-page .hero p {
+  max-width: 640px;
+  margin: 0.4rem auto 1rem;
+}
+
+.learning-page .hero .breadcrumbs {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.learning-page .hero .breadcrumbs a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+}
+
+.learning-page .hero .breadcrumbs .active {
+  font-weight: 600;
+}
+
+.learning-page .learning-card,
+.learning-page .quiz-card,
+.learning-page .quiz-course-card,
+.learning-page .quiz-pass-card,
+.learning-page .quiz-result-card,
+.learning-page .course-content-card {
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(8, 26, 58, 0.06);
+  box-shadow: 0 16px 38px rgba(8, 26, 58, 0.12);
+  overflow: hidden;
+}
+
+.learning-page .learning-card:hover,
+.learning-page .quiz-card:hover,
+.learning-page .quiz-course-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 60px rgba(8, 26, 58, 0.20);
+}
+
+.learning-page .learning-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #00c6ef, #0d6efd);
+  color: #fff;
+}
+
+.learning-page .course-meta,
+.learning-page .quiz-meta {
+  font-size: 0.85rem;
+  color: #6b7c8a;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+}
+
+.learning-page .course-meta .meta-item,
+.learning-page .quiz-meta span {
+  background: #f3f7fb;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.learning-page .learning-cta,
+.learning-page .quiz-cta {
+  box-shadow: 0 10px 26px rgba(13, 110, 253, 0.35);
+}
+
+.learning-page .learning-cta:hover,
+.learning-page .quiz-cta:hover {
+  box-shadow: 0 16px 40px rgba(13, 110, 253, 0.45);
+}
+
+.learning-page .quiz-difficulty,
+.learning-page .quiz-difficulty-badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.learning-page .quiz-level-easy { border: 1px solid #d1e7dd; }
+.learning-page .quiz-level-medium { border: 1px solid #ffeeba; }
+.learning-page .quiz-level-hard { border: 1px solid #f5c2c7; }
+
+.learning-page .quiz-list-item {
+  border-radius: 14px;
+  border: 1px solid #e3f2fd;
+  padding: 1.1rem 1.25rem;
+  background: #f9fcff;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  height: 100%;
+}
+
+.learning-page .quiz-list-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 35px rgba(13, 63, 209, 0.18);
+  border-color: #0d6efd;
+  background: #ffffff;
+}
+
+.learning-page .learning-filter .btn-outline-primary,
+.learning-page .learning-filter .btn-outline-success {
+  border-radius: 999px;
+}
+
+@media (max-width: 768px) {
+  .learning-page .hero h1 {
+    font-size: 2rem;
+  }
+}
+
+/* =========================
    MAIN ZONE
    ========================= */
 .savings-page .savings-zone{

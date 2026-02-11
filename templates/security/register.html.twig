@@ -3,9 +3,10 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Inscription | FinanceLogo</title>
+    <title>Sign up | FinanceLogo</title>
 
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -24,15 +25,15 @@
 </div>
 
             <h2>
-                Rejoignez-nous et gérez<br>
-                <span>votre avenir financier</span>
+                Join us and manage<br>
+                <span>your financial future</span>
             </h2>
 
             <div class="accent-line"></div>
 
             <p class="side-text">
-                Optimisez vos investissements et suivez votre solde en temps réel
-                avec nos outils avancés.
+                Optimize your investments and track your balance in real time
+                with our advanced tools.
             </p>
         </div>
 
@@ -40,14 +41,14 @@
         <div class="auth-right">
             <div class="auth-card register">
 
-                <h2>Inscription</h2>
-                <p class="subtitle">Créez votre compte sécurisé</p>
+                <h2>Sign up</h2>
+                <p class="subtitle">Create your secure account</p>
 
                 <form method="post" class="register-grid">
 
                     <div class="input-group">
-                        <label>Nom complet</label>
-                        <input type="text" name="nom" placeholder="Nom complet" required>
+                        <label>Full name</label>
+                        <input type="text" name="nom" placeholder="Full name" required>
                     </div>
 
                     <div class="input-group">
@@ -56,21 +57,21 @@
                     </div>
 
                     <div class="input-group">
-                        <label>Mot de passe</label>
-                        <input type="password" name="password" placeholder="Mot de passe" required>
+                        <label>Password</label>
+                        <input type="password" name="password" placeholder="Password" required>
                     </div>
 
                     <div class="input-group">
-                        <label>Confirmer le mot de passe</label>
+                        <label>Confirm password</label>
                         <input type="password" name="confirm_password" placeholder="Confirmer" required>
                     </div>
 
                     <div class="input-group">
-                        <label>Rôle</label>
+                        <label>Role</label>
                         <select name="role" required>
-                            <option value="">Choisir un rôle</option>
-                            <option value="ETUDIANT">Étudiant</option>
-                            <option value="SALARIE">Salarié</option>
+                            <option value="">Choose a role</option>
+                            <option value="ETUDIANT">Student</option>
+                            <option value="SALARIE">Employee</option>
                         </select>
                     </div>
 
@@ -85,7 +86,7 @@
                 </form>
 
                 <div class="auth-footer">
-                    Déjà un compte ?
+                    Already have an account?
                     <a href="{{ path('app_login') }}">Se connecter</a>
                 </div>
 
@@ -99,5 +100,9 @@
     </div>
 </div>
 
+<script src="{{ asset('js/theme-toggle.js') }}"></script>
 </body>
 </html>
+
+
+

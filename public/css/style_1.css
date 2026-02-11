@@ -1186,3 +1186,247 @@ body.admin-body {
     padding: 30px;
     color: #64748b;
 }
+
+/* =========================
+   TRANSACTIONS ADMIN (structured + professional)
+========================= */
+.tx-admin {
+    max-width: 1240px;
+    margin: 0 auto;
+}
+
+.tx-header {
+    margin-bottom: 1.25rem;
+}
+
+.tx-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.tx-kpi {
+    border-radius: 12px;
+    padding: 0.8rem 0.95rem;
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.tx-kpi-expense {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+.tx-kpi-saving {
+    background: linear-gradient(135deg, #22c55e, #15803d);
+}
+
+.tx-kpi-investment {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.tx-kpi-label {
+    display: block;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
+}
+
+.tx-kpi-value {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.tx-card {
+    border-radius: 14px;
+    border: 1px solid #e6eaf2;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.tx-card + .tx-card {
+    margin-top: 1rem;
+}
+
+.tx-card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.tx-card-title-row h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.tx-card-title-row-wrap {
+    flex-wrap: wrap;
+}
+
+.tx-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.tx-filter-btn {
+    width: 100%;
+}
+
+.tx-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.tx-field {
+    min-width: 0;
+}
+
+.tx-field label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.tx-field .form-control,
+.tx-field .form-select {
+    min-height: 44px;
+}
+
+.tx-field .form-control:focus,
+.tx-field .form-select:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16);
+}
+
+.tx-field-full {
+    grid-column: 1 / -1;
+}
+
+.tx-counter {
+    display: inline-block;
+    margin-top: 0.3rem;
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+.tx-counter-limit {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.tx-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.tx-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.88rem;
+    color: #64748b;
+}
+
+.tx-table {
+    margin: 0;
+}
+
+.tx-table thead th {
+    background: #eef2ff;
+    color: #334155;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tx-table tbody td {
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+}
+
+.tx-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.tx-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 84px;
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.tx-pill.expense { background: #dc2626; }
+.tx-pill.saving { background: #16a34a; }
+.tx-pill.investment { background: #2563eb; }
+
+.tx-amount-positive {
+    color: #16a34a;
+    font-weight: 700;
+}
+
+.tx-amount-negative {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.tx-balance {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.tx-actions-cell {
+    white-space: nowrap;
+}
+
+.tx-empty {
+    text-align: center;
+    color: #94a3b8;
+    padding: 1.25rem !important;
+}
+
+@media (max-width: 1100px) {
+    .tx-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tx-filters-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .content {
+        padding: 1rem;
+    }
+
+    .tx-form-grid,
+    .tx-filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tx-actions {
+        justify-content: stretch;
+    }
+
+    .tx-actions .btn,
+    .tx-filter-btn {
+        width: 100%;
+    }
+}

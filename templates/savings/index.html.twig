@@ -1,4 +1,4 @@
-{# templates/savings/index.html.twig — same header & footer as Contact, Service, About #}
+﻿{# templates/savings/index.html.twig — same header & footer as Contact, Service, About #}
 {% extends 'base_pages.html.twig' %}
 
 {% block title %}Savings & Goals | Decide${% endblock %}
@@ -334,21 +334,21 @@
 
           // If server didn't return JSON, fallback to normal redirect
           if(!data){
-            toast('warning', 'Connexion au serveur', "Réponse inattendue. Rechargement sécurisé…");
+            toast('warning', 'Server connection', "Unexpected response. Safe reload...");
             form.submit();
             return;
           }
 
           if(!res.ok || data.ok === false){
             // professional error copy
-            const title = data.title || "Action refusée";
-            const msg   = data.message || "Vérifie les champs et réessaie.";
+            const title = data.title || "Action denied";
+            const msg   = data.message || "Check the fields and try again.";
             toast(data.type || 'danger', title, msg, data.code || null);
             return;
           }
 
           // success
-          toast(data.type || 'success', data.title || "Opération réussie", data.message || "Enregistré ✅", data.code || null);
+          toast(data.type || 'success', data.title || "Operation successful", data.message || "Saved ✅", data.code || null);
 
           // optional UI updates
           if(data.newBalance !== undefined) updateBalanceIfPresent(data.newBalance);
@@ -367,7 +367,7 @@
           }
 
         }catch(err){
-          toast('danger', 'Connexion impossible', "Erreur réseau. Vérifie ta connexion et réessaie.");
+          toast('danger', 'Connection failed', "Network error. Check your connection and try again.");
         }finally{
           btns.forEach(b => b.disabled = false);
         }
@@ -582,13 +582,13 @@
       const prio  = btn.getAttribute('data-goal-prio')  || '3';
 
       const elId   = document.getElementById('edit_id');
-      const elNom  = document.getElementById('edit_nom');
+      const elName  = document.getElementById('edit_nom');
       const elCibl = document.getElementById('edit_cible');
       const elDate = document.getElementById('edit_date');
       const elPrio = document.getElementById('edit_prio');
 
       if (elId)   elId.value = id;
-      if (elNom)  elNom.value = nom;
+      if (elName)  elName.value = nom;
       if (elCibl) elCibl.value = cible;
       if (elDate) elDate.value = date;
       if (elPrio) elPrio.value = prio;
@@ -694,3 +694,5 @@
 </script>
 
 {% endblock %}
+
+

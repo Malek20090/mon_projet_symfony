@@ -1,4 +1,4 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
 {% block title %}Revenus | Decide${% endblock %}
 
@@ -7,9 +7,9 @@
     <div class="page-header-card">
         <div>
             <h1>Revenus</h1>
-            <p class="mb-0">Gestion des revenus et salaires</p>
+            <p class="mb-0">Management of revenus et salaires</p>
         </div>
-        <a href="{{ path('app_revenue_new') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Nouveau revenu</a>
+        <a href="{{ path('app_revenue_new') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>New income</a>
     </div>
 
     {% for message in app.flashes('success') %}
@@ -27,7 +27,7 @@
                         <th>#</th>
                         <th>Montant</th>
                         <th>Type</th>
-                        <th>Date réception</th>
+                        <th>Received date</th>
                         <th>Utilisateur</th>
                         <th style="width: 140px;">Actions</th>
                     </tr>
@@ -41,16 +41,16 @@
                             <td>{{ revenue.receivedAt ? revenue.receivedAt|date('d/m/Y') : '' }}</td>
                             <td>{{ revenue.user ? (revenue.user.nom ?? revenue.user.email ?? 'User #' ~ revenue.user.id) : '-' }}</td>
                             <td>
-                                <a href="{{ path('app_revenue_show', { id: revenue.id }) }}" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fas fa-eye"></i></a>
-                                <a href="{{ path('app_revenue_edit', { id: revenue.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="fas fa-edit"></i></a>
-                                <form method="post" action="{{ path('app_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer ce revenu ?');">
+                                <a href="{{ path('app_revenue_show', { id: revenue.id }) }}" class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>
+                                <a href="{{ path('app_revenue_edit', { id: revenue.id }) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
+                                <form method="post" action="{{ path('app_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Delete this income?');">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ revenue.id) }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fas fa-trash"></i></button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
                                 </form>
                             </td>
                         </tr>
                     {% else %}
-                        <tr><td colspan="6" class="text-center text-muted py-4">Aucun revenu.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-4">No income.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -58,7 +58,11 @@
     </div>
 
     <div class="admin-page-footer">
-        <a href="{{ path('admin_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Retour au dashboard</a>
+        <a href="{{ path('admin_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to dashboard</a>
     </div>
 </div>
 {% endblock %}
+
+
+
+

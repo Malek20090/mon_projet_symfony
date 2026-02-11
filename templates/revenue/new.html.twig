@@ -1,26 +1,29 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Nouveau revenu | Decide${% endblock %}
+{% block title %}New income | Decide${% endblock %}
 
 {% block content %}
 <div class="admin-page">
     <div class="page-header-card">
         <div>
-            <h1>Nouveau revenu</h1>
-            <p class="mb-0">Ajouter un revenu ou un salaire</p>
+            <h1>New income</h1>
+            <p class="mb-0">Add an income ou un salaire</p>
         </div>
     </div>
 
     <div class="card-custom">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <h5 class="mb-4"><i class="fas fa-wallet text-primary me-2"></i>Ajouter un revenu</h5>
-                {{ include('revenue/_form.html.twig', { button_label: 'Créer' }) }}
+                <h5 class="mb-4"><i class="fas fa-wallet text-primary me-2"></i>Add an income</h5>
+                {{ include('revenue/_form.html.twig', { button_label: 'Create' }) }}
                 <div class="admin-page-footer mt-4">
-                    <a href="{{ path('app_revenue_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
+                    <a href="{{ path('app_revenue_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to list</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+
+

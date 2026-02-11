@@ -1,4 +1,4 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
 {% block title %}Users{% endblock %}
 
@@ -12,9 +12,9 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Nom</th>
+            <th>Name</th>
             <th>Email</th>
-            <th>Rôle</th>
+            <th>Role</th>
             <th>Solde</th>
             <th>Actions</th>
         </tr>
@@ -40,7 +40,7 @@
 
         {% if not hasAdmin %}
             <tr>
-                <td colspan="5">Aucun administrateur</td>
+                <td colspan="5">No administrateur</td>
             </tr>
         {% endif %}
     </tbody>
@@ -53,9 +53,9 @@
 <table class="table">
     <thead>
         <tr>
-            <th>Nom</th>
+            <th>Name</th>
             <th>Email</th>
-            <th>Rôle</th>
+            <th>Role</th>
             <th>Solde</th>
             <th>Actions</th>
         </tr>
@@ -72,7 +72,7 @@
                     {% if 'ROLE_SALARY' in user.roles %}
                         <span class="badge badge-salary">Salary</span>
                     {% elseif 'ROLE_ETUDIANT' in user.roles %}
-                        <span class="badge badge-student">Étudiant</span>
+                        <span class="badge badge-student">Student</span>
                     {% else %}
                         {{ user.roles|join(', ') }}
                     {% endif %}
@@ -88,7 +88,7 @@
 
     {% if not hasUsers %}
         <tr>
-            <td colspan="5">Aucun utilisateur</td>
+            <td colspan="5">No utilisateur</td>
         </tr>
     {% endif %}
     </tbody>
@@ -97,3 +97,5 @@
 <a href="{{ path('app_user_new') }}" class="btn-primary">Add User</a>
 
 {% endblock %}
+
+

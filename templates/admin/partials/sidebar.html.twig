@@ -1,4 +1,4 @@
-<div class="sidebar">
+﻿<div class="sidebar">
     <div class="brand">
         <h3><i class="fas fa-wallet me-2"></i>Decide$</h3>
     </div>
@@ -7,13 +7,13 @@
             <i class="fas fa-home"></i> <span>Dashboard</span>
         </a>
         <a href="{{ path('admin_imprevus_list') }}" class="nav-link {% if 'imprevus' in app.request.attributes.get('_route') %}active{% endif %}">
-            <i class="fas fa-exclamation-triangle"></i> <span>Imprévus</span>
+            <i class="fas fa-exclamation-triangle"></i> <span>Unexpected Events</span>
         </a>
         <a href="{{ path('admin_casrelles_list') }}" class="nav-link {% if 'casrelles' in app.request.attributes.get('_route') %}active{% endif %}">
-            <i class="fas fa-clipboard-list"></i> <span>Cas Réels</span>
+            <i class="fas fa-clipboard-list"></i> <span>Real Cases</span>
         </a>
         <a href="{{ path('admin_dashboard') }}" class="nav-link {% if 'admin_dashboard' in app.request.attributes.get('_route') or 'admin_cours' in app.request.attributes.get('_route') or 'admin_quiz' in app.request.attributes.get('_route') %}active{% endif %}">
-            <i class="fas fa-graduation-cap"></i> <span>Cours & Quiz</span>
+            <i class="fas fa-graduation-cap"></i> <span>Course & Quiz</span>
         </a>
     </nav>
 </div>
@@ -36,7 +36,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="#">
                     <i class="fas fa-shopping-cart"></i>
-                    <span>Dépenses</span>
+                    <span>Expenses</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -54,13 +54,13 @@
             <li class="nav-item">
                 <a class="nav-link {% if app.request.get('_route') == 'app_alea' %}active{% endif %}" href="{{ path('app_alea') }}">
                     <i class="fas fa-bolt"></i>
-                    <span>Aléas</span>
+                    <span>Unexpected Events</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {% if 'admin_imprevus' in app.request.get('_route') %}active{% endif %}" href="{{ path('admin_imprevus_list') }}">
                     <i class="fas fa-bolt"></i>
-                    <span>Gérer Imprévus</span>
+                    <span>Manage Unexpected Events</span>
                 </a>
             </li>
 
@@ -70,6 +70,6 @@
     <div class="mt-auto p-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
         <a href="#" class="d-flex align-items-center text-white text-decoration-none">
             <i class="fas fa-sign-out-alt me-2"></i>
-            <span>Déconnexion</span>
+            <span>Sign out</span>
         </a>
     </div>

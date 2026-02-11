@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -20,6 +20,7 @@
 
     <!-- Page CSS -->
     <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
 </head>
 
 <body>
@@ -57,7 +58,7 @@
             Nos Services
         </h1>
         <p class="text-light">
-            Découvrez les modules intelligents de gestion financière Decide$
+            Discover Decide$ smart financial management modules
         </p>
     </div>
 </div>
@@ -70,16 +71,16 @@
         <!-- LEFT MODULES -->
         <div class="col-lg-4">
 
-            {# Lien vers le module Revenu & Dépenses (ancienne version) #}
+            {# Lien vers le module Income & Expenses (ancienne version) #}
             <a href="{{ path('app_salary_expense_index') }}" class="module-link">
                 <div class="module-card">
                     <div class="module-icon">
                         <i class="fas fa-wallet"></i>
                     </div>
-                    <h4>Revenus & Dépenses</h4>
+                    <h4>Revenus & Expenses</h4>
                     <p>
-                        Suivez vos revenus et contrôlez vos dépenses
-                        quotidiennes avec précision.
+                        Track your income and control your expenses
+                        daily with precision.
                     </p>
                 </div>
             </a>
@@ -89,9 +90,9 @@
     <div class="module-icon">
         <i class="fas fa-piggy-bank"></i>
     </div>
-    <h4>Imprevus & cas réellees</h4>
+    <h4>Unexpected events & real cases</h4>
     <p>
-        Financez vos rêves en créant des cagnottes dédiées
+        Fund your dreams by creating dedicated savings pots
         (Voyages, Mariage, Immobilier).
     </p>
 </div>
@@ -115,24 +116,24 @@
     <div class="module-icon">
         <i class="fas fa-piggy-bank"></i>
     </div>
-    <h4>Epargne & Objectif</h4>
+    <h4>Epargne & Goal</h4>
     <p>
-        Financez vos rêves en créant des cagnottes dédiées
+        Fund your dreams by creating dedicated savings pots
         (Voyages, Mariage, Immobilier).
     </p>
 </div>
 </a>
 
-            {# Anciennes cartes de droite désactivées #}
+            {# Old right-side cards disabled #}
             {#
             <div class="module-card">
                 <div class="module-icon">
                     <i class="fas fa-bolt"></i>
                 </div>
-                <h4>Imprévus & Cas réels</h4>
+                <h4>Unexpected Events & Real Cases</h4>
                 <p>
-                    Testez votre résilience face aux imprévus
-                    financiers réels.
+                    Test your resilience against unexpected events
+                    real financial ones.
                 </p>
             </div>
 
@@ -143,7 +144,7 @@
                 <h4>Investissements</h4>
                 <p>
                     Simulez des placements financiers et
-                    apprenez à investir intelligemment.
+                    learn to invest smartly.
                 </p>
             </div>
 
@@ -151,10 +152,10 @@
                 <div class="module-icon">
                     <i class="fas fa-graduation-cap"></i>
                 </div>
-                <h4>Cours & Quiz</h4>
+                <h4>Course & Quiz</h4>
                 <p>
-                    Progressez avec des cours interactifs
-                    et des quiz pédagogiques.
+                    Progress with interactive courses
+                    and educational quizzes.
                 </p>
             </div>
             #}
@@ -215,5 +216,9 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('js/theme-toggle.js') }}"></script>
 </body>
 </html>
+
+
+

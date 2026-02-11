@@ -1,102 +1,58 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Transaction{% endblock %}
-
-{% block body %}
-    <h1>Transaction</h1>
-
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ transaction.id }}</td>
-            </tr>
-            <tr>
-                <th>Type</th>
-                <td>{{ transaction.type }}</td>
-            </tr>
-            <tr>
-                <th>Montant</th>
-                <td>{{ transaction.montant }}</td>
-            </tr>
-            <tr>
-                <th>Date</th>
-                <td>{{ transaction.date ? transaction.date|date('Y-m-d') : '' }}</td>
-            </tr>
-            <tr>
-                <th>Description</th>
-                <td>{{ transaction.description }}</td>
-            </tr>
-            <tr>
-                <th>ModuleSource</th>
-                <td>{{ transaction.moduleSource }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <a href="{{ path('app_transaction_index') }}">back to list</a>
-
-    <a href="{{ path('app_transaction_edit', {'id': transaction.id}) }}">edit</a>
-
-    {{ include('transaction/_delete_form.html.twig') }}
-{% extends 'admin/layout.html.twig' %}
+{% block title %}Detail transaction | Decide${% endblock %}
 
 {% block content %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Transaction #{{ transaction.id }}</h1>
+            <p class="mb-0">Details complets de la transaction</p>
+        </div>
+        <div>
+            <a href="{{ path('app_transaction_edit', {'id': transaction.id}) }}" class="btn btn-primary me-2">
+                <i class="fas fa-edit me-1"></i>Edit
+            </a>
+            <a href="{{ path('app_transaction_index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to list
+            </a>
+        </div>
+    </div>
 
-<h1>Transactions</h1>
+    <div class="card-custom mb-3">
+        <table class="table mb-0">
+            <tbody>
+                <tr>
+                    <th style="width: 220px;">ID</th>
+                    <td>{{ transaction.id }}</td>
+                </tr>
+                <tr>
+                    <th>Type</th>
+                    <td>{{ transaction.type }}</td>
+                </tr>
+                <tr>
+                    <th>Montant</th>
+                    <td class="text-primary fw-bold">{{ transaction.montant }} TND</td>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    <td>{{ transaction.date ? transaction.date|date('d/m/Y') : '' }}</td>
+                </tr>
+                <tr>
+                    <th>Description</th>
+                    <td>{{ transaction.description }}</td>
+                </tr>
+                <tr>
+                    <th>Module source</th>
+                    <td>{{ transaction.moduleSource }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-<!-- 🔎 FILTRES -->
-<form method="get" class="filter-bar">
-    <select name="type">
-        <option value="">All types</option>
-        <option value="SAVING">Saving</option>
-        <option value="EXPENSE">Expense</option>
-        <option value="INVESTMENT">Investment</option>
-    </select>
-
-    <input type="date" name="from">
-    <input type="date" name="to">
-
-    <button>Filter</button>
-</form>
-
-<!-- ➕ CREATE -->
-<div class="card">
-    <h3>Create New Transaction</h3>
-    {{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn-primary">Add</button>
-    {{ form_end(form) }}
+    <div class="card-custom">
+        {{ include('transaction/_delete_form.html.twig') }}
+    </div>
 </div>
-
-<!-- 📋 TABLE -->
-<div class="card">
-<table class="table">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>User</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Date</th>
-            <th>Description</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for t in transactions %}
-        <tr>
-            <td>{{ t.id }}</td>
-            <td>{{ t.user.nom }}</td>
-            <td>{{ t.type }}</td>
-            <td>{{ t.montant }} DT</td>
-            <td>{{ t.date|date('Y-m-d') }}</td>
-            <td>{{ t.description }}</td>
-        </tr>
-    {% else %}
-        <tr><td colspan="6">No transactions</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
-</div>
-
 {% endblock %}
+

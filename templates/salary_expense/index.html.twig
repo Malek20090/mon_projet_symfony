@@ -1,6 +1,6 @@
-{% extends 'base_pages.html.twig' %}
+﻿{% extends 'base_pages.html.twig' %}
 
-{% block title %}Revenu & Expense | Decide${% endblock %}
+{% block title %}Income & Expense | Decide${% endblock %}
 
 {% block body_class %}savings-page{% endblock %}
 
@@ -40,7 +40,7 @@
 
 <section class="hero">
   <div class="wrap container text-center">
-    <h1>Revenu & Expense</h1>
+    <h1>Income & Expense</h1>
     <p>Track your income, manage your expenses, and visualize your financial balance in one place.</p>
   </div>
 </section>
@@ -56,7 +56,7 @@
 
     <div class="section-title">
       <div class="kicker">DECIDE$ MODULE</div>
-      <h2>Revenu & Expense Management</h2>
+      <h2>Income & Expense Management</h2>
       <p>Manage income and expenses with tri and recherche.</p>
     </div>
 
@@ -74,7 +74,7 @@
       <div class="stat-card">
         <div>
           <h4>Total Expenses</h4>
-          <div class="small">Somme des dépenses</div>
+          <div class="small">Total expenses</div>
           <div class="value">{{ totalExpenses|number_format(2, '.', ' ') }} TND</div>
         </div>
         <div class="icon-bubble"><i class="fa-solid fa-credit-card"></i></div>
@@ -103,7 +103,7 @@
         <i class="fa-solid fa-wallet me-2"></i>Revenus
       </button>
       <button type="button" class="js-tab tab-pill {{ tab == 'expenses' ? 'active' : '' }}" data-tab="expenses">
-        <i class="fa-solid fa-credit-card me-2"></i>Dépenses
+        <i class="fa-solid fa-credit-card me-2"></i>Expenses
       </button>
     </div>
 
@@ -112,14 +112,14 @@
       <div class="row g-4">
         <div class="col-lg-5">
           <div class="stat-card p-4">
-            <h4 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Ajouter un revenu</h4>
+            <h4 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Add an income</h4>
             {{ form_start(formRevenue, { 'attr': { 'class': '' } }) }}
               <div class="mb-3">{{ form_row(formRevenue.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Montant (TND)' }) }}</div>
               <div class="mb-3">{{ form_row(formRevenue.type, { 'attr': { 'class': 'form-select' } }) }}</div>
               <div class="mb-3">{{ form_row(formRevenue.receivedAt, { 'attr': { 'class': 'form-control' }, 'label': 'Date' }) }}</div>
               <div class="mb-3">{{ form_row(formRevenue.description, { 'attr': { 'class': 'form-control' }, 'required': false }) }}</div>
               
-              <button type="submit" class="btn-primary2 w-100"><i class="fas fa-plus-circle me-2"></i>Ajouter</button>
+              <button type="submit" class="btn-primary2 w-100"><i class="fas fa-plus-circle me-2"></i>Add</button>
             {{ form_end(formRevenue) }}
           </div>
         </div>
@@ -131,12 +131,12 @@
               <input type="hidden" name="tab" value="revenus">
               <div class="row g-2 align-items-end mb-2">
                 <div class="col-auto">
-                  <label class="form-label small mb-0">Tri (critère 1)</label>
+                  <label class="form-label small mb-0">Sort (criterion 1)</label>
                   <select name="revenue_sort1" class="form-select form-select-sm">
                     <option value="receivedAt" {{ app.request.query.get('revenue_sort1') == 'receivedAt' ? 'selected' : '' }}>Date</option>
                     <option value="amount" {{ app.request.query.get('revenue_sort1') == 'amount' ? 'selected' : '' }}>Montant</option>
                     <option value="type" {{ app.request.query.get('revenue_sort1') == 'type' ? 'selected' : '' }}>Type</option>
-                    <option value="createdAt" {{ app.request.query.get('revenue_sort1') == 'createdAt' ? 'selected' : '' }}>Création</option>
+                    <option value="createdAt" {{ app.request.query.get('revenue_sort1') == 'createdAt' ? 'selected' : '' }}>Created on</option>
                   </select>
                 </div>
                 <div class="col-auto">
@@ -147,7 +147,7 @@
                   </select>
                 </div>
                 <div class="col-auto">
-                  <label class="form-label small mb-0">Critère 2</label>
+                  <label class="form-label small mb-0">Criterion 2</label>
                   <select name="revenue_sort2" class="form-select form-select-sm">
                     <option value="amount" {{ app.request.query.get('revenue_sort2', 'amount') == 'amount' ? 'selected' : '' }}>Montant</option>
                     <option value="receivedAt" {{ app.request.query.get('revenue_sort2') == 'receivedAt' ? 'selected' : '' }}>Date</option>
@@ -195,15 +195,15 @@
                       <td class="col-amount">{{ revenue.amount|number_format(2, ',', ' ') }} TND</td>
                       <td>{{ revenue.type }}</td>
                       <td class="col-actions">
-                        <a href="{{ path('app_salary_expense_revenue_edit', { id: revenue.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="fas fa-edit"></i></a>
-                        <form method="post" action="{{ path('app_salary_expense_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer ce revenu ?');">
+                        <a href="{{ path('app_salary_expense_revenue_edit', { id: revenue.id }) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
+                        <form method="post" action="{{ path('app_salary_expense_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Delete this income?');">
                           <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ revenue.id) }}">
-                          <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fas fa-trash"></i></button>
+                          <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
                         </form>
                       </td>
                     </tr>
                   {% else %}
-                    <tr><td colspan="5" class="text-center text-muted py-4">Aucun revenu.</td></tr>
+                    <tr><td colspan="5" class="text-center text-muted py-4">No income.</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -214,35 +214,35 @@
       </div>
     </div>
 
-    {# TAB: DÉPENSES #}
+    {# TAB: EXPENSES #}
     <div id="tab-expenses" class="tab-panel {{ tab == 'expenses' ? 'show' : '' }}">
       <div class="row g-4">
         <div class="col-lg-5">
           <div class="stat-card p-4">
-            <h4 class="mb-3"><i class="fas fa-minus-circle text-primary me-2"></i>Ajouter une dépense</h4>
+            <h4 class="mb-3"><i class="fas fa-minus-circle text-primary me-2"></i>Add an expense</h4>
             {{ form_start(formExpense, { 'attr': { 'class': '' } }) }}
               <div class="mb-3">{{ form_row(formExpense.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Montant (TND)' }) }}</div>
               <div class="mb-3">{{ form_row(formExpense.category, { 'attr': { 'class': 'form-select' } }) }}</div>
               <div class="mb-3">{{ form_row(formExpense.expenseDate, { 'attr': { 'class': 'form-control' }, 'label': 'Date' }) }}</div>
               <div class="mb-3">{{ form_row(formExpense.description, { 'attr': { 'class': 'form-control' }, 'required': false }) }}</div>
               <div class="mb-3">{{ form_row(formExpense.revenue, { 'attr': { 'class': 'form-select' } }) }}</div>
-              <button type="submit" class="btn-primary2 w-100"><i class="fas fa-minus-circle me-2"></i>Ajouter</button>
+              <button type="submit" class="btn-primary2 w-100"><i class="fas fa-minus-circle me-2"></i>Add</button>
             {{ form_end(formExpense) }}
           </div>
         </div>
         <div class="col-lg-7">
           <div class="stat-card p-4 historique-frame">
-            <h4 class="mb-0"><i class="fas fa-history text-primary me-2"></i>Historique des dépenses</h4>
+            <h4 class="mb-0"><i class="fas fa-history text-primary me-2"></i>Expense history</h4>
 
             <form method="get" class="historique-toolbar">
               <input type="hidden" name="tab" value="expenses">
               <div class="row g-2 align-items-end mb-2">
                 <div class="col-auto">
-                  <label class="form-label small mb-0">Tri (critère 1)</label>
+                  <label class="form-label small mb-0">Sort (criterion 1)</label>
                   <select name="expense_sort1" class="form-select form-select-sm">
                     <option value="expenseDate" {{ app.request.query.get('expense_sort1') == 'expenseDate' ? 'selected' : '' }}>Date</option>
                     <option value="amount" {{ app.request.query.get('expense_sort1') == 'amount' ? 'selected' : '' }}>Montant</option>
-                    <option value="category" {{ app.request.query.get('expense_sort1') == 'category' ? 'selected' : '' }}>Catégorie</option>
+                    <option value="category" {{ app.request.query.get('expense_sort1') == 'category' ? 'selected' : '' }}>Category</option>
                   </select>
                 </div>
                 <div class="col-auto">
@@ -253,11 +253,11 @@
                   </select>
                 </div>
                 <div class="col-auto">
-                  <label class="form-label small mb-0">Critère 2</label>
+                  <label class="form-label small mb-0">Criterion 2</label>
                   <select name="expense_sort2" class="form-select form-select-sm">
                     <option value="amount" {{ app.request.query.get('expense_sort2', 'amount') == 'amount' ? 'selected' : '' }}>Montant</option>
                     <option value="expenseDate" {{ app.request.query.get('expense_sort2') == 'expenseDate' ? 'selected' : '' }}>Date</option>
-                    <option value="category" {{ app.request.query.get('expense_sort2') == 'category' ? 'selected' : '' }}>Catégorie</option>
+                    <option value="category" {{ app.request.query.get('expense_sort2') == 'category' ? 'selected' : '' }}>Category</option>
                   </select>
                 </div>
                 <div class="col-auto">
@@ -273,7 +273,7 @@
               <div class="row g-2 align-items-end">
                 <div class="col-auto flex-grow-1">
                   <label class="form-label small mb-0">Recherche</label>
-                  <input type="text" name="expense_search" value="{{ app.request.query.get('expense_search') }}" class="form-control form-control-sm" placeholder="Catégorie ou description...">
+                  <input type="text" name="expense_search" value="{{ app.request.query.get('expense_search') }}" class="form-control form-control-sm" placeholder="Category ou description...">
                 </div>
                 <div class="col-auto">
                   <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search me-1"></i>Rechercher</button>
@@ -289,7 +289,7 @@
                     <th>#</th>
                     <th>Date</th>
                     <th>Montant</th>
-                    <th>Catégorie</th>
+                    <th>Category</th>
                     <th>Description</th>
                     <th>Actions</th>
                   </tr>
@@ -303,15 +303,15 @@
                       <td>{{ expense.category }}</td>
                       <td>{{ expense.description|default('—') }}</td>
                       <td class="col-actions">
-                        <a href="{{ path('app_salary_expense_expense_edit', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="fas fa-edit"></i></a>
-                        <form method="post" action="{{ path('app_salary_expense_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer cette dépense ?');">
+                        <a href="{{ path('app_salary_expense_expense_edit', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
+                        <form method="post" action="{{ path('app_salary_expense_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Delete this expense?');">
                           <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ expense.id) }}">
-                          <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fas fa-trash"></i></button>
+                          <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
                         </form>
                       </td>
                     </tr>
                   {% else %}
-                    <tr><td colspan="6" class="text-center text-muted py-4">Aucune dépense.</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted py-4">No expense.</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -361,3 +361,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 {% endblock %}
+
+
+
+

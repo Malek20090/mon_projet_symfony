@@ -1,15 +1,15 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Traiter la demande | Decide${% endblock %}
+{% block title %}Process request | Decide${% endblock %}
 
 {% block content %}
 <div class="admin-page">
     <div class="page-header-card">
         <div>
-            <h1>Traiter la demande</h1>
-            <p class="mb-0">Accepter ou refuser la demande – Cas Réel</p>
+            <h1>Process request</h1>
+            <p class="mb-0">Accept or reject request - Real Case</p>
         </div>
-        <a href="{{ path('admin_casrelles_list') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
+        <a href="{{ path('admin_casrelles_list') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Back to list</a>
     </div>
 
     <div class="card-custom">
@@ -17,7 +17,7 @@
             <div class="col-lg-6">
                 <div class="card mb-4">
                     <div class="card-header bg-light">
-                        <h5 class="mb-0"><i class="fas fa-file-alt me-2 text-primary"></i>Détails de la demande</h5>
+                        <h5 class="mb-0"><i class="fas fa-file-alt me-2 text-primary"></i>Request details</h5>
                     </div>
                 <div class="card-body">
                     <table class="table table-borderless mb-0">
@@ -31,7 +31,7 @@
                                 {% if cas.type == 'POSITIF' %}
                                     <span class="badge bg-success">POSITIF</span>
                                 {% else %}
-                                    <span class="badge bg-danger">NÉGATIF</span>
+                                    <span class="badge bg-danger">NEGATIVE</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -49,9 +49,9 @@
                             <td><strong>Solution:</strong></td>
                             <td>
                                 {% if cas.solution == 'FONDS_SECURITE' %}
-                                    <span class="badge bg-info"><i class="fas fa-shield-alt me-1"></i>Fonds de Sécurité</span>
+                                    <span class="badge bg-info"><i class="fas fa-shield-alt me-1"></i>Emergency Fund</span>
                                 {% elseif cas.solution == 'EPARGNE' %}
-                                    <span class="badge bg-warning"><i class="fas fa-piggy-bank me-1"></i>Épargne</span>
+                                    <span class="badge bg-warning"><i class="fas fa-piggy-bank me-1"></i>Savings</span>
                                 {% elseif cas.solution == 'FAMILLE' %}
                                     <span class="badge bg-secondary"><i class="fas fa-users me-1"></i>Famille</span>
                                 {% else %}
@@ -64,9 +64,9 @@
                             <td><strong>Statut:</strong></td>
                             <td>
                                 {% if cas.resultat == 'VALIDE' %}
-                                    <span class="badge bg-success">Accepté</span>
+                                    <span class="badge bg-success">Accepted</span>
                                 {% elseif cas.resultat == 'REFUSE' %}
-                                    <span class="badge bg-danger">Refusé</span>
+                                    <span class="badge bg-danger">Rejected</span>
                                 {% else %}
                                     <span class="badge bg-warning">En attente</span>
                                 {% endif %}
@@ -75,7 +75,7 @@
                         {% endif %}
                         {% if cas.raisonRefus %}
                         <tr>
-                            <td><strong>Raison du refus:</strong></td>
+                            <td><strong>Reason for rejection:</strong></td>
                             <td class="text-danger">{{ cas.raisonRefus }}</td>
                         </tr>
                         {% endif %}
@@ -85,18 +85,18 @@
 
                 <div class="card mb-4">
                     <div class="card-header text-white" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
-                        <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Fonds de sécurité</h5>
+                        <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Emergency fund</h5>
                     </div>
                     <div class="card-body text-center py-4">
                         <div class="h3 mb-1 text-primary">{{ securityFund|number_format(2, ',', ' ') }} DT</div>
-                        <p class="text-muted mb-0 small">Solde actuel du fonds de sécurité</p>
+                        <p class="text-muted mb-0 small">Current emergency fund balance</p>
                     </div>
                 </div>
 
                 {% if cas.solution == 'EPARGNE' and cas.epargne %}
                 <div class="card mb-4">
                     <div class="card-header text-dark" style="background: #fef3c7; border-bottom-color: #fcd34d;">
-                        <h5 class="mb-0"><i class="fas fa-piggy-bank me-2"></i>Compte d'épargne</h5>
+                        <h5 class="mb-0"><i class="fas fa-piggy-bank me-2"></i>Savings account</h5>
                     </div>
                 <div class="card-body">
                     <table class="table table-borderless mb-0">
@@ -111,19 +111,19 @@
                             </td>
                         </tr>
                         <tr>
-                            <td><strong>Créé le:</strong></td>
+                            <td><strong>Created on:</strong></td>
                             <td>{{ cas.epargne.dateCreation|date('d/m/Y') }}</td>
                         </tr>
                         {% if cas.type == 'NEGATIF' %}
                         <tr>
-                            <td><strong>Après transaction:</strong></td>
+                            <td><strong>After transaction:</strong></td>
                             <td class="text-primary">
                                 {{ (cas.epargne.sold - cas.montant)|number_format(2, ',', ' ') }} DT
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td><strong>Après transaction:</strong></td>
+                            <td><strong>After transaction:</strong></td>
                             <td class="text-primary">
                                 {{ (cas.epargne.sold + cas.montant)|number_format(2, ',', ' ') }} DT
                             </td>
@@ -142,19 +142,19 @@
                         <h5 class="mb-0"><i class="fas fa-tasks me-2 text-primary"></i>Actions</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted mb-3">La demande est en attente de validation.</p>
+                        <p class="text-muted mb-3">The request is pending validation.</p>
                         <div class="alert alert-info mb-0 border-0">
                             <i class="fas fa-info-circle me-2"></i>
-                            En acceptant, les transactions seront effectuées automatiquement sur le compte d'épargne ou le fonds de sécurité.
+                            By accepting, transactions will be automatically executed on the savings account or emergency fund.
                         </div>
                     </div>
                     <div class="card-footer">
                         <form method="POST" class="d-flex flex-column gap-2">
-                            <button type="submit" name="action" value="accept" class="btn btn-success" onclick="return confirm('Êtes-vous sûr de vouloir accepter cette demande ?');">
-                                <i class="fas fa-check me-2"></i>Accepter la demande
+                            <button type="submit" name="action" value="accept" class="btn btn-success" onclick="return confirm('Are you sure you want to accept this request?');">
+                                <i class="fas fa-check me-2"></i>Accept request
                             </button>
                             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                <i class="fas fa-times me-2"></i>Refuser la demande
+                                <i class="fas fa-times me-2"></i>Reject request
                             </button>
                             <a href="{{ path('admin_casrelles_list') }}" class="btn btn-outline-secondary">Annuler</a>
                         </form>
@@ -163,42 +163,42 @@
                 {% else %}
                 <div class="card">
                     <div class="card-header bg-light">
-                        <h5 class="mb-0">Demande déjà traitée</h5>
+                        <h5 class="mb-0">Request already processed</h5>
                     </div>
                 <div class="card-body text-center">
                     {% if cas.resultat == 'VALIDE' %}
                         <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
-                        <h4 class="text-success">Demande Acceptée</h4>
-                        <p>La demande a été traitée avec succès.</p>
+                        <h4 class="text-success">Demande Accepted</h4>
+                        <p>The request was processed successfully.</p>
                         {% if cas.solution == 'EPARGNE' and cas.epargne %}
                             <div class="alert alert-success">
-                                <strong>Compte d'épargne #{{ cas.epargne.id }}</strong><br>
+                                <strong>Savings account #{{ cas.epargne.id }}</strong><br>
                                 {% if cas.type == 'NEGATIF' %}
-                                    {{ cas.montant }} DT ont été prélevés<br>
+                                    {{ cas.montant }} DT were withdrawn<br>
                                 {% else %}
-                                    {{ cas.montant }} DT ont été ajoutés<br>
+                                    {{ cas.montant }} DT were added<br>
                                 {% endif %}
-                                Nouveau solde: {{ cas.epargne.sold|number_format(2, ',', ' ') }} DT
+                                New solde: {{ cas.epargne.sold|number_format(2, ',', ' ') }} DT
                             </div>
                         {% elseif cas.solution == 'FONDS_SECURITE' %}
                             <div class="alert alert-info">
                                 {% if cas.type == 'NEGATIF' %}
-                                    <strong>{{ cas.montant }} DT</strong> ont été prélevés du fonds de sécurité
+                                    <strong>{{ cas.montant }} DT</strong> were withdrawn from the emergency fund
                                 {% else %}
-                                    <strong>{{ cas.montant }} DT</strong> ont été ajoutés au fonds de sécurité
+                                    <strong>{{ cas.montant }} DT</strong> were added to the emergency fund
                                 {% endif %}
                             </div>
                         {% elseif cas.solution == 'FAMILLE' %}
                             <div class="alert alert-secondary">
-                                <i class="fas fa-users me-2"></i>Famille sollicitée
+                                <i class="fas fa-users me-2"></i>Family asked for help
                             </div>
                         {% endif %}
                     {% else %}
                         <i class="fas fa-times-circle text-danger fa-4x mb-3"></i>
-                        <h4 class="text-danger">Demande Refusée</h4>
+                        <h4 class="text-danger">Demande Rejected</h4>
                         {% if cas.raisonRefus %}
                             <div class="alert alert-danger">
-                                <strong>Raison du refus:</strong><br>
+                                <strong>Reason for rejection:</strong><br>
                                 {{ cas.raisonRefus }}
                             </div>
                         {% endif %}
@@ -206,7 +206,7 @@
                 </div>
                     <div class="card-footer">
                         <a href="{{ path('admin_casrelles_list') }}" class="btn btn-primary">
-                            <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                            <i class="fas fa-arrow-left me-2"></i>Back to list
                         </a>
                     </div>
                 </div>
@@ -216,7 +216,7 @@
     </div>
 
     <div class="admin-page-footer">
-        <a href="{{ path('admin_casrelles_list') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
+        <a href="{{ path('admin_casrelles_list') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Back to list</a>
         <a href="{{ path('admin_index') }}" class="btn btn-outline-secondary"><i class="fas fa-home me-2"></i>Dashboard</a>
     </div>
 </div>
@@ -225,22 +225,22 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Refuser la demande</h5>
+                <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Reject request</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="raisonRefus" class="form-label fw-bold">Motif du refus:</label>
+                        <label for="raisonRefus" class="form-label fw-bold">Rejection reason:</label>
                         <textarea class="form-control" id="raisonRefus" name="raisonRefus" rows="4" 
-                                  placeholder="Veuillez indiquer la raison du refus..." required></textarea>
-                        <div class="form-text">Cette raison sera communiquée à l'utilisateur.</div>
+                                  placeholder="Please provide the reason for rejection..." required></textarea>
+                        <div class="form-text">This reason will be communicated to the user.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                     <button type="submit" name="action" value="reject" class="btn btn-danger">
-                        <i class="fas fa-times me-2"></i>Confirmer le refus
+                        <i class="fas fa-times me-2"></i>Confirm rejection
                     </button>
                 </div>
             </form>
@@ -248,3 +248,6 @@
     </div>
 </div>
 {% endblock %}
+
+
+

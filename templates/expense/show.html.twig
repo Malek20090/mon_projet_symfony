@@ -1,33 +1,33 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Dépense #{{ expense.id }} | Decide${% endblock %}
+{% block title %}Expense #{{ expense.id }} | Decide${% endblock %}
 
 {% block content %}
 <div class="admin-page">
     <div class="page-header-card">
         <div>
-            <h1>Dépense #{{ expense.id }}</h1>
-            <p class="mb-0">Détail de la dépense</p>
+            <h1>Expense #{{ expense.id }}</h1>
+            <p class="mb-0">Expense details</p>
         </div>
         <div>
-            <a href="{{ path('app_expense_edit', { id: expense.id }) }}" class="btn btn-primary me-2"><i class="fas fa-edit me-2"></i>Modifier</a>
-            <form method="post" action="{{ path('app_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer cette dépense ?');">
+            <a href="{{ path('app_expense_edit', { id: expense.id }) }}" class="btn btn-primary me-2"><i class="fas fa-edit me-2"></i>Edit</a>
+            <form method="post" action="{{ path('app_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Delete this expense?');">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ expense.id) }}">
-                <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i>Supprimer</button>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i>Delete</button>
             </form>
         </div>
     </div>
 
     <div class="card-custom">
-        <h5 class="mb-4"><i class="fas fa-credit-card text-primary me-2"></i>Détails</h5>
+        <h5 class="mb-4"><i class="fas fa-credit-card text-primary me-2"></i>Details</h5>
         <table class="table table-bordered align-middle mb-0">
             <tbody>
                 <tr><th>Id</th><td>{{ expense.id }}</td></tr>
                 <tr><th>Montant</th><td class="text-primary fw-bold">{{ expense.amount|number_format(2, '.', ' ') }} TND</td></tr>
-                <tr><th>Catégorie</th><td>{{ expense.category }}</td></tr>
+                <tr><th>Category</th><td>{{ expense.category }}</td></tr>
                 <tr><th>Date</th><td>{{ expense.expenseDate ? expense.expenseDate|date('d/m/Y') : '' }}</td></tr>
                 <tr><th>Description</th><td>{{ expense.description ?? '-' }}</td></tr>
-                <tr><th>Revenu associé</th>
+                <tr><th>Related income</th>
                     <td>
                         {% if expense.revenue %}
                             <a href="{{ path('app_revenue_show', { id: expense.revenue.id }) }}">Revenu #{{ expense.revenue.id }} ({{ expense.revenue.amount|number_format(2, '.', ' ') }} TND)</a>
@@ -41,7 +41,9 @@
     </div>
 
     <div class="admin-page-footer">
-        <a href="{{ path('app_expense_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
+        <a href="{{ path('app_expense_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to list</a>
     </div>
 </div>
 {% endblock %}
+
+

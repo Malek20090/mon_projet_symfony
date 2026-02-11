@@ -2,9 +2,10 @@
     <html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>Connexion | FinanceLogo</title>
+        <title>Sign in | FinanceLogo</title>
 
         <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
     <script>
@@ -32,15 +33,15 @@
 </div>
 
                 <h2>
-                    Accédez à votre espace financier<br>
-                    <span>en toute sécurité</span>
+                    Access your financial space<br>
+                    <span>securely</span>
                 </h2>
 
                 <div class="accent-line"></div>
 
                 <p class="description">
-                    Gérez vos actifs, analysez vos performances et sécurisez votre avenir
-                    avec notre plateforme nouvelle génération.
+                    Manage your assets, analyze your performance, and secure your future
+                    with our next-generation platform.
                 </p>
             </div>
 
@@ -48,8 +49,8 @@
             <div class="login-right">
                 <div class="login-card">
 
-                    <h2>Connexion</h2>
-                    <p class="subtitle">Bienvenue sur votre espace sécurisé</p>
+                    <h2>Sign in</h2>
+                    <p class="subtitle">Welcome to your secure space</p>
 
                     {% if error %}
                         <div class="error-message">
@@ -75,7 +76,7 @@
                         </div>
 
                         <div class="input-group">
-                            <label>Mot de passe</label>
+                            <label>Password</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-lock"></i>
                                 <input
@@ -94,7 +95,7 @@
                                 Se souvenir de moi
                             </label>
 
-                            <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+                            <a href="#" class="forgot-link">Forgot password?</a>
                         </div>
 
                         <button type="submit" class="btn-login">
@@ -109,13 +110,13 @@
                     </div>
 
                     <div class="footer-links">
-                        Nouveau sur la plateforme ?
-                        <a href="{{ path('app_register') }}">Créer un compte</a>
+                        New sur la plateforme ?
+                        <a href="{{ path('app_register') }}">Create un compte</a>
                     </div>
 
                     <div class="ssl-info">
                         <i class="fas fa-shield-alt"></i>
-                        Connexion sécurisée SSL 256-bit
+                        Secure sign-in SSL 256-bit
                     </div>
 
                 </div>
@@ -124,5 +125,9 @@
         </div>
     </div>
 
+    <script src="{{ asset('js/theme-toggle.js') }}"></script>
     </body>
     </html>
+
+
+

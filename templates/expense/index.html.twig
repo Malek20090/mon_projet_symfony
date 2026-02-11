@@ -1,15 +1,15 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Dépenses | Decide${% endblock %}
+{% block title %}Expenses | Decide${% endblock %}
 
 {% block content %}
 <div class="admin-page">
     <div class="page-header-card">
         <div>
-            <h1>Dépenses</h1>
-            <p class="mb-0">Gestion des dépenses par catégorie</p>
+            <h1>Expenses</h1>
+            <p class="mb-0">Expense management by category</p>
         </div>
-        <a href="{{ path('app_expense_new') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Nouvelle dépense</a>
+        <a href="{{ path('app_expense_new') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>New expense</a>
     </div>
 
     {% for message in app.flashes('success') %}
@@ -26,9 +26,9 @@
                     <tr>
                         <th>#</th>
                         <th>Montant</th>
-                        <th>Catégorie</th>
+                        <th>Category</th>
                         <th>Date</th>
-                        <th>Revenu associé</th>
+                        <th>Related income</th>
                         <th style="width: 140px;">Actions</th>
                     </tr>
                 </thead>
@@ -47,16 +47,16 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ path('app_expense_show', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary" title="Voir"><i class="fas fa-eye"></i></a>
-                                <a href="{{ path('app_expense_edit', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="fas fa-edit"></i></a>
-                                <form method="post" action="{{ path('app_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer cette dépense ?');">
+                                <a href="{{ path('app_expense_show', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>
+                                <a href="{{ path('app_expense_edit', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
+                                <form method="post" action="{{ path('app_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Delete this expense?');">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ expense.id) }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fas fa-trash"></i></button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
                                 </form>
                             </td>
                         </tr>
                     {% else %}
-                        <tr><td colspan="6" class="text-center text-muted py-4">Aucune dépense.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-4">No expense.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -64,7 +64,9 @@
     </div>
 
     <div class="admin-page-footer">
-        <a href="{{ path('admin_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Retour au dashboard</a>
+        <a href="{{ path('admin_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to dashboard</a>
     </div>
 </div>
 {% endblock %}
+
+
