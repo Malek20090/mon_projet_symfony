@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -20,30 +21,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $nom = null;
 
-    #[ORM\Column(length: 180, unique: true, nullable: true)]
-    private ?string $email = null;
+    #[ORM\Column(length: 180, unique: true)]
+    private string $email;
 
     #[ORM\Column]
     private string $password;
 
     /**
-     * Single role stored in DB (column `role`), exposed as array for UserInterface::getRoles()
+     * ✅ UNIQUE source des rôles
      */
-   #[ORM\Column(type: 'json')]
-private array $roles = [];
-
+    #[ORM\Column(type: 'json')]
+    private array $roles = [];
 
     #[ORM\Column(type: 'date', nullable: true)]
     private ?\DateTime $dateInscription = null;
 
     #[ORM\Column]
     private float $soldeTotal = 0;
-
-    /**
-     * Not mapped to database. If you want to persist it, add a migration
-     * to create `image` column on `user` table and add an ORM\Column.
-     */
-    private ?string $image = null;
 
     #[ORM\OneToMany(
         mappedBy: 'user',
@@ -53,16 +47,10 @@ private array $roles = [];
     )]
     private Collection $transactions;
 
-    /**
-     * @var Collection<int, Revenue>
-     */
-    #[ORM\OneToMany(targetEntity: Revenue::class, mappedBy: 'user')]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Revenue::class)]
     private Collection $revenues;
 
-    /**
-     * @var Collection<int, Quiz>
-     */
-    #[ORM\OneToMany(targetEntity: Quiz::class, mappedBy: 'user')]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Quiz::class)]
     private Collection $quizzes;
 
     public function __construct()
@@ -71,53 +59,26 @@ private array $roles = [];
         $this->revenues = new ArrayCollection();
         $this->quizzes = new ArrayCollection();
         $this->dateInscription = new \DateTime();
-        $this->soldeTotal = 0;
-    }
-
-    /* ================= IMAGE (NON PERSISTÉE) ================= */
-
-    public function getImage(): ?string
-    {
-        return $this->image;
-    }
-
-    public function setImage(?string $image): self
-    {
-        $this->image = $image;
-        return $this;
     }
 
     /* ================= SECURITY ================= */
 
     public function getUserIdentifier(): string
     {
-        return (string) ($this->email ?? '');
+        return $this->email;
     }
 
-   public function getRoles(): array
-{
-    $roles = $this->roles;
-    $roles[] = 'ROLE_USER';
-    return array_unique($roles);
-}
-
-
-   public function setRoles(array $roles): self
-{
-    $this->roles = $roles;
-    return $this;
-}
-
-    public function getRole(): ?string
+    public function getRoles(): array
     {
-        // Return the first role from the array, or null if empty
-        return !empty($this->roles) ? reset($this->roles) : null;
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER'; // toujours garanti
+
+        return array_values(array_unique($roles));
     }
 
-    public function setRole(?string $role): self
+    public function setRoles(array $roles): self
     {
-        // Set the roles array with the single role, or empty array if null
-        $this->roles = $role !== null ? [$role] : [];
+        $this->roles = $roles;
         return $this;
     }
 
@@ -132,10 +93,7 @@ private array $roles = [];
         return $this;
     }
 
-    public function eraseCredentials(): void
-    {
-        // If you store any temporary, sensitive data on the user, clear it here
-    }
+    public function eraseCredentials(): void {}
 
     /* ================= GETTERS / SETTERS ================= */
 
@@ -155,25 +113,14 @@ private array $roles = [];
         return $this;
     }
 
-    public function getEmail(): ?string
+    public function getEmail(): string
     {
         return $this->email;
     }
 
-    public function setEmail(?string $email): self
+    public function setEmail(string $email): self
     {
-        $this->email = $email ? strtolower($email) : null;
-        return $this;
-    }
-
-    public function getDateInscription(): ?\DateTime
-    {
-        return $this->dateInscription;
-    }
-
-    public function setDateInscription(?\DateTime $date): self
-    {
-        $this->dateInscription = $date;
+        $this->email = strtolower($email);
         return $this;
     }
 

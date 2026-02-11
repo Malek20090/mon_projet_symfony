@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+{% block title %}Admin Goal Show{% endblock %}
+
+{% block body %}
+<div class="container" style="padding:30px 18px;">
+  <h2>👁️ Goal #{{ goal.id }}</h2>
+
+  <div class="big-card" style="margin-top:12px;">
+    <div class="info-row"><span>Name</span><b>{{ goal.nom }}</b></div>
+    <div class="info-row"><span>Target</span><b>{{ goal.montantCible }} TND</b></div>
+    <div class="info-row"><span>Current</span><b>{{ goal.montantActuel }} TND</b></div>
+    <div class="info-row"><span>Deadline</span><b>{{ goal.dateLimite ? goal.dateLimite|date('Y-m-d') : '-' }}</b></div>
+    <div class="info-row"><span>Priority</span><b>P{{ goal.priorite ?? 0 }}</b></div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+      <a class="mini-link" href="{{ path('admin_goal_edit', {id:goal.id}) }}">✏️ Edit</a>
+      <a class="mini-link" href="{{ path('admin_goal_index') }}">↩ Back</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,64 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Admin | Decide$</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin | Decide${% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ asset('css/style_1.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body>
+<body class="admin-body">
 
 <div class="admin-container">
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR (même style que Transactions, Reports, Users) -->
     <aside class="sidebar">
         <div class="brand">
             Decide<span>$</span>
         </div>
 
         <nav>
-            
-
+            {% set _route = app.request.attributes.get('_route') ?? '' %}
+            <a href="{{ path('admin_index') }}"
+               class="{{ _route == 'admin_index' ? 'active' : '' }}">
+                <i class="fas fa-home"></i> <span>Dashboard</span>
+            </a>
             <a href="{{ path('app_user_index') }}"
-               class="{{ app.request.get('_route') starts with 'app_user' ? 'active' : '' }}">
-                <span class="icon">👤</span> Users
+               class="{{ _route starts with 'app_user' ? 'active' : '' }}">
+                <i class="fas fa-users"></i> <span>Utilisateurs</span>
             </a>
 
             <a href="{{ path('app_transaction_index') }}"
-               class="{{ app.request.get('_route') starts with 'app_transaction' ? 'active' : '' }}">
-                <span class="icon">💳</span> Transactions
+               class="{{ _route starts with 'app_transaction' ? 'active' : '' }}">
+                <i class="fas fa-file-invoice-dollar"></i> <span>Transactions</span>
             </a>
 
             <a href="{{ path('admin_dashboard') }}"
-               class="{{ app.request.get('_route') starts with 'admin_' ? 'active' : '' }}">
-                <span class="icon">📚</span> Cours & Quiz
+               class="{{ 'admin_dashboard' in _route or 'admin_cours' in _route or 'admin_quiz' in _route ? 'active' : '' }}">
+                <i class="fas fa-graduation-cap"></i> <span>Cours & Quiz</span>
             </a>
 
-            <a href="#">
-                <span class="icon">⚠️</span> Aléas
+            <a href="{{ path('admin_imprevus_list') }}"
+               class="{{ 'admin_imprevus' in _route ? 'active' : '' }}">
+                <i class="fas fa-exclamation-triangle"></i> <span>Imprévus</span>
+            </a>
+
+            <a href="{{ path('admin_casrelles_list') }}"
+               class="{{ 'admin_casrelles' in _route ? 'active' : '' }}">
+                <i class="fas fa-clipboard-list"></i> <span>Cas Réel</span>
+            </a>
+
+            <a href="{{ path('app_revenue_index') }}"
+               class="{{ _route starts with 'app_revenue' ? 'active' : '' }}">
+                <i class="fas fa-coins"></i> <span>Revenus</span>
+            </a>
+
+            <a href="{{ path('app_expense_index') }}"
+               class="{{ _route starts with 'app_expense' ? 'active' : '' }}">
+                <i class="fas fa-wallet"></i> <span>Dépenses</span>
             </a>
 
             <a href="{{ path('app_reports') }}"
-   class="{{ app.request.get('_route') starts with 'app_reports' ? 'active' : '' }}">
-    <span class="icon">📈</span> Reports
-</a>
-
-             
+               class="{{ _route starts with 'app_reports' ? 'active' : '' }}">
+                <i class="fas fa-chart-line"></i> <span>Rapports</span>
+            </a>
         </nav>
 
         <div class="sidebar-footer">
-    <a href="{{ path('app_logout') }}">
-        <span class="icon">🚪</span> Logout
-    </a>
-</div>
-
+            <a href="{{ path('app_logout') }}">
+                <i class="fas fa-sign-out-alt"></i> <span>Déconnexion</span>
+            </a>
+        </div>
     </aside>
 
     <!-- CONTENT -->
     <main class="content">
         {% block content %}{% endblock %}
+        <!-- FOOTER ADMIN -->
+        <footer class="admin-footer">
+            <div class="admin-footer-inner">
+                <span class="admin-footer-brand"><i class="fas fa-wallet me-1"></i> Decide$</span>
+                <span class="admin-footer-copy">&copy; {{ "now"|date("Y") }} Decide$ – Admin. Tous droits réservés.</span>
+                <a href="{{ path('admin_index') }}" class="admin-footer-link">Dashboard</a>
+                <a href="{{ path('app_logout') }}" class="admin-footer-link">Déconnexion</a>
+            </div>
+        </footer>
     </main>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block javascripts %}{% endblock %}
 </body>
 </html>

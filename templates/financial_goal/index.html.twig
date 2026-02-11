@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}FinancialGoal index{% endblock %}
+
+{% block body %}
+    <h1>FinancialGoal index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nom</th>
+                <th>MontantCible</th>
+                <th>MontantActuel</th>
+                <th>DateLimite</th>
+                <th>Priorite</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for financial_goal in financial_goals %}
+            <tr>
+                <td>{{ financial_goal.id }}</td>
+                <td>{{ financial_goal.nom }}</td>
+                <td>{{ financial_goal.montantCible }}</td>
+                <td>{{ financial_goal.montantActuel }}</td>
+                <td>{{ financial_goal.dateLimite ? financial_goal.dateLimite|date('Y-m-d') : '' }}</td>
+                <td>{{ financial_goal.priorite }}</td>
+                <td>
+                    <a href="{{ path('app_financial_goal_show', {'id': financial_goal.id}) }}">show</a>
+                    <a href="{{ path('app_financial_goal_edit', {'id': financial_goal.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="7">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_financial_goal_new') }}">Create new</a>
+{% endblock %}

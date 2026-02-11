@@ -1,0 +1,620 @@
+{# templates/goal/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Goals | Decide${% endblock %}
+
+{% block body %}
+
+<style>
+/* ===============================
+   GOALS WIDTH = SAME AS SAVINGS
+   =============================== */
+.savings-wrap{
+  width: 100% !important;
+  max-width: 1220px !important;
+  margin: 0 auto !important;
+  padding: 0 18px !important;
+}
+
+/* ===============================
+   2-COLUMN GRID (SAME FEEL)
+   =============================== */
+.grid-goals{
+  width: 100% !important;
+  max-width: 1220px !important;
+  margin: 0 auto !important;
+
+  display: grid !important;
+  grid-template-columns: 420px 1fr !important;
+  gap: 28px !important;
+  align-items: stretch !important;
+}
+
+/* Cards equal height */
+.grid-goals > .big-card{
+  height: 100% !important;
+  min-height: 640px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Head fixed, body stretches */
+.grid-goals > .big-card .card-head{
+  flex: 0 0 auto !important;
+}
+.grid-goals > .big-card .card-body{
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  padding-bottom: 6px !important;
+}
+
+/* Prevent overflow forcing width */
+.grid-goals *{ max-width: 100%; }
+
+/* Toolbar layout like Savings */
+.table-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom: 14px;
+}
+.table-toolbar .tool-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:1;
+  flex-wrap:wrap;
+  min-width:0 !important;
+}
+.table-toolbar .tool-left .form-control{
+  flex:1;
+  min-width:240px;
+  width:100% !important;
+}
+.table-toolbar .tool-right{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+/* Chips behave like buttons */
+.chip{
+  border: 0;
+  cursor: pointer;
+}
+.tool-right a.chip{
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* =========================
+   MODAL
+   ========================= */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background: rgba(8,26,58,.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 9999;
+  padding: 18px;
+}
+.modal-card{
+  width: min(560px, 96vw);
+  background: var(--card-strong, #fff);
+  border-radius: 18px;
+  box-shadow: 0 22px 55px rgba(0,0,0,.18);
+  padding: 16px;
+}
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom: 10px;
+}
+
+/* =========================
+   ✅ INLINE ERRORS (NO RELOAD)
+   ========================= */
+.field-error{
+  margin-top:6px;
+  font-size:12px;
+  color:#ef4444;
+  font-weight:700;
+  display:none;
+}
+.is-bad{
+  border-color: rgba(239,68,68,.55) !important;
+  box-shadow: 0 0 0 3px rgba(239,68,68,.10) !important;
+}
+</style>
+
+
+<div class="savings-wrap">
+  <div class="grid-goals">
+
+    {# ================= LEFT CARD ================= #}
+    <div class="big-card goal-card-shell">
+      <div class="card-head head">
+        <div>
+          <h3>Create a Goal</h3>
+          <div class="sub">🎯 create + rules</div>
+        </div>
+        <div class="icon-bubble">🎯</div>
+      </div>
+
+      <div class="card-body">
+
+        {# ✅ ADD: id + novalidate + error boxes #}
+        <form method="post" action="{{ path('app_goal_new') }}" id="goalAddForm" novalidate>
+          <input type="hidden" name="_form" value="add_goal">
+
+          <div style="margin-bottom:10px;">
+            <label class="form-label">Goal name</label>
+            <input class="form-control" name="nom" placeholder="Ex: Buy a car" required minlength="3" maxlength="60">
+            <div class="field-error" data-err="nom"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div>
+              <label class="form-label">Target (TND)</label>
+              <input class="form-control" name="montant_cible" type="number" step="0.01" min="0.01" required>
+              <div class="field-error" data-err="montant_cible"></div>
+            </div>
+            <div>
+              <label class="form-label">Current (TND)</label>
+              <input class="form-control" name="montant_actuel" type="number" step="0.01" min="0" value="0">
+              <div class="field-error" data-err="montant_actuel"></div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label class="form-label">Deadline</label>
+              <input class="form-control" name="date_limite" type="date">
+              <div class="field-error" data-err="date_limite"></div>
+            </div>
+            <div>
+              <label class="form-label">Priority (1-5)</label>
+              <input class="form-control" name="priorite" type="number" min="1" max="5" value="3" required>
+              <div class="field-error" data-err="priorite"></div>
+            </div>
+          </div>
+
+          <div class="mt-16">
+            <button class="primary-btn" type="submit">➕ Add Goal</button>
+          </div>
+        </form>
+
+        <div class="mt-16">
+          <button class="ghost-btn" type="button" id="btn-autoplan">✨ Auto-plan (later)</button>
+        </div>
+
+      </div>
+    </div>
+
+
+    {# ================= RIGHT CARD ================= #}
+    <div class="big-card goal-card-shell">
+      <div class="card-head head">
+        <div>
+          <h3>Your Goals</h3>
+          <div class="sub">🔎 search • ⇅ sort • ✏️ edit • 🗑 delete</div>
+        </div>
+        <div class="icon-bubble">📌</div>
+      </div>
+
+      <div class="card-body">
+
+<form class="table-toolbar" method="get" action="" id="goalToolbarForm">
+
+  <div class="toolbar-row">
+    <div class="tool-field full">
+      <button type="submit" class="emoji-btn" title="Search">🔎</button>
+
+      <input class="form-control"
+             id="goalSearchInput"
+             type="text"
+             name="q"
+             value="{{ app.request.get('q') }}"
+             placeholder="Search: name, priority, deadline, amounts…"
+             oninput="clearTimeout(window.__gsearch);
+                      window.__gsearch=setTimeout(()=>this.form.submit(),450);">
+    </div>
+  </div>
+
+  <div class="toolbar-row">
+    <div class="tool-field">
+      <button type="button" class="emoji-btn" id="sortLoopBtn" title="Next sort">🔁</button>
+
+      <select class="form-control"
+              name="sort"
+              id="goalSortSelect"
+              onchange="this.form.submit()">
+        {% set sortVal = app.request.get('sort') %}
+        <option value="" {{ sortVal == '' ? 'selected' : '' }}>Sort by…</option>
+        <option value="priority_desc" {{ sortVal == 'priority_desc' ? 'selected' : '' }}>Priority (high → low)</option>
+        <option value="deadline_asc"  {{ sortVal == 'deadline_asc' ? 'selected' : '' }}>Deadline (soonest)</option>
+        <option value="progress_desc" {{ sortVal == 'progress_desc' ? 'selected' : '' }}>Progress (high → low)</option>
+        <option value="name_asc" {{ sortVal == 'name_asc' ? 'selected' : '' }}>Name (A → Z)</option>
+      </select>
+
+      {% set filterVal = app.request.get('filter')|default('all') %}
+      <button type="submit"
+              name="filter"
+              value="all"
+              class="chip {{ filterVal == 'all' ? 'active' : '' }}">
+        All
+      </button>
+
+      <a class="chip" href="{{ app.request.pathinfo }}">Reset</a>
+    </div>
+  </div>
+
+</form>
+
+        <div id="goals-list">
+
+          {% if goals is empty %}
+            <div class="info-row" style="justify-content:center;">
+              <b>✨ No goals yet. Create one on the left.</b>
+            </div>
+          {% else %}
+
+            {% for g in goals %}
+              {% set target = attribute(g,'montant_cible')|default(attribute(g,'montantCible')|default(0)) %}
+              {% set current = attribute(g,'montant_actuel')|default(attribute(g,'montantActuel')|default(0)) %}
+              {% set pct = (target > 0) ? ((current / target) * 100) : 0 %}
+              {% set pct = pct > 100 ? 100 : pct %}
+              {% set isDone = (target > 0 and current >= target) %}
+
+              {% set dl = attribute(g,'date_limite')|default(attribute(g,'dateLimite')|default(null)) %}
+              {% set pr = attribute(g,'priorite')|default(attribute(g,'priorite')|default(1)) %}
+              {% set name = attribute(g,'nom')|default('Goal') %}
+              {% set goalId = attribute(g,'id')|default('') %}
+
+              <div class="goal-card"
+                   data-goal-name="{{ name|lower }}"
+                   data-goal-priority="{{ pr }}"
+                   data-goal-target="{{ target }}"
+                   data-goal-current="{{ current }}"
+                   data-goal-progress="{{ pct }}"
+                   data-goal-deadline="{{ dl ? dl|date('Y-m-d') : '' }}">
+
+                <div class="d-flex between align-center" style="gap:12px;">
+                  <div>
+                    <div style="font-weight:950; font-size:16px;">🎯 {{ name }}</div>
+                    <div style="color:var(--muted); font-size:12px; margin-top:4px;">
+                      Target: <b>{{ target }}</b> TND · Current: <b>{{ current }}</b> TND
+                      {% if dl %} · Deadline: <b>{{ dl|date('Y-m-d') }}</b>{% endif %}
+                    </div>
+                  </div>
+
+                  <span class="badge-pill">🏷️ P{{ pr }}</span>
+                </div>
+
+                <div class="mt-10" style="display:flex; gap:10px; align-items:center;">
+                  <div class="progress" style="flex:1;"><div style="width: {{ pct }}%"></div></div>
+                  <div style="min-width:58px; text-align:right; font-weight:950;">{{ pct|round }}%</div>
+                </div>
+
+                <div class="mt-10 d-flex between align-center" style="gap:12px; flex-wrap:wrap;">
+
+                  {# ✅ FIX CONTRIBUTE: add id + min + error box #}
+                  <form method="post"
+                        action="{{ path('app_goal_contribute', {id: goalId}) }}"
+                        class="d-flex align-center gap-10 goalContributeForm"
+                        style="flex-wrap:wrap;"
+                        novalidate
+                        {% if isDone %} onsubmit="return false;" {% endif %}>
+
+                    <input class="form-control goalContributeInput"
+                           style="max-width:170px"
+                           type="number"
+                           step="0.01"
+                           min="0.01"
+                           name="add_amount"
+                           placeholder="Add TND"
+                           required
+                           {{ isDone ? 'disabled' : '' }}>
+
+                    <button class="pill-btn back-btn"
+                            style="padding:10px 14px;"
+                            type="submit"
+                            {{ isDone ? 'disabled' : '' }}>
+                      ➕ Contribute
+                    </button>
+
+                    <div class="field-error" data-err="add_amount" style="width:100%;"></div>
+
+                    {% if isDone %}
+                      <div style="font-size:12px; color:var(--muted); margin-top:6px; width:100%;">
+                        Goal completed ✅ (editing target is still allowed)
+                      </div>
+                    {% endif %}
+
+                  </form>
+
+                  <div class="d-flex gap-10">
+                    <button class="circle-btn"
+                            type="button"
+                            data-open-goal-edit
+                            data-goal-id="{{ goalId }}"
+                            data-goal-nom="{{ name }}"
+                            data-goal-cible="{{ target }}"
+                            data-goal-date="{{ dl ? dl|date('Y-m-d') : '' }}"
+                            data-goal-prio="{{ pr }}"
+                            title="Edit goal">✏️</button>
+
+                    <form method="post" action="{{ path('app_goal_delete', {id: goalId}) }}"
+                          onsubmit="return confirm('Delete this goal?');" style="display:inline;">
+                      <button class="circle-btn danger" type="submit" title="Delete goal">🗑️</button>
+                    </form>
+                  </div>
+
+                </div>
+              </div>
+            {% endfor %}
+
+          {% endif %}
+        </div>
+
+        <div class="tiny-note">Next: add stats charts + calendar events per goal ✓</div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+{# =================== EDIT MODAL (REAL SUBMIT) =================== #}
+<div class="modal-overlay" id="goalEditOverlay" style="display:none;">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div style="font-weight:950;font-size:16px;">✏️ Edit Goal</div>
+      <button type="button" class="circle-btn danger" id="goalEditClose" title="Close">✖</button>
+    </div>
+
+    <form method="post" action="#" id="goalEditForm" novalidate>
+      <input type="hidden" name="id" id="edit_id">
+
+      <div style="margin-bottom:10px;">
+        <label class="form-label">Goal name</label>
+        <input class="form-control" name="nom" id="edit_nom" required minlength="3">
+        <div class="field-error" data-err="edit_nom"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div>
+          <label class="form-label">Target (TND)</label>
+          <input class="form-control" name="montant_cible" id="edit_cible" type="number" step="0.01" min="0.01" required>
+          <div class="field-error" data-err="edit_cible"></div>
+        </div>
+        <div>
+          <label class="form-label">Priority (1-5)</label>
+          <input class="form-control" name="priorite" id="edit_prio" type="number" min="1" max="5" required>
+          <div class="field-error" data-err="edit_prio"></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <label class="form-label">Deadline</label>
+        <input class="form-control" name="date_limite" id="edit_date" type="date">
+        <div class="field-error" data-err="edit_date"></div>
+      </div>
+
+      <div class="mt-16 d-flex gap-10" style="justify-content:flex-end;">
+        <button type="button" class="ghost-btn" id="goalEditCancel">Cancel</button>
+        <button type="submit" class="primary-btn">Save changes</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+<script>
+(function(){
+
+  // ===============================
+  // ✅ INLINE ERROR HELPERS
+  // ===============================
+  function showErr(form, name, msg){
+    const input = form.querySelector(`[name="${name}"], #${name}`);
+    const box   = form.querySelector(`[data-err="${name}"]`);
+    if(input) input.classList.add('is-bad');
+    if(box){
+      box.textContent = msg || '';
+      box.style.display = msg ? 'block' : 'none';
+    }
+  }
+  function clearErr(form, name){
+    const input = form.querySelector(`[name="${name}"], #${name}`);
+    const box   = form.querySelector(`[data-err="${name}"]`);
+    if(input) input.classList.remove('is-bad');
+    if(box){
+      box.textContent = '';
+      box.style.display = 'none';
+    }
+  }
+  function isPastDate(ymd){
+    if(!ymd) return false;
+    const d = new Date(ymd + "T00:00:00");
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return d < today;
+  }
+
+  // ===============================
+  // ✅ CREATE GOAL VALIDATION
+  // ===============================
+  const addForm = document.getElementById('goalAddForm');
+  if(addForm){
+
+    addForm.addEventListener('input', (e) => {
+      if(!e.target.name) return;
+      clearErr(addForm, e.target.name);
+    });
+
+    addForm.addEventListener('submit', (e) => {
+      ['nom','montant_cible','montant_actuel','date_limite','priorite'].forEach(n => clearErr(addForm,n));
+
+      const nom    = (addForm.querySelector('[name="nom"]')?.value || '').trim();
+      const cible  = parseFloat(addForm.querySelector('[name="montant_cible"]')?.value || '0');
+      const actuel = parseFloat(addForm.querySelector('[name="montant_actuel"]')?.value || '0');
+      const date   = (addForm.querySelector('[name="date_limite"]')?.value || '').trim();
+      const prio   = parseInt(addForm.querySelector('[name="priorite"]')?.value || '0', 10);
+
+      let ok = true;
+
+      if(nom.length < 3){
+        showErr(addForm,'nom',"Le nom doit contenir au moins 3 caractères.");
+        ok = false;
+      }
+      if(!(cible > 0)){
+        showErr(addForm,'montant_cible',"Le montant cible doit être > 0.");
+        ok = false;
+      }
+      if(actuel < 0){
+        showErr(addForm,'montant_actuel',"Le montant actuel ne peut pas être négatif.");
+        ok = false;
+      }
+      if(cible > 0 && actuel > cible){
+        showErr(addForm,'montant_actuel',"Le montant actuel ne peut pas dépasser le montant cible.");
+        ok = false;
+      }
+      if(prio < 1 || prio > 5){
+        showErr(addForm,'priorite',"La priorité doit être entre 1 et 5.");
+        ok = false;
+      }
+      if(date && isPastDate(date)){
+        showErr(addForm,'date_limite',"La date limite doit être aujourd’hui ou dans le futur.");
+        ok = false;
+      }
+
+      if(!ok){
+        e.preventDefault();
+        const firstBad = addForm.querySelector('.is-bad');
+        if(firstBad) firstBad.focus();
+      }
+    });
+  }
+
+  // ===============================
+  // ✅ CONTRIBUTE VALIDATION
+  // ===============================
+  document.querySelectorAll('.goalContributeForm').forEach((f) => {
+    f.addEventListener('input', (e) => {
+      if(e.target && e.target.name === 'add_amount'){
+        clearErr(f,'add_amount');
+      }
+    });
+
+    f.addEventListener('submit', (e) => {
+      clearErr(f,'add_amount');
+      const v = parseFloat(f.querySelector('[name="add_amount"]')?.value || '0');
+
+      if(!(v > 0)){
+        e.preventDefault();
+        showErr(f,'add_amount',"La contribution doit être > 0.");
+        const inp = f.querySelector('[name="add_amount"]');
+        if(inp) inp.focus();
+      }
+    });
+  });
+
+  // ---------- OPTIONAL button
+  const autoBtn = document.getElementById('btn-autoplan');
+  if(autoBtn){
+    autoBtn.addEventListener('click', () => {});
+  }
+
+  // ---------- EDIT MODAL OPEN/CLOSE
+  const overlay   = document.getElementById('goalEditOverlay');
+  const closeBtn  = document.getElementById('goalEditClose');
+  const cancelBtn = document.getElementById('goalEditCancel');
+  const form      = document.getElementById('goalEditForm');
+
+  function openModal(){ overlay.style.display = 'flex'; }
+  function closeModal(){ overlay.style.display = 'none'; }
+
+  if(closeBtn) closeBtn.addEventListener('click', closeModal);
+  if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  if(overlay){
+    overlay.addEventListener('click', (e) => {
+      if(e.target === overlay) closeModal();
+    });
+  }
+
+  // Fill modal from edit buttons + set action to edit route
+  document.querySelectorAll('[data-open-goal-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-goal-id') || '';
+
+      document.getElementById('edit_id').value    = id;
+      document.getElementById('edit_nom').value   = btn.getAttribute('data-goal-nom') || '';
+      document.getElementById('edit_cible').value = btn.getAttribute('data-goal-cible') || '';
+      document.getElementById('edit_date').value  = btn.getAttribute('data-goal-date') || '';
+      document.getElementById('edit_prio').value  = btn.getAttribute('data-goal-prio') || '3';
+
+      const urlTemplate = "{{ path('app_goal_edit', {id: 'GOAL_ID'}) }}";
+      form.action = urlTemplate.replace('GOAL_ID', id);
+
+      // clear previous errors
+      ['edit_nom','edit_cible','edit_prio','edit_date'].forEach(n => clearErr(form,n));
+
+      openModal();
+    });
+  });
+
+  // ✅ Edit modal validation (optional but clean)
+  if(form){
+    form.addEventListener('submit', (e) => {
+      ['edit_nom','edit_cible','edit_prio','edit_date'].forEach(n => clearErr(form,n));
+
+      const nom   = (document.getElementById('edit_nom')?.value || '').trim();
+      const cible = parseFloat(document.getElementById('edit_cible')?.value || '0');
+      const prio  = parseInt(document.getElementById('edit_prio')?.value || '0', 10);
+      const date  = (document.getElementById('edit_date')?.value || '').trim();
+
+      let ok = true;
+
+      if(nom.length < 3){ showErr(form,'edit_nom',"Le nom doit contenir au moins 3 caractères."); ok=false; }
+      if(!(cible > 0)){ showErr(form,'edit_cible',"Le montant cible doit être > 0."); ok=false; }
+      if(prio < 1 || prio > 5){ showErr(form,'edit_prio',"La priorité doit être entre 1 et 5."); ok=false; }
+      if(date && isPastDate(date)){ showErr(form,'edit_date',"La date limite doit être aujourd’hui ou dans le futur."); ok=false; }
+
+      if(!ok){
+        e.preventDefault();
+        const firstBad = form.querySelector('.is-bad');
+        if(firstBad) firstBad.focus();
+      }
+    });
+  }
+
+  // ---------- SORT LOOP EMOJI (🔁)
+  const toolbarForm = document.getElementById('goalToolbarForm');
+  const sortLoopBtn = document.getElementById('sortLoopBtn');
+  const sortSelect  = document.getElementById('goalSortSelect');
+
+  if(sortLoopBtn && sortSelect && toolbarForm){
+    sortLoopBtn.addEventListener('click', () => {
+      const opts = Array.from(sortSelect.options).filter(o => o.value);
+      let i = opts.findIndex(o => o.value === sortSelect.value);
+      i = (i === -1) ? 0 : (i + 1) % opts.length;
+      sortSelect.value = opts[i].value;
+      toolbarForm.submit();
+    });
+  }
+
+})();
+</script>
+
+{% endblock %}

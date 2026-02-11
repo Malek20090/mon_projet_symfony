@@ -1,0 +1,328 @@
+
+    <!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8">
+    <title>Decide$ - Simulation Aléas</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet"> 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+
+    <style>
+        /* Styles personnalisés pour la logique +/- */
+        .clickable-item {
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        .clickable-item:hover {
+            background-color: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        /* Thème Négatif */
+        .item-negative { border-left-color: #dc3545; }
+        .theme-negative .card-header-icon { color: #dc3545; background-color: rgba(220, 53, 69, 0.1); }
+        .theme-negative .amount-text { color: #dc3545; }
+        
+        /* Thème Positif */
+        .item-positive { border-left-color: #198754; }
+        .theme-positive .card-header-icon { color: #198754; background-color: rgba(25, 135, 84, 0.1); }
+        .theme-positive .amount-text { color: #198754; }
+
+        .choice-btn { text-align: left; position: relative; transition: 0.3s; }
+        .choice-btn:hover { background-color: #f8f9fa; border-color: #0d6efd; }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid position-relative p-0">
+        <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0">
+            <a href="" class="navbar-brand p-0 d-flex align-items-center">
+                <i class="fas fa-wallet text-primary me-2" style="font-size: 32px;"></i>
+                <h1 class="text-primary m-0 fw-bold"> Decide<span class="text-dark">$</span></h1>
+            </a>
+            <div class="ms-auto">
+                <a href="index.html" class="btn btn-primary rounded-pill py-2 px-4">Retour Accueil</a>
+            </div>
+        </nav>
+        <div class="container-fluid bg-breadcrumb">
+            <div class="container text-center py-5" style="max-width: 900px;">
+                <h4 class="text-white display-4 mb-4">Gestion des Imprévus</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid py-5 bg-light">
+        <div class="container">
+            
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-primary border-3">
+                        <i class="fas fa-university text-primary fa-2x mb-2"></i>
+                        <h6>Solde epargnes</h6>
+                        <h3 class="text-dark">2 450 DT</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-success border-3">
+                        <i class="fas fa-shield-alt text-success fa-2x mb-2"></i>
+                        <h6>Fonds de Sécurité</h6>
+                        <h3 class="text-success">500 DT</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-danger border-3">
+                        <i class="fas fa-heartbeat text-danger fa-2x mb-2"></i>
+                        <h6>Score Résilience</h6>
+                        <h3 class="text-danger">85/100</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-5">
+                
+                <div class="col-lg-5">
+                    
+                    <div class="bg-white rounded p-4 shadow-sm mb-4">
+                        <h5 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Ajouter un Cas Réel</h5>
+                        <form id="customEventForm">
+                            <div class="mb-2">
+                                <input type="text" id="customTitle" class="form-control" placeholder="Titre (ex: Réparation Frigo)">
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <select id="customType" class="form-select">
+                                        <option value="negative">Dépense (-)</option>
+                                        <option value="positive">Gain (+)</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" id="customAmount" class="form-control" placeholder="Montant (DT)">
+                                </div>
+                            </div>
+                            <button type="button" onclick="addCustomEvent()" class="btn btn-primary w-100 btn-sm">Lancer ce cas</button>
+                        </form>
+                    </div>
+
+                    <h5 class="mb-3">Imprévus Possibles</h5>
+                    
+                    <div class="list-group shadow-sm">
+                        <div class="list-group-item bg-light fw-bold text-danger"><i class="fas fa-arrow-down me-2"></i>Risques (-)</div>
+                        
+                        <div class="list-group-item list-group-item-action clickable-item item-negative p-3" 
+                             onclick="loadEvent('negative', 'Panne de Voiture', 650, 'Alternateur HS, réparation immédiate requise.')">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-car-crash text-muted me-2"></i>Panne Voiture</span>
+                                <span class="fw-bold text-danger">-650 DT</span>
+                            </div>
+                        </div>
+
+                        <div class="list-group-item list-group-item-action clickable-item item-negative p-3" 
+                             onclick="loadEvent('negative', 'Urgence Médicale', 150, 'Consultation spécialiste non remboursée.')">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-user-md text-muted me-2"></i>Urgence Santé</span>
+                                <span class="fw-bold text-danger">-150 DT</span>
+                            </div>
+                        </div>
+
+                        <div class="list-group-item bg-light fw-bold text-success mt-2"><i class="fas fa-arrow-up me-2"></i>Opportunités (+)</div>
+
+                        <div class="list-group-item list-group-item-action clickable-item item-positive p-3" 
+                             onclick="loadEvent('positive', 'Prime de Rendement', 300, 'Félicitations pour votre travail trimestriel !')">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-gift text-muted me-2"></i>Prime Bonus</span>
+                                <span class="fw-bold text-success">+300 DT</span>
+                            </div>
+                        </div>
+                        
+                        <div class="list-group-item list-group-item-action clickable-item item-positive p-3" 
+                             onclick="loadEvent('positive', 'Vente Objet', 120, 'Vente de vieux meubles sur Marketplace.')">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-hand-holding-usd text-muted me-2"></i>Vente Occasion</span>
+                                <span class="fw-bold text-success">+120 DT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div id="decisionPanel" class="bg-white rounded p-5 shadow-sm theme-negative">
+                        
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="btn-lg-square rounded-circle me-3 card-header-icon d-flex align-items-center justify-content-center">
+                                <i id="eventIcon" class="fas fa-exclamation-triangle fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-uppercase text-muted mb-1">Cas Réel En Cours</h6>
+                                <h2 id="eventTitle" class="mb-0">Sélectionnez un cas...</h2>
+                            </div>
+                        </div>
+
+                        <div class="p-4 border rounded bg-light mb-4">
+                            <p id="eventDesc" class="lead mb-3">Cliquez sur un événement à gauche ou créez-en un nouveau pour commencer la simulation.</p>
+                            <hr>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fs-5">Impact Financier :</span>
+                                <span id="eventAmount" class="display-6 fw-bold amount-text">---</span>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3" id="actionTitle">Vos options :</h5>
+                        
+                        <div id="negativeOptions" class="d-none">
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn">
+                                <i class="fas fa-shield-alt text-primary me-3 fa-lg"></i>
+                                <strong>Utiliser Fonds de Sécurité</strong>
+                                <small class="d-block text-muted ms-5">Recommandé pour les urgences.</small>
+                            </button>
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn">
+                                <i class="fas fa-piggy-bank text-warning me-3 fa-lg"></i>
+                                <strong>Puiser dans l'Épargne</strong>
+                                <small class="d-block text-muted ms-5">Attention : Retarde vos projets.</small>
+                            </button>
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn">
+                                <i class="fas fa-users text-danger me-3 fa-lg"></i>
+                                <strong>Demander à la Famille</strong>
+                                <small class="d-block text-muted ms-5">Crée une dette à rembourser.</small>
+                            </button>
+                        </div>
+
+                        <div id="positiveOptions" class="d-none">
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn">
+                                <i class="fas fa-shield-alt text-success me-3 fa-lg"></i>
+                                <strong>Renforcer Fonds de Sécurité</strong>
+                                <small class="d-block text-muted ms-5">Excellent pour votre score de résilience.</small>
+                            </button>
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn">
+                                <i class="fas fa-glass-cheers text-primary me-3 fa-lg"></i>
+                                <strong>Ajouter aux Projets (Plaisir)</strong>
+                                <small class="d-block text-muted ms-5">Pour voyager ou acheter plus tôt.</small>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadEvent(type, title, amount, desc) {
+            const panel = document.getElementById('decisionPanel');
+            const icon = document.getElementById('eventIcon');
+            const titleElem = document.getElementById('eventTitle');
+            const descElem = document.getElementById('eventDesc');
+            const amountElem = document.getElementById('eventAmount');
+            const actionTitle = document.getElementById('actionTitle');
+            
+            const negOptions = document.getElementById('negativeOptions');
+            const posOptions = document.getElementById('positiveOptions');
+
+            // Mise à jour textes
+            titleElem.innerText = title;
+            descElem.innerText = desc;
+            
+            // Logique selon le Type (+ ou -)
+            if (type === 'negative') {
+                // Style Visuel Rouge
+                panel.className = "bg-white rounded p-5 shadow-sm theme-negative";
+                icon.className = "fas fa-tools fa-2x"; // Icône réparation
+                amountElem.innerText = "- " + amount + " DT";
+                actionTitle.innerText = "Comment allez-vous payer ?";
+                
+                // Afficher boutons Négatifs, Cacher Positifs
+                negOptions.classList.remove('d-none');
+                posOptions.classList.add('d-none');
+                
+            } else {
+                // Style Visuel Vert
+                panel.className = "bg-white rounded p-5 shadow-sm theme-positive";
+                icon.className = "fas fa-gift fa-2x"; // Icône cadeau
+                amountElem.innerText = "+ " + amount + " DT";
+                actionTitle.innerText = "Où placer cet argent ?";
+                
+                // Afficher boutons Positifs, Cacher Négatifs
+                posOptions.classList.remove('d-none');
+                negOptions.classList.add('d-none');
+            }
+        }
+
+        function addCustomEvent() {
+            // Récupérer les valeurs du formulaire
+            const title = document.getElementById('customTitle').value;
+            const type = document.getElementById('customType').value; // 'negative' ou 'positive'
+            const amount = document.getElementById('customAmount').value;
+            
+            if(title && amount) {
+                // Lancer la simulation immédiatement
+                let desc = "Cas personnalisé ajouté manuellement.";
+                loadEvent(type, title, amount, desc);
+                
+                // (Optionnel) Vider le formulaire
+                document.getElementById('customTitle').value = '';
+                document.getElementById('customAmount').value = '';
+            } else {
+                alert("Veuillez remplir le titre et le montant.");
+            }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+                <div class="col-lg-4">
+                    <div class="bg-primary rounded p-4 text-white mb-4 wow fadeInRight">
+                        <h4 class="text-white mb-3">Conseil de l'IA</h4>
+                        <p class="small">"Un fonds de sécurité idéal doit représenter 3 à 6 mois de dépenses. En utilisant votre épargne aujourd'hui, vous évitez des intérêts bancaires de 12%."</p>
+                        <button class="btn btn-light btn-sm rounded-pill mt-2">Écouter le conseil <i class="fas fa-volume-up ms-1"></i></button>
+                    </div>
+
+                    <div class="bg-white rounded p-4 shadow-sm wow fadeInRight" data-wow-delay="0.2s">
+                        <h5 class="mb-3">Historique des Aléas</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span><i class="fas fa-check-circle text-success me-2"></i> Fuite d'eau</span>
+                                <span class="small text-muted">-120 DT</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span><i class="fas fa-gift text-primary me-2"></i> Prime Bonus</span>
+                                <span class="small text-success">+300 DT</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid footer py-5 wow fadeIn" data-wow-delay="0.2s">
+        <div class="container py-5">
+            <div class="row g-5">
+                <div class="col-md-6 col-lg-6 col-xl-3">
+                    <div class="footer-item d-flex flex-column">
+                        <h3 class="text-white mb-4"><i class="fas fa-chart-line text-primary me-3"></i>Decide$</h3>
+                        <p>Plateforme de gestion financière intelligente pour maîtriser votre avenir.</p>
+                    </div>
+                </div>
+                </div>
+        </div>
+    </div>
+    <a href="#" class="btn btn-secondary btn-lg-square rounded-circle back-to-top"><i class="fa fa-arrow-up"></i></a>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="lib/wow/wow.min.js"></script>
+    <script src="lib/easing/easing.min.js"></script>
+    <script src="lib/waypoints/waypoints.min.js"></script>
+    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

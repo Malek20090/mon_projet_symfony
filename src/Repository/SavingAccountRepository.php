@@ -3,12 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\SavingAccount;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * @extends ServiceEntityRepository<SavingAccount>
- */
 class SavingAccountRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -16,28 +14,13 @@ class SavingAccountRepository extends ServiceEntityRepository
         parent::__construct($registry, SavingAccount::class);
     }
 
-    //    /**
-    //     * @return SavingAccount[] Returns an array of SavingAccount objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('s.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?SavingAccount
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    public function findOneByUser(User $user): ?SavingAccount
+    {
+        return $this->createQueryBuilder('s')
+            ->andWhere('s.user = :u')
+            ->setParameter('u', $user)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

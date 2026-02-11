@@ -1,67 +1,63 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/layout.html.twig' %}
 
 {% block title %}Revenu #{{ revenue.id }} | Decide${% endblock %}
 
-{% block body %}
-<div class="container-fluid bg-breadcrumb">
-    <div class="container text-center py-5">
-        <h1 class="display-4 text-white wow fadeInDown">Revenu #{{ revenue.id }}</h1>
-        <p class="text-white-50 wow fadeInUp">Détail du revenu</p>
-    </div>
-</div>
-
-<div class="container-fluid service bg-light py-5">
-    <div class="container py-5">
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="service-item rounded p-4 wow fadeInUp">
-                    <h4 class="mb-4"><i class="fas fa-wallet text-primary me-2"></i>Détails</h4>
-                    <table class="table table-bordered align-middle mb-0">
-                        <tbody>
-                            <tr><th>Id</th><td>{{ revenue.id }}</td></tr>
-                            <tr><th>Montant</th><td class="text-primary fw-bold">{{ revenue.amount|number_format(2, '.', ' ') }} TND</td></tr>
-                            <tr><th>Type</th><td>{{ revenue.type }}</td></tr>
-                            <tr><th>Date de réception</th><td>{{ revenue.receivedAt ? revenue.receivedAt|date('d/m/Y') : '' }}</td></tr>
-                            <tr><th>Description</th><td>{{ revenue.description ?? '-' }}</td></tr>
-                            <tr><th>Créé le</th><td>{{ revenue.createdAt ? revenue.createdAt|date('d/m/Y H:i') : '' }}</td></tr>
-                            <tr><th>Utilisateur</th><td>{{ revenue.user ? (revenue.user.nom ?? revenue.user.email ?? 'User #' ~ revenue.user.id) : '-' }}</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="service-item rounded p-4 mt-4 wow fadeInUp">
-                    <h5 class="mb-3"><i class="fas fa-credit-card text-primary me-2"></i>Dépenses liées ({{ revenue.expenses|length }})</h5>
-                    {% if revenue.expenses|length > 0 %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle mb-0">
-                                <thead class="table-light"><tr><th>Montant</th><th>Catégorie</th><th>Date</th><th></th></tr></thead>
-                                <tbody>
-                                    {% for expense in revenue.expenses %}
-                                        <tr>
-                                            <td class="text-primary fw-bold">{{ expense.amount|number_format(2, '.', ' ') }} TND</td>
-                                            <td>{{ expense.category }}</td>
-                                            <td>{{ expense.expenseDate ? expense.expenseDate|date('d/m/Y') : '' }}</td>
-                                            <td><a href="{{ path('app_expense_show', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a></td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-muted mb-0">Aucune dépense liée.</p>
-                    {% endif %}
-                </div>
-            </div>
+{% block content %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Revenu #{{ revenue.id }}</h1>
+            <p class="mb-0">Détail du revenu</p>
         </div>
-
-        <div class="mt-4">
-            <a href="{{ path('app_revenue_index') }}" class="btn btn-secondary rounded-pill me-2"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
-            <a href="{{ path('app_revenue_edit', { id: revenue.id }) }}" class="btn btn-primary rounded-pill me-2"><i class="fas fa-edit me-2"></i>Modifier</a>
+        <div>
+            <a href="{{ path('app_revenue_edit', { id: revenue.id }) }}" class="btn btn-primary me-2"><i class="fas fa-edit me-2"></i>Modifier</a>
             <form method="post" action="{{ path('app_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer ce revenu ?');">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ revenue.id) }}">
-                <button type="submit" class="btn btn-danger rounded-pill"><i class="fas fa-trash me-2"></i>Supprimer</button>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i>Supprimer</button>
             </form>
         </div>
+    </div>
+
+    <div class="card-custom">
+        <h5 class="mb-4"><i class="fas fa-wallet text-primary me-2"></i>Détails</h5>
+        <table class="table table-bordered align-middle mb-0">
+            <tbody>
+                <tr><th>Id</th><td>{{ revenue.id }}</td></tr>
+                <tr><th>Montant</th><td class="text-primary fw-bold">{{ revenue.amount|number_format(2, '.', ' ') }} TND</td></tr>
+                <tr><th>Type</th><td>{{ revenue.type }}</td></tr>
+                <tr><th>Date de réception</th><td>{{ revenue.receivedAt ? revenue.receivedAt|date('d/m/Y') : '' }}</td></tr>
+                <tr><th>Description</th><td>{{ revenue.description ?? '-' }}</td></tr>
+                <tr><th>Créé le</th><td>{{ revenue.createdAt ? revenue.createdAt|date('d/m/Y H:i') : '' }}</td></tr>
+                <tr><th>Utilisateur</th><td>{{ revenue.user ? (revenue.user.nom ?? revenue.user.email ?? 'User #' ~ revenue.user.id) : '-' }}</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-custom">
+        <h5 class="mb-3"><i class="fas fa-credit-card text-primary me-2"></i>Dépenses liées ({{ revenue.expenses|length }})</h5>
+        {% if revenue.expenses|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle mb-0">
+                    <thead class="table-light"><tr><th>Montant</th><th>Catégorie</th><th>Date</th><th></th></tr></thead>
+                    <tbody>
+                        {% for expense in revenue.expenses %}
+                            <tr>
+                                <td class="text-primary fw-bold">{{ expense.amount|number_format(2, '.', ' ') }} TND</td>
+                                <td>{{ expense.category }}</td>
+                                <td>{{ expense.expenseDate ? expense.expenseDate|date('d/m/Y') : '' }}</td>
+                                <td><a href="{{ path('app_expense_show', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">Aucune dépense liée.</p>
+        {% endif %}
+    </div>
+
+    <div class="admin-page-footer">
+        <a href="{{ path('app_revenue_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
     </div>
 </div>
 {% endblock %}

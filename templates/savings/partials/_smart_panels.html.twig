@@ -1,0 +1,113 @@
+<div class="grid-3 mt-24">
+  <div class="big-card">
+    <div class="head">
+      <div>
+        <h3>Smart Financial Insights</h3>
+        <div class="sub">Mini AI (rule-based) — no real AI needed</div>
+      </div>
+      <div class="icon-bubble">💡</div>
+    </div>
+
+    <div class="badge-pill">✨ Personalized Tips</div>
+
+    <div class="mt-16">
+      <div class="alert-item">
+        <div class="alert-dot"></div>
+        <div>
+          <p class="alert-title">Suggestion: Increase your monthly deposit</p>
+          <p class="alert-desc">If you save +10% each month, you reach your nearest goal faster.</p>
+        </div>
+      </div>
+
+      <div class="alert-item warn">
+        <div class="alert-dot"></div>
+        <div>
+          <p class="alert-title">Interest Tip</p>
+          <p class="alert-desc">Your interest rate is {{ sa_rate|default(0) }}%. Consider adjusting it for long-term goals.</p>
+        </div>
+      </div>
+
+      <div class="alert-item danger">
+        <div class="alert-dot"></div>
+        <div>
+          <p class="alert-title">Risk Warning</p>
+          <p class="alert-desc">If “Nearest Deadline” is soon, prioritize contributions to that goal.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-16">
+      <button class="ghost-btn" type="button">✨ Generate Insights (later)</button>
+    </div>
+  </div>
+
+  <div class="big-card">
+    <div class="head">
+      <div>
+        <h3>Smart Alerts</h3>
+        <div class="sub">Deadlines • low balance • unusual activity</div>
+      </div>
+      <div class="icon-bubble">🔔</div>
+    </div>
+
+    <div class="alert-item warn">
+      <div class="alert-dot"></div>
+      <div>
+        <p class="alert-title">Upcoming deadline</p>
+        <p class="alert-desc">A goal deadline is close — check “Nearest Deadline”.</p>
+      </div>
+    </div>
+
+    <div class="alert-item">
+      <div class="alert-dot"></div>
+      <div>
+        <p class="alert-title">Consistency reminder</p>
+        <p class="alert-desc">A small weekly deposit keeps your streak alive.</p>
+      </div>
+    </div>
+
+    <div class="alert-item danger">
+      <div class="alert-dot"></div>
+      <div>
+        <p class="alert-title">Low savings buffer</p>
+        <p class="alert-desc">If balance is too low, consider an emergency fund first.</p>
+      </div>
+    </div>
+
+    <div class="mt-16">
+      <a class="mini-link" href="#tab-savings">✅ Manage Alerts</a>
+      <a class="mini-link" href="#tab-goals">🎯 Prioritize Goals</a>
+    </div>
+  </div>
+
+  <div class="big-card">
+    <div class="head">
+      <div>
+        <h3>Gamification</h3>
+        <div class="sub">Streak • XP • badges</div>
+      </div>
+      <div class="icon-bubble">🏆</div>
+    </div>
+
+    <div class="badge-pill">🔥 Streak: 5 days</div>
+    <div class="mt-16">
+      <div class="info-row"><span>Level</span><b>3</b></div>
+      <div class="info-row"><span>XP</span><b>650 / 1000</b></div>
+      <div class="progress"><div style="width:65%"></div></div>
+    </div>
+
+    <div class="mt-16">
+      <div class="badge-pill">🏅 Badges</div>
+      <div class="mt-10" style="display:flex; gap:10px; flex-wrap:wrap;">
+        <span class="chip active">🐷 First Deposit</span>
+        <span class="chip">🎯 Goal Creator</span>
+        <span class="chip">📅 Weekly Saver</span>
+        <span class="chip">💎 1K Saved</span>
+      </div>
+    </div>
+
+    <div class="mt-16">
+      <button class="ghost-btn" type="button">🏅 See Challenges (later)</button>
+    </div>
+  </div>
+</div>

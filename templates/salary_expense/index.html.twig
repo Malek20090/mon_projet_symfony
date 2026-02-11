@@ -1,200 +1,362 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_pages.html.twig' %}
 
 {% block title %}Revenu & Expense | Decide${% endblock %}
 
+{% block body_class %}savings-page{% endblock %}
+
+{% block stylesheets %}
+  {{ parent() }}
+  <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}?v=1000">
+  <style>
+    .savings-page .table-wrap { overflow-x: auto; max-width: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    .savings-page .table-history { width: 100%; border-collapse: collapse; background: #fff; font-size: 0.95rem; }
+    .savings-page .table-history thead { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: #fff; }
+    .savings-page .table-history thead th { padding: 14px 16px; text-align: left; font-weight: 600; white-space: nowrap; border: none; }
+    .savings-page .table-history thead th:first-child { border-radius: 0; }
+    .savings-page .table-history tbody tr { border-bottom: 1px solid #eee; transition: background 0.15s; }
+    .savings-page .table-history tbody tr:hover { background: #f8f9fa; }
+    .savings-page .table-history tbody tr:last-child { border-bottom: none; }
+    .savings-page .table-history td { padding: 14px 16px; vertical-align: middle; }
+    .savings-page .table-history .col-id { width: 50px; text-align: center; color: #6c757d; }
+    .savings-page .table-history .col-date { white-space: nowrap; }
+    .savings-page .table-history .col-amount { font-weight: 700; color: #0d6efd; white-space: nowrap; }
+    .savings-page .table-history .col-actions { white-space: nowrap; }
+    .savings-page .table-history .col-actions .btn { padding: 8px 12px; margin: 0 2px; }
+    .savings-page .table-history .col-actions form { display: inline; }
+    body.night .savings-page .table-wrap { box-shadow: 0 2px 12px rgba(0,0,0,.25); }
+    body.night .savings-page .table-history tbody tr { border-bottom-color: rgba(255,255,255,.08); }
+    body.night .savings-page .table-history tbody tr:hover { background: rgba(255,255,255,.05); }
+    .savings-page .historique-frame { display: flex; flex-direction: column; height: 100%; min-height: 420px; }
+    .savings-page .historique-toolbar { flex-shrink: 0; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(0,0,0,.08); }
+    body.night .savings-page .historique-toolbar { border-bottom-color: rgba(255,255,255,.1); }
+    .savings-page .historique-table-wrap { flex: 1; min-height: 220px; display: flex; flex-direction: column; }
+    .savings-page .historique-table-wrap .table-wrap { flex: 1; display: block; }
+  </style>
+{% endblock %}
+
 {% block body %}
 
-<!-- Header / Breadcrumb -->
-<div class="container-fluid bg-breadcrumb">
-    <div class="container text-center py-5">
-        <h1 class="display-4 text-white wow fadeInDown">Revenu & Expense</h1>
-        <p class="text-white-50 wow fadeInUp">Unified income and expense management module</p>
+{% set tab = app.request.query.get('tab', 'revenus') %}
+
+<section class="hero">
+  <div class="wrap container text-center">
+    <h1>Revenu & Expense</h1>
+    <p>Track your income, manage your expenses, and visualize your financial balance in one place.</p>
+  </div>
+</section>
+
+<section class="savings-zone">
+  <div class="container">
+
+    {% for message in app.flashes('success') %}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+
+    <div class="section-title">
+      <div class="kicker">DECIDE$ MODULE</div>
+      <h2>Revenu & Expense Management</h2>
+      <p>Manage income and expenses with tri and recherche.</p>
     </div>
-</div>
 
-<!-- Module Content -->
-<div class="container-fluid service bg-light py-5">
-    <div class="container py-5">
-
-        {% for message in app.flashes('success') %}
-            <div class="alert alert-success alert-dismissible fade show" role="alert">{{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-
-        <!-- Title -->
-        <div class="text-center mx-auto pb-5 wow fadeInUp" style="max-width: 900px;">
-            <h4 class="text-uppercase text-primary">Decide$ Module</h4>
-            <h1 class="display-5 mb-3">Revenu & Expense Management</h1>
-            <p>Track your income, manage your expenses, and visualize your financial balance in one place.</p>
+    {# KPIs #}
+    <div class="kpi-grid stats-row">
+      <div class="stat-card">
+        <div>
+          <h4>Total Income</h4>
+          <div class="small">Somme des revenus</div>
+          <div class="value">{{ totalIncome|number_format(2, '.', ' ') }} TND</div>
         </div>
-
-        <!-- KPI Cards -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-6 col-xl-3 wow fadeInUp">
-                <div class="service-item rounded p-4 text-center">
-                    <i class="fas fa-wallet fa-2x text-primary mb-3"></i>
-                    <h5>Total Income</h5>
-                    <h2 class="text-primary">{{ totalIncome|number_format(2, '.', ' ') }} TND</h2>
-                    <small class="text-muted">Somme des revenus</small>
-                </div>
-            </div>
-            <div class="col-md-6 col-xl-3 wow fadeInUp" data-wow-delay="0.1s">
-                <div class="service-item rounded p-4 text-center">
-                    <i class="fas fa-credit-card fa-2x text-primary mb-3"></i>
-                    <h5>Total Expenses</h5>
-                    <h2 class="text-primary">{{ totalExpenses|number_format(2, '.', ' ') }} TND</h2>
-                    <small class="text-muted">Sum of expenses</small>
-                </div>
-            </div>
-            <div class="col-md-6 col-xl-3 wow fadeInUp" data-wow-delay="0.2s">
-                <div class="service-item rounded p-4 text-center">
-                    <i class="fas fa-balance-scale fa-2x text-primary mb-3"></i>
-                    <h5>Net Balance</h5>
-                    <h2 class="text-primary {{ netBalance >= 0 ? 'text-success' : 'text-danger' }}">{{ netBalance|number_format(2, '.', ' ') }} TND</h2>
-                    <small class="text-muted">Income - Expenses</small>
-                </div>
-            </div>
-            <div class="col-md-6 col-xl-3 wow fadeInUp" data-wow-delay="0.3s">
-                <div class="service-item rounded p-4 text-center">
-                    <i class="fas fa-calendar-alt fa-2x text-primary mb-3"></i>
-                    <h5>Last Transaction</h5>
-                    <h2 class="text-primary" style="font-size: 1.25rem;">{{ lastTransactionDate ? lastTransactionDate|date('d/m/Y') : '--/--/----' }}</h2>
-                    <small class="text-muted">Latest activity</small>
-                </div>
-            </div>
+        <div class="icon-bubble"><i class="fa-solid fa-wallet"></i></div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <h4>Total Expenses</h4>
+          <div class="small">Somme des dépenses</div>
+          <div class="value">{{ totalExpenses|number_format(2, '.', ' ') }} TND</div>
         </div>
-
-        <!-- Tabs -->
-        <ul class="nav nav-pills justify-content-center mb-4 wow fadeInUp" id="salaryExpenseTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active rounded-pill px-4 py-2 me-2" id="salary-tab" data-bs-toggle="pill" data-bs-target="#salary" type="button" role="tab">
-                    <i class="fas fa-wallet me-2"></i>Revenus
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-pill px-4 py-2" id="expense-tab" data-bs-toggle="pill" data-bs-target="#expense" type="button" role="tab">
-                    <i class="fas fa-credit-card me-2"></i>Expenses
-                </button>
-            </li>
-        </ul>
-
-        <div class="tab-content" id="salaryExpenseTabContent">
-            <!-- Salary Tab -->
-            <div class="tab-pane fade show active" id="salary" role="tabpanel">
-                <div class="row g-4">
-                    <div class="col-lg-5">
-                        <div class="service-item rounded p-4 wow fadeInUp">
-                            <h4 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Ajouter un revenu</h4>
-                            {{ form_start(formRevenue, { 'attr': { 'class': '' } }) }}
-                                <div class="mb-3">{{ form_row(formRevenue.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Amount (TND)' }) }}</div>
-                                <div class="mb-3">{{ form_row(formRevenue.type, { 'attr': { 'class': 'form-select' } }) }}</div>
-                                <div class="mb-3">{{ form_row(formRevenue.receivedAt, { 'attr': { 'class': 'form-control' }, 'label': 'Payment Date' }) }}</div>
-                                <div class="mb-3">{{ form_row(formRevenue.description, { 'attr': { 'class': 'form-control' }, 'required': false }) }}</div>
-                                <div class="mb-3">{{ form_row(formRevenue.user, { 'attr': { 'class': 'form-select' } }) }}</div>
-                                <button type="submit" class="btn btn-primary rounded-pill w-100"><i class="fas fa-plus-circle me-2"></i>Ajouter un revenu</button>
-                            {{ form_end(formRevenue) }}
-                        </div>
-                    </div>
-                    <div class="col-lg-7">
-                        <div class="service-item rounded p-4 wow fadeInUp">
-                            <h4 class="mb-3"><i class="fas fa-history text-primary me-2"></i>Historique des revenus</h4>
-                            <div class="table-responsive">
-                                <table class="table table-bordered align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Date</th>
-                                            <th>Amount</th>
-                                            <th>Type</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for revenue in revenues %}
-                                            <tr>
-                                                <td>{{ revenue.id }}</td>
-                                                <td>{{ revenue.receivedAt ? revenue.receivedAt|date('Y-m-d') : '' }}</td>
-                                                <td class="text-primary fw-bold">{{ revenue.amount|number_format(2, '.', ' ') }} TND</td>
-                                                <td>{{ revenue.type }}</td>
-                                                <td>
-                                                    <a href="{{ path('app_salary_expense_revenue_edit', { id: revenue.id }) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                                                    <form method="post" action="{{ path('app_salary_expense_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer ce revenu ?');">
-                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ revenue.id) }}">
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        {% else %}
-                                            <tr><td colspan="5" class="text-center text-muted">Aucun revenu pour le moment.</td></tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Expense Tab -->
-            <div class="tab-pane fade" id="expense" role="tabpanel">
-                <div class="row g-4">
-                    <div class="col-lg-5">
-                        <div class="service-item rounded p-4 wow fadeInUp">
-                            <h4 class="mb-3"><i class="fas fa-minus-circle text-primary me-2"></i>Add Expense</h4>
-                            {{ form_start(formExpense, { 'attr': { 'class': '' } }) }}
-                                <div class="mb-3">{{ form_row(formExpense.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Amount (TND)' }) }}</div>
-                                <div class="mb-3">{{ form_row(formExpense.category, { 'attr': { 'class': 'form-select' } }) }}</div>
-                                <div class="mb-3">{{ form_row(formExpense.expenseDate, { 'attr': { 'class': 'form-control' }, 'label': 'Date' }) }}</div>
-                                <div class="mb-3">{{ form_row(formExpense.description, { 'attr': { 'class': 'form-control' }, 'required': false }) }}</div>
-                                <div class="mb-3">{{ form_row(formExpense.revenue, { 'attr': { 'class': 'form-select' } }) }}</div>
-                                <button type="submit" class="btn btn-primary rounded-pill w-100"><i class="fas fa-minus-circle me-2"></i>Add Expense</button>
-                            {{ form_end(formExpense) }}
-                        </div>
-                    </div>
-                    <div class="col-lg-7">
-                        <div class="service-item rounded p-4 wow fadeInUp">
-                            <h4 class="mb-3"><i class="fas fa-history text-primary me-2"></i>Expense History</h4>
-                            <div class="table-responsive">
-                                <table class="table table-bordered align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Date</th>
-                                            <th>Amount</th>
-                                            <th>Category</th>
-                                            <th>Description</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for expense in expenses %}
-                                            <tr>
-                                                <td>{{ expense.id }}</td>
-                                                <td>{{ expense.expenseDate ? expense.expenseDate|date('Y-m-d') : '' }}</td>
-                                                <td class="text-primary fw-bold">{{ expense.amount|number_format(2, '.', ' ') }} TND</td>
-                                                <td>{{ expense.category }}</td>
-                                                <td>{{ expense.description|default('-') }}</td>
-                                                <td>
-                                                    <a href="{{ path('app_salary_expense_expense_edit', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                                                    <form method="post" action="{{ path('app_salary_expense_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer cette dépense ?');">
-                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ expense.id) }}">
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        {% else %}
-                                            <tr><td colspan="6" class="text-center text-muted">No expenses yet.</td></tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="icon-bubble"><i class="fa-solid fa-credit-card"></i></div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <h4>Net Balance</h4>
+          <div class="small">Income - Expenses</div>
+          <div class="value {{ netBalance >= 0 ? '' : 'text-danger' }}">{{ netBalance|number_format(2, '.', ' ') }} TND</div>
         </div>
+        <div class="icon-bubble"><i class="fa-solid fa-balance-scale"></i></div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <h4>Last Transaction</h4>
+          <div class="small">Latest activity</div>
+          <div class="value" style="font-size:1rem;">{{ lastTransactionDate ? lastTransactionDate|date('d/m/Y') : '--/--/----' }}</div>
+        </div>
+        <div class="icon-bubble"><i class="fa-solid fa-calendar-alt"></i></div>
+      </div>
     </div>
-</div>
 
+    {# Tabs #}
+    <div class="tabs">
+      <button type="button" class="js-tab tab-pill {{ tab == 'revenus' ? 'active' : '' }}" data-tab="revenus">
+        <i class="fa-solid fa-wallet me-2"></i>Revenus
+      </button>
+      <button type="button" class="js-tab tab-pill {{ tab == 'expenses' ? 'active' : '' }}" data-tab="expenses">
+        <i class="fa-solid fa-credit-card me-2"></i>Dépenses
+      </button>
+    </div>
+
+    {# TAB: REVENUS #}
+    <div id="tab-revenus" class="tab-panel {{ tab == 'revenus' ? 'show' : '' }}">
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="stat-card p-4">
+            <h4 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Ajouter un revenu</h4>
+            {{ form_start(formRevenue, { 'attr': { 'class': '' } }) }}
+              <div class="mb-3">{{ form_row(formRevenue.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Montant (TND)' }) }}</div>
+              <div class="mb-3">{{ form_row(formRevenue.type, { 'attr': { 'class': 'form-select' } }) }}</div>
+              <div class="mb-3">{{ form_row(formRevenue.receivedAt, { 'attr': { 'class': 'form-control' }, 'label': 'Date' }) }}</div>
+              <div class="mb-3">{{ form_row(formRevenue.description, { 'attr': { 'class': 'form-control' }, 'required': false }) }}</div>
+              <div class="mb-3">{{ form_row(formRevenue.user, { 'attr': { 'class': 'form-select' } }) }}</div>
+              <button type="submit" class="btn-primary2 w-100"><i class="fas fa-plus-circle me-2"></i>Ajouter</button>
+            {{ form_end(formRevenue) }}
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="stat-card p-4 historique-frame">
+            <h4 class="mb-0"><i class="fas fa-history text-primary me-2"></i>Historique des revenus</h4>
+
+            <form method="get" class="historique-toolbar">
+              <input type="hidden" name="tab" value="revenus">
+              <div class="row g-2 align-items-end mb-2">
+                <div class="col-auto">
+                  <label class="form-label small mb-0">Tri (critère 1)</label>
+                  <select name="revenue_sort1" class="form-select form-select-sm">
+                    <option value="receivedAt" {{ app.request.query.get('revenue_sort1') == 'receivedAt' ? 'selected' : '' }}>Date</option>
+                    <option value="amount" {{ app.request.query.get('revenue_sort1') == 'amount' ? 'selected' : '' }}>Montant</option>
+                    <option value="type" {{ app.request.query.get('revenue_sort1') == 'type' ? 'selected' : '' }}>Type</option>
+                    <option value="createdAt" {{ app.request.query.get('revenue_sort1') == 'createdAt' ? 'selected' : '' }}>Création</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <label class="form-label small mb-0">Sens</label>
+                  <select name="revenue_dir1" class="form-select form-select-sm">
+                    <option value="DESC" {{ app.request.query.get('revenue_dir1', 'DESC') == 'DESC' ? 'selected' : '' }}>Desc</option>
+                    <option value="ASC" {{ app.request.query.get('revenue_dir1') == 'ASC' ? 'selected' : '' }}>Asc</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <label class="form-label small mb-0">Critère 2</label>
+                  <select name="revenue_sort2" class="form-select form-select-sm">
+                    <option value="amount" {{ app.request.query.get('revenue_sort2', 'amount') == 'amount' ? 'selected' : '' }}>Montant</option>
+                    <option value="receivedAt" {{ app.request.query.get('revenue_sort2') == 'receivedAt' ? 'selected' : '' }}>Date</option>
+                    <option value="type" {{ app.request.query.get('revenue_sort2') == 'type' ? 'selected' : '' }}>Type</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <select name="revenue_dir2" class="form-select form-select-sm">
+                    <option value="DESC" {{ app.request.query.get('revenue_dir2', 'DESC') == 'DESC' ? 'selected' : '' }}>Desc</option>
+                    <option value="ASC" {{ app.request.query.get('revenue_dir2') == 'ASC' ? 'selected' : '' }}>Asc</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <button type="submit" class="btn btn-sm btn-outline-primary"><i class="fas fa-sort me-1"></i>Trier</button>
+                </div>
+              </div>
+              <div class="row g-2 align-items-end">
+                <div class="col-auto flex-grow-1">
+                  <label class="form-label small mb-0">Recherche</label>
+                  <input type="text" name="revenue_search" value="{{ app.request.query.get('revenue_search') }}" class="form-control form-control-sm" placeholder="Type ou description...">
+                </div>
+                <div class="col-auto">
+                  <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search me-1"></i>Rechercher</button>
+                </div>
+              </div>
+            </form>
+
+            <div class="historique-table-wrap">
+            <div class="table-wrap">
+              <table class="table-history">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Montant</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for revenue in revenues %}
+                    <tr>
+                      <td class="col-id">{{ revenue.id }}</td>
+                      <td class="col-date">{{ revenue.receivedAt ? revenue.receivedAt|date('d/m/Y') : '—' }}</td>
+                      <td class="col-amount">{{ revenue.amount|number_format(2, ',', ' ') }} TND</td>
+                      <td>{{ revenue.type }}</td>
+                      <td class="col-actions">
+                        <a href="{{ path('app_salary_expense_revenue_edit', { id: revenue.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="fas fa-edit"></i></a>
+                        <form method="post" action="{{ path('app_salary_expense_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer ce revenu ?');">
+                          <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ revenue.id) }}">
+                          <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fas fa-trash"></i></button>
+                        </form>
+                      </td>
+                    </tr>
+                  {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">Aucun revenu.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# TAB: DÉPENSES #}
+    <div id="tab-expenses" class="tab-panel {{ tab == 'expenses' ? 'show' : '' }}">
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="stat-card p-4">
+            <h4 class="mb-3"><i class="fas fa-minus-circle text-primary me-2"></i>Ajouter une dépense</h4>
+            {{ form_start(formExpense, { 'attr': { 'class': '' } }) }}
+              <div class="mb-3">{{ form_row(formExpense.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Montant (TND)' }) }}</div>
+              <div class="mb-3">{{ form_row(formExpense.category, { 'attr': { 'class': 'form-select' } }) }}</div>
+              <div class="mb-3">{{ form_row(formExpense.expenseDate, { 'attr': { 'class': 'form-control' }, 'label': 'Date' }) }}</div>
+              <div class="mb-3">{{ form_row(formExpense.description, { 'attr': { 'class': 'form-control' }, 'required': false }) }}</div>
+              <div class="mb-3">{{ form_row(formExpense.revenue, { 'attr': { 'class': 'form-select' } }) }}</div>
+              <button type="submit" class="btn-primary2 w-100"><i class="fas fa-minus-circle me-2"></i>Ajouter</button>
+            {{ form_end(formExpense) }}
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="stat-card p-4 historique-frame">
+            <h4 class="mb-0"><i class="fas fa-history text-primary me-2"></i>Historique des dépenses</h4>
+
+            <form method="get" class="historique-toolbar">
+              <input type="hidden" name="tab" value="expenses">
+              <div class="row g-2 align-items-end mb-2">
+                <div class="col-auto">
+                  <label class="form-label small mb-0">Tri (critère 1)</label>
+                  <select name="expense_sort1" class="form-select form-select-sm">
+                    <option value="expenseDate" {{ app.request.query.get('expense_sort1') == 'expenseDate' ? 'selected' : '' }}>Date</option>
+                    <option value="amount" {{ app.request.query.get('expense_sort1') == 'amount' ? 'selected' : '' }}>Montant</option>
+                    <option value="category" {{ app.request.query.get('expense_sort1') == 'category' ? 'selected' : '' }}>Catégorie</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <label class="form-label small mb-0">Sens</label>
+                  <select name="expense_dir1" class="form-select form-select-sm">
+                    <option value="DESC" {{ app.request.query.get('expense_dir1', 'DESC') == 'DESC' ? 'selected' : '' }}>Desc</option>
+                    <option value="ASC" {{ app.request.query.get('expense_dir1') == 'ASC' ? 'selected' : '' }}>Asc</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <label class="form-label small mb-0">Critère 2</label>
+                  <select name="expense_sort2" class="form-select form-select-sm">
+                    <option value="amount" {{ app.request.query.get('expense_sort2', 'amount') == 'amount' ? 'selected' : '' }}>Montant</option>
+                    <option value="expenseDate" {{ app.request.query.get('expense_sort2') == 'expenseDate' ? 'selected' : '' }}>Date</option>
+                    <option value="category" {{ app.request.query.get('expense_sort2') == 'category' ? 'selected' : '' }}>Catégorie</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <select name="expense_dir2" class="form-select form-select-sm">
+                    <option value="DESC" {{ app.request.query.get('expense_dir2', 'DESC') == 'DESC' ? 'selected' : '' }}>Desc</option>
+                    <option value="ASC" {{ app.request.query.get('expense_dir2') == 'ASC' ? 'selected' : '' }}>Asc</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <button type="submit" class="btn btn-sm btn-outline-primary"><i class="fas fa-sort me-1"></i>Trier</button>
+                </div>
+              </div>
+              <div class="row g-2 align-items-end">
+                <div class="col-auto flex-grow-1">
+                  <label class="form-label small mb-0">Recherche</label>
+                  <input type="text" name="expense_search" value="{{ app.request.query.get('expense_search') }}" class="form-control form-control-sm" placeholder="Catégorie ou description...">
+                </div>
+                <div class="col-auto">
+                  <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search me-1"></i>Rechercher</button>
+                </div>
+              </div>
+            </form>
+
+            <div class="historique-table-wrap">
+            <div class="table-wrap">
+              <table class="table-history">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Montant</th>
+                    <th>Catégorie</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for expense in expenses %}
+                    <tr>
+                      <td class="col-id">{{ expense.id }}</td>
+                      <td class="col-date">{{ expense.expenseDate ? expense.expenseDate|date('d/m/Y') : '—' }}</td>
+                      <td class="col-amount">{{ expense.amount|number_format(2, ',', ' ') }} TND</td>
+                      <td>{{ expense.category }}</td>
+                      <td>{{ expense.description|default('—') }}</td>
+                      <td class="col-actions">
+                        <a href="{{ path('app_salary_expense_expense_edit', { id: expense.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="fas fa-edit"></i></a>
+                        <form method="post" action="{{ path('app_salary_expense_expense_delete', { id: expense.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer cette dépense ?');">
+                          <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ expense.id) }}">
+                          <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fas fa-trash"></i></button>
+                        </form>
+                      </td>
+                    </tr>
+                  {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Aucune dépense.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const btn = document.getElementById('nightBtn');
+  if (btn) {
+    if (localStorage.getItem('decides_night') === '1') document.body.classList.add('night');
+    function sync() {
+      const isNight = document.body.classList.contains('night');
+      btn.querySelector('span').textContent = isNight ? 'Day' : 'Night';
+      btn.querySelector('i').className = isNight ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    }
+    sync();
+    btn.addEventListener('click', function () {
+      document.body.classList.toggle('night');
+      localStorage.setItem('decides_night', document.body.classList.contains('night') ? '1' : '0');
+      sync();
+    });
+  }
+
+  const tabBtns = document.querySelectorAll('.js-tab');
+  const panels = { revenus: document.getElementById('tab-revenus'), expenses: document.getElementById('tab-expenses') };
+  if (!tabBtns.length || (!panels.revenus && !panels.expenses)) return;
+  function showTab(name) {
+    tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    Object.keys(panels).forEach(k => { if (panels[k]) panels[k].classList.toggle('show', k === name); });
+    try { const url = new URL(window.location.href); url.searchParams.set('tab', name); window.history.replaceState({}, '', url.toString()); } catch (e) {}
+  }
+  tabBtns.forEach(btn => { btn.addEventListener('click', () => { const name = btn.dataset.tab; if (name && panels[name]) showTab(name); }); });
+  const urlTab = new URL(window.location.href).searchParams.get('tab');
+  if (urlTab && panels[urlTab]) showTab(urlTab);
+  else { const activeBtn = document.querySelector('.js-tab.active'); showTab(activeBtn ? activeBtn.dataset.tab : 'revenus'); }
+});
+</script>
 {% endblock %}

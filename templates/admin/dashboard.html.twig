@@ -1,8 +1,8 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/layout.html.twig' %}
 
 {% block title %}Tableau de Bord - Administration{% endblock %}
 
-{% block body %}
+{% block content %}
 <div class="container mt-5">
     <h1 class="display-4 mb-4">Tableau de Bord - Administration</h1>
 
@@ -128,9 +128,14 @@
 
     <!-- Navigation -->
     <div class="mt-4">
-        <a href="{{ path('app_salary_expense_index') }}" class="btn btn-secondary">
+        <a href="{{ path('admin_index') }}" class="btn btn-secondary">
             <i class="fas fa-home"></i> Retour à l'accueil
         </a>
     </div>
 </div>
+{% extends 'admin/layout.html.twig' %}
+
+{% block content %}
+    <h1>Dashboard Admin</h1>
+    <p>Bienvenue dans l’espace admin Decide$</p>
 {% endblock %}

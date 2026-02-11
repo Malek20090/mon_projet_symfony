@@ -1,0 +1,30 @@
+<div class="modal" id="simModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">📈 “What if?” Simulation</div>
+      <button class="close-x" type="button" data-close-modal>&times;</button>
+    </div>
+
+    <div class="sub">Simulate monthly savings to see how fast you hit a goal.</div>
+
+    <div class="mt-16">
+      <label class="form-label">Monthly deposit (TND)</label>
+      <input class="range" id="simRange" type="range" min="0" max="1000" value="200">
+    </div>
+
+    <div class="sim-box mt-16">
+      <div class="sim-kpi">
+        <div class="lbl">Monthly deposit</div>
+        <div class="val"><span id="simVal">200</span> TND</div>
+      </div>
+      <div class="sim-kpi">
+        <div class="lbl">Estimated months to reach target</div>
+        <div class="val"><span id="simMonths">—</span></div>
+      </div>
+    </div>
+
+    <div class="mt-16">
+      <button class="primary-btn" type="button">💾 Apply This Plan (later)</button>
+    </div>
+  </div>
+</div>

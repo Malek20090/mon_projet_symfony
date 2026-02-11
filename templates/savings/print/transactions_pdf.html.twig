@@ -1,0 +1,65 @@
+<body>
+
+<div class="page">
+
+  <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <span class="logo">💰</span>
+      <span>Decide$</span>
+    </div>
+
+    <h1>Savings Transactions</h1>
+
+    <div class="meta">
+      <span class="pill">📅 Generated: {{ generatedAt|date('Y-m-d H:i') }}</span>
+      <span class="pill">📦 Range: {{ range }}</span>
+      <span class="pill">🔍 Search: {{ q ? q : '---' }}</span>
+      <span class="pill">↕ Sort: {{ sort }}</span>
+    </div>
+  </div>
+
+  <!-- CARD -->
+  <div class="card">
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% if rows is empty %}
+          <tr>
+            <td colspan="5">No transactions.</td>
+          </tr>
+        {% else %}
+          {% for r in rows %}
+            <tr>
+              <td>#{{ loop.index }}</td>
+              <td>{{ r.date }}</td>
+              <td>{{ r.type }}</td>
+              <td class="amount">{{ r.montant }} TND</td>
+              <td>{{ r.description }}</td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+
+    <div class="footer-note">
+      Total rows: {{ rows|length }}
+    </div>
+
+  </div>
+
+</div>
+
+</body>
