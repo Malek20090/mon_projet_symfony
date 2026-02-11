@@ -5,7 +5,6 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -27,9 +26,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private string $password;
 
-    /**
-     * ✅ UNIQUE source des rôles
-     */
     #[ORM\Column(type: 'json')]
     private array $roles = [];
 
@@ -71,7 +67,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        $roles[] = 'ROLE_USER'; // toujours garanti
+        $roles[] = 'ROLE_USER';
 
         return array_values(array_unique($roles));
     }
@@ -95,7 +91,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void {}
 
-    /* ================= GETTERS / SETTERS ================= */
+    /* ================= BASIC GETTERS ================= */
 
     public function getId(): ?int
     {
@@ -134,4 +130,54 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->soldeTotal = $solde;
         return $this;
     }
+
+    /* ================= TRANSACTIONS ================= */
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function getTransactions(): Collection
+    {
+        return $this->transactions;
+    }
+
+    public function addTransaction(Transaction $transaction): self
+    {
+        if (!$this->transactions->contains($transaction)) {
+            $this->transactions[] = $transaction;
+            $transaction->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTransaction(Transaction $transaction): self
+    {
+        if ($this->transactions->removeElement($transaction)) {
+            if ($transaction->getUser() === $this) {
+                $transaction->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+    /* ================= RE-CALCUL SOLDE ================= */
+
+public function recalculateSolde(): self
+{
+    $total = 0;
+
+    foreach ($this->transactions as $transaction) {
+        if ($transaction->getType() === 'EXPENSE') {
+            $total -= $transaction->getMontant();
+        } else {
+            $total += $transaction->getMontant();
+        }
+    }
+
+    $this->soldeTotal = $total;
+
+    return $this;
+}
+
 }

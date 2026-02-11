@@ -1,115 +1,37 @@
-{% extends 'admin/layout.html.twig' %}
+{{ form_start(form) }}
 
-{% block content %}
-
-<div class="transactions-page">
-
-    <!-- HEADER -->
-    <div class="page-header">
-        <div>
-            <h1>Transactions</h1>
-            <p class="page-subtitle">
-                Manage all user transactions and balances
-            </p>
-        </div>
-    </div>
-
-    <!-- FILTERS -->
-    <div class="toolbar-card">
-        <form method="get" class="toolbar">
-
-            <input type="text"
-                   name="user"
-                   class="input"
-                   placeholder="User name"
-                   value="{{ app.request.get('user') }}">
-
-            <select name="type" class="input">
-                <option value="">All types</option>
-                <option value="EXPENSE" {{ app.request.get('type') == 'EXPENSE' ? 'selected' : '' }}>Expense</option>
-                <option value="SAVING" {{ app.request.get('type') == 'SAVING' ? 'selected' : '' }}>Saving</option>
-                <option value="INVESTMENT" {{ app.request.get('type') == 'INVESTMENT' ? 'selected' : '' }}>Investment</option>
-            </select>
-
-            <input type="date" name="date_from" class="input" value="{{ app.request.get('date_from') }}">
-            <input type="date" name="date_to" class="input" value="{{ app.request.get('date_to') }}">
-
-            <button class="btn-primary">Filter</button>
-        </form>
-    </div>
-
-    <!-- CREATE -->
-    <div class="create-card">
-        <h3>Create New Transaction</h3>
-
-        {{ form_start(form) }}
-        <div class="form-grid">
-            {{ form_widget(form.type, { attr: { class: 'input' } }) }}
-            {{ form_widget(form.montant, { attr: { class: 'input' } }) }}
-            {{ form_widget(form.date, { attr: { class: 'input' } }) }}
-            {{ form_widget(form.description, { attr: { class: 'input' } }) }}
-            {{ form_widget(form.moduleSource, { attr: { class: 'input' } }) }}
-            {# user n'est plus dans le formulaire : il est pris depuis l'utilisateur connecté #}
-            <button class="btn-primary full">Add Transaction</button>
-        </div>
-        {{ form_end(form) }}
-    </div>
-
-    <!-- TABLE -->
-    <div class="table-card">
-        <table class="modern-table">
-            <thead>
-            <tr>
-                <th>#</th>
-                <th>User</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Balance</th>
-            </tr>
-            </thead>
-
-            <tbody>
-            {% for transaction in transactions %}
-                <tr>
-                    <td>{{ transaction.id }}</td>
-
-                    <td>
-                        <strong>{{ transaction.user.nom }}</strong><br>
-                        <small>ID {{ transaction.user.id }}</small>
-                    </td>
-
-                    <td>
-                        <span class="pill {{ transaction.type|lower }}">
-                            {{ transaction.type }}
-                        </span>
-                    </td>
-
-                    <td class="{{ transaction.type == 'EXPENSE' ? 'danger' : 'success' }}">
-                        {{ transaction.montant }} DT
-                    </td>
-
-                    <td>{{ transaction.date|date('Y-m-d') }}</td>
-                    <td>{{ transaction.description ?: '-' }}</td>
-
-                    <td class="balance">
-                        {{ transaction.user.soldeTotal }} DT
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="7" class="empty">No transactions found</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-
-        <div class="pagination-wrapper">
-            {{ knp_pagination_render(transactions) }}
-        </div>
-    </div>
-
+<div class="form-group">
+    {{ form_label(form.user) }}
+    {{ form_widget(form.user) }}
 </div>
 
-{% endblock %}
+<div class="form-group">
+    {{ form_label(form.type) }}
+    {{ form_widget(form.type) }}
+</div>
+
+<div class="form-group">
+    {{ form_label(form.montant) }}
+    {{ form_widget(form.montant) }}
+</div>
+
+<div class="form-group">
+    {{ form_label(form.date) }}
+    {{ form_widget(form.date) }}
+</div>
+
+<div class="form-group">
+    {{ form_label(form.description) }}
+    {{ form_widget(form.description) }}
+</div>
+
+<div class="form-group">
+    {{ form_label(form.moduleSource) }}
+    {{ form_widget(form.moduleSource) }}
+</div>
+
+<button type="submit" class="btn-primary">
+    Ajouter Transaction
+</button>
+
+{{ form_end(form) }}

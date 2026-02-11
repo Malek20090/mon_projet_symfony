@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Knp\Component\Pager\PaginatorInterface;
 
 #[IsGranted('ROLE_ADMIN')]
@@ -17,64 +18,58 @@ use Knp\Component\Pager\PaginatorInterface;
 class TransactionController extends AbstractController
 {
     #[Route('/', name: 'app_transaction_index', methods: ['GET', 'POST'])]
-   public function index(
-    Request $request,
-    TransactionRepository $repo,
-    EntityManagerInterface $em,
-    PaginatorInterface $paginator
-): Response {
+    public function index(
+        Request $request,
+        TransactionRepository $repo,
+        EntityManagerInterface $em,
+        PaginatorInterface $paginator
+    ): Response {
 
-        // Création transaction
+        // ================= CREATE =================
         $transaction = new Transaction();
         $form = $this->createForm(TransactionType::class, $transaction);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // 🔐 utilisateur connecté = propriétaire de la transaction
-            $user = $this->getUser();
+
+            $user = $transaction->getUser();
+
             if (!$user) {
-                $this->addFlash('error', 'Aucun utilisateur connecté.');
+                $this->addFlash('error', 'Veuillez choisir un utilisateur.');
                 return $this->redirectToRoute('app_transaction_index');
             }
-
-            // Date auto
-            $transaction->setDate(new \DateTime());
-            $transaction->setUser($user);
-
-            // Lier transaction au user
-            $user->addTransaction($transaction);
 
             $em->persist($transaction);
             $em->flush();
 
-            // recalcul du solde
+            // recalcul solde
             $user->recalculateSolde();
             $em->flush();
+
+            $this->addFlash('success', 'Transaction ajoutée avec succès.');
 
             return $this->redirectToRoute('app_transaction_index');
         }
 
-        // Filtres
+        // ================= LIST + FILTER =================
+
         $type = $request->query->get('type');
-$from = $request->query->get('date_from');
-$to   = $request->query->get('date_to');
-$userName = $request->query->get('user');
+        $from = $request->query->get('date_from');
+        $to   = $request->query->get('date_to');
+        $userName = $request->query->get('user');
 
-$query = $repo->queryWithFilters(
-    $type,
-    $from,
-    $to,
-    $userName
-);
+        $query = $repo->queryWithFilters(
+            $type,
+            $from,
+            $to,
+            $userName
+        );
 
-$transactions = $paginator->paginate(
-    $query,                              // Query Doctrine
-    $request->query->getInt('page', 1),  // page actuelle
-    5                                   // éléments par page
-);
-
-
-       
+        $transactions = $paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1),
+            5
+        );
 
         return $this->render('admin/transactions.html.twig', [
             'transactions' => $transactions,
@@ -83,37 +78,53 @@ $transactions = $paginator->paginate(
     }
 
     #[Route('/{id}/edit', name: 'app_transaction_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Transaction $transaction, EntityManagerInterface $em): Response
-    {
+    public function edit(
+        Request $request,
+        Transaction $transaction,
+        EntityManagerInterface $em
+    ): Response {
+
         $form = $this->createForm(TransactionType::class, $transaction);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
             $em->flush();
 
             $transaction->getUser()->recalculateSolde();
             $em->flush();
 
+            $this->addFlash('success', 'Transaction modifiée.');
+
             return $this->redirectToRoute('app_transaction_index');
         }
 
-        return $this->render('transaction/edit.html.twig', [
-            'form' => $form,
+        return $this->render('admin/transaction_edit.html.twig', [
+            'form' => $form->createView(),
             'transaction' => $transaction,
         ]);
     }
 
     #[Route('/{id}', name: 'app_transaction_delete', methods: ['POST'])]
-    public function delete(Request $request, Transaction $transaction, EntityManagerInterface $em): Response
-    {
+    public function delete(
+        Request $request,
+        Transaction $transaction,
+        EntityManagerInterface $em
+    ): Response {
+
         $user = $transaction->getUser();
 
         if ($this->isCsrfTokenValid('delete'.$transaction->getId(), $request->request->get('_token'))) {
+
             $em->remove($transaction);
             $em->flush();
 
-            $user->recalculateSolde();
-            $em->flush();
+            if ($user) {
+                $user->recalculateSolde();
+                $em->flush();
+            }
+
+            $this->addFlash('success', 'Transaction supprimée.');
         }
 
         return $this->redirectToRoute('app_transaction_index');
