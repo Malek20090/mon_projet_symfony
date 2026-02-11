@@ -43,14 +43,16 @@ class AdminController extends AbstractController
     public function coursIndex(Request $request, CoursRepository $coursRepository): Response
     {
         $search = $request->query->get('q');
+        $typeMedia = $request->query->get('type_media');
         $sortBy = $request->query->get('sort', CoursRepository::SORT_TITRE);
         $order = $request->query->get('order', 'ASC');
 
-        $cours = $coursRepository->searchAndSort($search, $sortBy, $order);
+        $cours = $coursRepository->searchAndSort($search, $typeMedia, $sortBy, $order);
 
         return $this->render('admin/cours/index.html.twig', [
             'cours' => $cours,
             'search' => $search,
+            'typeMedia' => $typeMedia,
             'sortBy' => $sortBy,
             'order' => $order,
         ]);
@@ -122,17 +124,25 @@ class AdminController extends AbstractController
     // =========================
 
     #[Route('/quiz', name: 'admin_quiz_index', methods: ['GET'])]
-    public function quizIndex(Request $request, QuizRepository $quizRepository): Response
+    public function quizIndex(Request $request, QuizRepository $quizRepository, CoursRepository $coursRepository): Response
     {
         $search = $request->query->get('q');
+        $courseId = $request->query->getInt('cours_id');
+        $pointsMin = $request->query->getInt('points_min') ?: null;
+        $pointsMax = $request->query->getInt('points_max') ?: null;
         $sortBy = $request->query->get('sort', QuizRepository::SORT_QUESTION);
         $order = $request->query->get('order', 'ASC');
 
-        $quizzes = $quizRepository->searchAndSort($search, $sortBy, $order);
+        $quizzes = $quizRepository->searchAndSort($search, $courseId, $pointsMin, $pointsMax, $sortBy, $order);
+        $courses = $coursRepository->findBy([], ['titre' => 'ASC']);
 
         return $this->render('admin/quiz/index.html.twig', [
             'quizzes' => $quizzes,
             'search' => $search,
+            'courseId' => $courseId,
+            'pointsMin' => $pointsMin,
+            'pointsMax' => $pointsMax,
+            'courses' => $courses,
             'sortBy' => $sortBy,
             'order' => $order,
         ]);

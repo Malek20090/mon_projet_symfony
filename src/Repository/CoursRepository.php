@@ -27,7 +27,7 @@ class CoursRepository extends ServiceEntityRepository
      * @param string      $order  ASC ou DESC
      * @return Cours[]
      */
-    public function searchAndSort(?string $search = null, string $sortBy = self::SORT_TITRE, string $order = 'ASC'): array
+    public function searchAndSort(?string $search = null, ?string $typeMedia = null, string $sortBy = self::SORT_TITRE, string $order = 'ASC'): array
     {
         $qb = $this->createQueryBuilder('c');
 
@@ -36,9 +36,15 @@ class CoursRepository extends ServiceEntityRepository
                 $qb->expr()->orX(
                     $qb->expr()->like('c.titre', ':search'),
                     $qb->expr()->like('c.typeMedia', ':search'),
-                    $qb->expr()->like('c.contenuTexte', ':search')
+                    $qb->expr()->like('c.contenuTexte', ':search'),
+                    $qb->expr()->like('c.urlMedia', ':search')
                 )
             )->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($typeMedia !== null && $typeMedia !== '') {
+            $qb->andWhere('c.typeMedia = :typeMedia')
+               ->setParameter('typeMedia', $typeMedia);
         }
 
         $allowedSort = [self::SORT_TITRE, self::SORT_TYPE_MEDIA];

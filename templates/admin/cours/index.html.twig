@@ -23,17 +23,36 @@
 
     <div class="card-custom mb-3">
         <form method="get" action="{{ path('admin_cours_index') }}" class="row g-3 align-items-end">
-            <div class="col-md-6">
+            <div class="col-md-5">
                 <label for="q" class="form-label">Rechercher</label>
-                <input type="text" name="q" id="q" class="form-control" placeholder="Title, media type, content..." value="{{ search|default('') }}">
-                <input type="hidden" name="sort" value="{{ sortBy|default('titre') }}">
-                <input type="hidden" name="order" value="{{ order|default('ASC') }}">
+                <input type="text" name="q" id="q" class="form-control" placeholder="Titre, type, contenu, URL..." value="{{ search|default('') }}">
             </div>
-            <div class="col-auto">
+            <div class="col-md-3">
+                <label for="type_media" class="form-label">Type media</label>
+                <select name="type_media" id="type_media" class="form-select">
+                    <option value="">Tous</option>
+                    <option value="video" {{ typeMedia == 'video' ? 'selected' : '' }}>Video</option>
+                    <option value="image" {{ typeMedia == 'image' ? 'selected' : '' }}>Image</option>
+                    <option value="pdf" {{ typeMedia == 'pdf' ? 'selected' : '' }}>PDF</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="sort" class="form-label">Trier par</label>
+                <select name="sort" id="sort" class="form-select">
+                    <option value="titre" {{ sortBy == 'titre' ? 'selected' : '' }}>Titre</option>
+                    <option value="typeMedia" {{ sortBy == 'typeMedia' ? 'selected' : '' }}>Type media</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="order" class="form-label">Ordre</label>
+                <select name="order" id="order" class="form-select">
+                    <option value="ASC" {{ order|upper == 'ASC' ? 'selected' : '' }}>ASC</option>
+                    <option value="DESC" {{ order|upper == 'DESC' ? 'selected' : '' }}>DESC</option>
+                </select>
+            </div>
+            <div class="col-12 d-flex gap-2">
                 <button type="submit" class="btn btn-primary"><i class="fas fa-search me-1"></i>Rechercher</button>
-                {% if search %}
-                    <a href="{{ path('admin_cours_index') }}" class="btn btn-outline-secondary">Effacer</a>
-                {% endif %}
+                <a href="{{ path('admin_cours_index') }}" class="btn btn-outline-secondary">Réinitialiser</a>
             </div>
         </form>
     </div>
@@ -54,10 +73,10 @@
                         {% for cour in cours %}
                             <tr>
                                 <td>{{ cour.titre }}</td>
-                                <td><span class="badge bg-info">{{ cour.typeMedia }}</span></td>
+                                <td><span class="badge bg-info text-uppercase">{{ cour.typeMedia }}</span></td>
                                 <td>
                                     {% if cour.urlMedia %}
-                                        <a href="{{ cour.urlMedia }}" target="_blank" class="text-decoration-none">
+                                        <a href="{{ cour.urlMedia }}" target="_blank" rel="noreferrer" class="text-decoration-none">
                                             <i class="fas fa-link"></i> Lien
                                         </a>
                                     {% else %}

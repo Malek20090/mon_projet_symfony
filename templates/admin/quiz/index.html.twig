@@ -23,17 +23,45 @@
 
     <div class="card-custom mb-3">
         <form method="get" action="{{ path('admin_quiz_index') }}" class="row g-3 align-items-end">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <label for="q" class="form-label">Rechercher</label>
-                <input type="text" name="q" id="q" class="form-control" placeholder="Question, correct answer..." value="{{ search|default('') }}">
-                <input type="hidden" name="sort" value="{{ sortBy|default('question') }}">
-                <input type="hidden" name="order" value="{{ order|default('ASC') }}">
+                <input type="text" name="q" id="q" class="form-control" placeholder="Question, réponse..." value="{{ search|default('') }}">
             </div>
-            <div class="col-auto">
+            <div class="col-md-3">
+                <label for="cours_id" class="form-label">Cours</label>
+                <select name="cours_id" id="cours_id" class="form-select">
+                    <option value="">Tous</option>
+                    {% for c in courses %}
+                        <option value="{{ c.id }}" {{ courseId == c.id ? 'selected' : '' }}>{{ c.titre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="points_min" class="form-label">Points min</label>
+                <input type="number" name="points_min" id="points_min" class="form-control" min="0" value="{{ pointsMin }}">
+            </div>
+            <div class="col-md-2">
+                <label for="points_max" class="form-label">Points max</label>
+                <input type="number" name="points_max" id="points_max" class="form-control" min="0" value="{{ pointsMax }}">
+            </div>
+            <div class="col-md-2">
+                <label for="sort" class="form-label">Trier par</label>
+                <select name="sort" id="sort" class="form-select">
+                    <option value="question" {{ sortBy == 'question' ? 'selected' : '' }}>Question</option>
+                    <option value="pointsValeur" {{ sortBy == 'pointsValeur' ? 'selected' : '' }}>Points</option>
+                    <option value="reponseCorrecte" {{ sortBy == 'reponseCorrecte' ? 'selected' : '' }}>Réponse</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="order" class="form-label">Ordre</label>
+                <select name="order" id="order" class="form-select">
+                    <option value="ASC" {{ order|upper == 'ASC' ? 'selected' : '' }}>ASC</option>
+                    <option value="DESC" {{ order|upper == 'DESC' ? 'selected' : '' }}>DESC</option>
+                </select>
+            </div>
+            <div class="col-12 d-flex gap-2">
                 <button type="submit" class="btn btn-primary"><i class="fas fa-search me-1"></i>Rechercher</button>
-                {% if search %}
-                    <a href="{{ path('admin_quiz_index') }}" class="btn btn-outline-secondary">Effacer</a>
-                {% endif %}
+                <a href="{{ path('admin_quiz_index') }}" class="btn btn-outline-secondary">Réinitialiser</a>
             </div>
         </form>
     </div>
