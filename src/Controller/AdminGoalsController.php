@@ -11,8 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/admin/goals')]
-class AdminGoalsController extends AbstractController
+#[Route('/admin/goals', name: 'admin_goals_')]class AdminGoalsController extends AbstractController
 {
     // ----------------------------
     // Helpers: user table / label
@@ -236,7 +235,7 @@ class AdminGoalsController extends AbstractController
                 : 0,
         ];
 
-        return $this->render('admin/goals/index.html.twig', [
+        return $this->render('goals/index.html.twig', [
     'goals' => $goals,
     'savingAccounts' => $savingAccounts,
 
@@ -279,7 +278,7 @@ class AdminGoalsController extends AbstractController
     {
         $rows = $this->fetchGoals($conn, $request);
 
-        $html = $this->renderView('admin/goals/pdf_goals.html.twig', [
+        $html = $this->renderView('goals/pdf_goals.html.twig', [
             'rows' => $rows,
             'generatedAt' => new \DateTimeImmutable(),
         ]);
@@ -327,7 +326,7 @@ class AdminGoalsController extends AbstractController
     {
         $rows = $this->fetchSavingAccounts($conn, $request);
 
-        $html = $this->renderView('admin/goals/pdf_saving.html.twig', [
+        $html = $this->renderView('goals/pdf_saving.html.twig', [
             'rows' => $rows,
             'generatedAt' => new \DateTimeImmutable(),
         ]);
