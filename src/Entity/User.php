@@ -110,12 +110,14 @@ private array $roles = [];
 
     public function getRole(): ?string
     {
-        return $this->role;
+        // Return the first role from the array, or null if empty
+        return !empty($this->roles) ? reset($this->roles) : null;
     }
 
     public function setRole(?string $role): self
     {
-        $this->role = $role;
+        // Set the roles array with the single role, or empty array if null
+        $this->roles = $role !== null ? [$role] : [];
         return $this;
     }
 

@@ -45,7 +45,7 @@ class Quiz
         return $this->question;
     }
 
-    public function setQuestion(string $question): static
+    public function setQuestion(?string $question): static
     {
         $this->question = $question;
 
@@ -69,7 +69,7 @@ class Quiz
         return $this->reponseCorrecte;
     }
 
-    public function setReponseCorrecte(string $reponseCorrecte): static
+    public function setReponseCorrecte(?string $reponseCorrecte): static
     {
         $this->reponseCorrecte = $reponseCorrecte;
 
@@ -81,7 +81,7 @@ class Quiz
         return $this->pointsValeur;
     }
 
-    public function setPointsValeur(int $pointsValeur): static
+    public function setPointsValeur(?int $pointsValeur): static
     {
         $this->pointsValeur = $pointsValeur;
 

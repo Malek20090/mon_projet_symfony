@@ -4,10 +4,16 @@ namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class PageController extends AbstractController
 {
+    #[Route('/education', name: 'app_home_education', methods: ['GET'])]
+    public function homeEducation(): Response
+    {
+        return $this->redirectToRoute('student_cours_index');
+    }
+
     #[Route('/about', name: 'app_about')]
     public function about(): Response
     {

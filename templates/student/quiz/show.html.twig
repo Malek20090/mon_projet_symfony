@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Quiz : {{ quiz.question|slice(0, 50) }}...{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('css/home.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('app_home_education') }}">Accueil</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('student_quiz_index') }}">Quiz</a></li>
+            <li class="breadcrumb-item active">Détails</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0"><i class="fas fa-question-circle"></i> Détails du Quiz</h3>
+        </div>
+        <div class="card-body">
+            {% if quiz.cours %}
+                <p class="mb-3">
+                    <span class="badge bg-info"><i class="fas fa-book"></i> {{ quiz.cours.titre }}</span>
+                </p>
+            {% endif %}
+            <h5 class="text-dark mb-3">{{ quiz.question }}</h5>
+            <p class="mb-2">
+                <span class="badge bg-primary"><i class="fas fa-star"></i> {{ quiz.pointsValeur }} points</span>
+                <span class="badge bg-secondary"><i class="fas fa-list"></i> {{ quiz.choixReponses|length }} choix</span>
+            </p>
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <a href="{{ path('student_quiz_pass', {'id': quiz.id}) }}" class="btn btn-success">
+                    <i class="fas fa-play"></i> Passer le quiz
+                </a>
+                {% if quiz.cours %}
+                    <a href="{{ path('student_cours_show', {'id': quiz.cours.id}) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-book"></i> Voir le cours
+                    </a>
+                {% endif %}
+                <a href="{{ path('student_quiz_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

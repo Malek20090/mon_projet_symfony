@@ -19,10 +19,17 @@ class StudentController extends AbstractController
     // =========================
 
     #[Route('/cours', name: 'cours_index', methods: ['GET'])]
-    public function coursIndex(CoursRepository $coursRepository): Response
+    public function coursIndex(Request $request, CoursRepository $coursRepository): Response
     {
+        $sortBy = $request->query->get('sort', CoursRepository::SORT_TITRE);
+        $order = $request->query->get('order', 'ASC');
+
+        $cours = $coursRepository->searchAndSort(null, $sortBy, $order);
+
         return $this->render('student/cours/index.html.twig', [
-            'cours' => $coursRepository->findAll(),
+            'cours' => $cours,
+            'sortBy' => $sortBy,
+            'order' => $order,
         ]);
     }
 
@@ -39,10 +46,17 @@ class StudentController extends AbstractController
     // =========================
 
     #[Route('/quiz', name: 'quiz_index', methods: ['GET'])]
-    public function quizIndex(QuizRepository $quizRepository): Response
+    public function quizIndex(Request $request, QuizRepository $quizRepository): Response
     {
+        $sortBy = $request->query->get('sort', QuizRepository::SORT_QUESTION);
+        $order = $request->query->get('order', 'ASC');
+
+        $quizzes = $quizRepository->searchAndSort(null, $sortBy, $order);
+
         return $this->render('student/quiz/index.html.twig', [
-            'quizzes' => $quizRepository->findAll(),
+            'quizzes' => $quizzes,
+            'sortBy' => $sortBy,
+            'order' => $order,
         ]);
     }
 

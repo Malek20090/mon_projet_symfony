@@ -28,8 +28,9 @@
                 <span class="icon">💳</span> Transactions
             </a>
 
-            <a href="#">
-                <span class="icon">📚</span> Classes
+            <a href="{{ path('admin_dashboard') }}"
+               class="{{ app.request.get('_route') starts with 'admin_' ? 'active' : '' }}">
+                <span class="icon">📚</span> Cours & Quiz
             </a>
 
             <a href="#">

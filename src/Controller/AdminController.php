@@ -22,10 +22,19 @@ class AdminController extends AbstractController
     // =========================
 
     #[Route('/cours', name: 'admin_cours_index', methods: ['GET'])]
-    public function coursIndex(CoursRepository $coursRepository): Response
+    public function coursIndex(Request $request, CoursRepository $coursRepository): Response
     {
+        $search = $request->query->get('q');
+        $sortBy = $request->query->get('sort', CoursRepository::SORT_TITRE);
+        $order = $request->query->get('order', 'ASC');
+
+        $cours = $coursRepository->searchAndSort($search, $sortBy, $order);
+
         return $this->render('admin/cours/index.html.twig', [
-            'cours' => $coursRepository->findAll(),
+            'cours' => $cours,
+            'search' => $search,
+            'sortBy' => $sortBy,
+            'order' => $order,
         ]);
     }
 
@@ -94,10 +103,19 @@ class AdminController extends AbstractController
     // =========================
 
     #[Route('/quiz', name: 'admin_quiz_index', methods: ['GET'])]
-    public function quizIndex(QuizRepository $quizRepository): Response
+    public function quizIndex(Request $request, QuizRepository $quizRepository): Response
     {
+        $search = $request->query->get('q');
+        $sortBy = $request->query->get('sort', QuizRepository::SORT_QUESTION);
+        $order = $request->query->get('order', 'ASC');
+
+        $quizzes = $quizRepository->searchAndSort($search, $sortBy, $order);
+
         return $this->render('admin/quiz/index.html.twig', [
-            'quizzes' => $quizRepository->findAll(),
+            'quizzes' => $quizzes,
+            'search' => $search,
+            'sortBy' => $sortBy,
+            'order' => $order,
         ]);
     }
 

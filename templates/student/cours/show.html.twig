@@ -133,6 +133,11 @@
 
             <!-- Navigation -->
             <div class="text-center mt-4 mb-4">
+                {% if cour.quizzes|length > 0 %}
+                    <a href="{{ path('student_cours_quiz', {'id': cour.id}) }}" class="btn btn-success me-2">
+                        <i class="fas fa-question-circle"></i> Quiz du cours ({{ cour.quizzes|length }})
+                    </a>
+                {% endif %}
                 <a href="{{ path('student_cours_index') }}" class="btn btn-outline-primary">
                     <i class="fas fa-arrow-left"></i> Retour à la liste des cours
                 </a>
