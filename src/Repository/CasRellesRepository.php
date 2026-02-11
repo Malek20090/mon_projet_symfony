@@ -31,6 +31,46 @@ class CasRellesRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Search and sort CasRelles for admin list.
+     *
+     * @param string $search Search term (titre, description, type, solution)
+     * @param string $sort   Field to sort by
+     * @param string $order  Order direction (asc/desc)
+     * @param string $filter Filter by resultat (e.g. EN_ATTENTE, ACCEPTE, REFUSE, or 'all')
+     * @return CasRelles[]
+     */
+    public function findBySearchAndSort(string $search = '', string $sort = 'id', string $order = 'desc', string $filter = 'EN_ATTENTE'): array
+    {
+        $qb = $this->createQueryBuilder('c');
+
+        if (!empty($search)) {
+            $qb->andWhere(
+                $qb->expr()->orX(
+                    $qb->expr()->like('c.titre', ':search'),
+                    $qb->expr()->like('c.description', ':search'),
+                    $qb->expr()->like('c.type', ':search'),
+                    $qb->expr()->like('c.solution', ':search')
+                )
+            );
+            $qb->setParameter('search', '%' . $search . '%');
+        }
+
+        if (strtolower($filter) !== 'all') {
+            $qb->andWhere('c.resultat = :filter')
+                ->setParameter('filter', $filter);
+        }
+
+        $validSortFields = ['id', 'titre', 'type', 'montant', 'solution', 'dateEffet', 'resultat'];
+        if (!in_array($sort, $validSortFields, true)) {
+            $sort = 'id';
+        }
+        $order = strtolower($order) === 'asc' ? 'ASC' : 'DESC';
+        $qb->orderBy('c.' . $sort, $order);
+
+        return $qb->getQuery()->getResult();
+    }
+
     //    /**
     //     * @return CasRelles[] Returns an array of CasRelles objects
     //     */

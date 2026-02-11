@@ -10,6 +10,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Entity\Transaction;
+
 
 #[Route('/expense')]
 class ExpenseController extends AbstractController
@@ -23,25 +25,45 @@ class ExpenseController extends AbstractController
     }
 
     #[Route('/new', name: 'app_expense_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
-        $expense = new Expense();
-        $form = $this->createForm(ExpenseType::class, $expense);
-        $form->handleRequest($request);
+public function new(Request $request, EntityManagerInterface $entityManager): Response
+{
+    $expense = new Expense();
+    $form = $this->createForm(ExpenseType::class, $expense);
+    $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($expense);
-            $entityManager->flush();
+    if ($form->isSubmitted() && $form->isValid()) {
 
-            $this->addFlash('success', 'Dépense créée avec succès.');
-            return $this->redirectToRoute('app_expense_index', [], Response::HTTP_SEE_OTHER);
-        }
+        // 🔐 utilisateur connecté
+        $user = $this->getUser();
 
-        return $this->render('expense/new.html.twig', [
-            'expense' => $expense,
-            'form' => $form,
-        ]);
+        // 1️⃣ Sauvegarder la dépense (relation Revenue conservée)
+        $entityManager->persist($expense);
+
+        // 2️⃣ Créer la transaction associée
+        $transaction = new Transaction();
+        $transaction->setType('EXPENSE');
+        $transaction->setMontant($expense->getAmount());
+        $transaction->setDate($expense->getExpenseDate() ?? new \DateTime());
+        $transaction->setDescription($expense->getDescription());
+        $transaction->setModuleSource('EXPENSE_MODULE');
+        $transaction->setUser($user);
+        $transaction->setExpense($expense);
+
+        $entityManager->persist($transaction);
+
+        // 3️⃣ Flush global
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Dépense enregistrée + transaction créée');
+        return $this->redirectToRoute('app_expense_index');
     }
+
+    return $this->render('expense/new.html.twig', [
+        'expense' => $expense,
+        'form' => $form,
+    ]);
+}
+
 
     #[Route('/{id}', name: 'app_expense_show', methods: ['GET'])]
     public function show(Expense $expense): Response
@@ -73,7 +95,7 @@ class ExpenseController extends AbstractController
     #[Route('/{id}', name: 'app_expense_delete', methods: ['POST'])]
     public function delete(Request $request, Expense $expense, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete' . $expense->getId(), $request->request->string('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $expense->getId(), $request->request->get('_token', ''))) {
             $entityManager->remove($expense);
             $entityManager->flush();
             $this->addFlash('success', 'Dépense supprimée.');

@@ -55,6 +55,9 @@ class CasRelles
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $resultat = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $raisonRefus = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -167,6 +170,17 @@ class CasRelles
     public function setResultat(?string $resultat): static
     {
         $this->resultat = $resultat;
+        return $this;
+    }
+
+    public function getRaisonRefus(): ?string
+    {
+        return $this->raisonRefus;
+    }
+
+    public function setRaisonRefus(?string $raisonRefus): static
+    {
+        $this->raisonRefus = $raisonRefus;
         return $this;
     }
 }

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home | Decide$</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+  <!-- Animate.css -->
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+
+    <!-- Page CSS -->
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar navbar-expand-lg fixed-top glass-nav">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-white" href="#">
+            <i class="fas fa-wallet text-info me-2"></i> Decide$
+        </a>
+
+        <ul class="navbar-nav mx-auto gap-4">
+           <li class="nav-item">
+    <a class="nav-link text-white" href="{{ path('app_home') }}">Home</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link text-white" href="{{ path('app_about') }}">About</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link text-white" href="{{ path('app_service') }}">Service</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link text-white" href="{{ path('app_contact') }}">Contact</a>
+</li>
+        </ul>
+
+        <a href="#" class="btn btn-info rounded-pill px-4">To Start</a>
+    </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<section id="home" class="hero-carousel">
+
+    <!-- OVERLAY COULEUR THEME -->
+    <div class="hero-overlay"></div>
+
+    <!-- CAROUSEL -->
+    <div id="heroCarousel"
+         class="carousel slide carousel-fade"
+         data-bs-ride="carousel"
+         data-bs-interval="4500">
+
+        <div class="carousel-inner">
+
+            <!-- SLIDE 1 -->
+            <div class="carousel-item active">
+
+                <!-- TEXTE AVANT IMAGE -->
+                <div class="hero-caption animate-text">
+                    <span class="hero-tagline">SMART FINANCIAL MANAGEMENT</span>
+
+                    <h1 class="hero-title">
+                        Maîtrisez votre Salaire.<br>
+                        <span class="text-info">Dominez vos Dépenses.</span>
+                    </h1>
+
+                    <p class="hero-description">
+                        Optimisez votre parcours financier grâce à un suivi précis
+                        et une gestion intelligente.
+                    </p>
+                </div>
+
+                <!-- IMAGE -->
+                <img src="{{ asset('img/a8.jpg') }}" class="d-block w-100 hero-img" alt="">
+            </div>
+
+            <!-- SLIDE 2 -->
+            <div class="carousel-item">
+
+                <div class="hero-caption animate-text">
+                    <span class="hero-tagline">EXPENSE CONTROL</span>
+
+                    <h1 class="hero-title">
+                        Suivez Chaque Dépense.<br>
+                        <span class="text-info">Gardez le Contrôle.</span>
+                    </h1>
+
+                    <p class="hero-description">
+                        Visualisez vos dépenses en temps réel et évitez
+                        les surprises de fin de mois.
+                    </p>
+                </div>
+
+                <img src="{{ asset('img/a9.jpg') }}" class="d-block w-100 hero-img" alt="">
+            </div>
+
+            <!-- SLIDE 3 -->
+            <div class="carousel-item">
+
+                <div class="hero-caption animate-text">
+                    <span class="hero-tagline">FINANCIAL SECURITY</span>
+
+                    <h1 class="hero-title">
+                        Construisez votre Sécurité.<br>
+                        <span class="text-info">Planifiez l’Avenir.</span>
+                    </h1>
+
+                    <p class="hero-description">
+                        Des stratégies d’épargne intelligentes pour une
+                        stabilité financière durable.
+                    </p>
+                </div>
+
+                <img src="{{ asset('img/a10.jpg') }}" class="d-block w-100 hero-img" alt="">
+            </div>
+
+        </div>
+    </div>
+
+</section>
+
+
+
+
+
+<!-- ================= ABOUT ================= -->
+<section id="about" class="about-decides">
+    <div class="about-container">
+
+        <div class="about-image wow animate__animated animate__fadeInLeft" data-wow-delay="0.2s">
+
+            <span class="experience-badge">20 Years Experience</span>
+            <img src="{{ asset('img/a.jpg') }}" alt="About Decide$">
+        </div>
+
+        <div class="about-content wow animate__animated animate__fadeInRight" data-wow-delay="0.4s">
+
+            <h2>Manage Your Salary<br>Smarter.</h2>
+
+            <p class="about-desc">
+                Decide$ is a comprehensive personal financial architecture designed to bring clarity
+                to your income distribution and control your expenses.
+            </p>
+
+            <div class="about-card wow animate__animated animate__fadeInUp" data-wow-delay="0.6s">
+
+                <div class="icon-circle"><i class="fas fa-coins"></i></div>
+                <div>
+                    <h4>Salary Tracking</h4>
+                    <p>See exactly where every dollar flows.</p>
+                </div>
+            </div>
+
+            <div class="about-card wow animate__animated animate__fadeInUp" data-wow-delay="0.8s">
+
+                <div class="icon-circle"><i class="fas fa-chart-line"></i></div>
+                <div>
+                    <h4>Budget Analysis</h4>
+                    <p>Optimize spending with powerful insights.</p>
+                </div>
+            </div>
+
+            <a href="#" class="about-btn">
+    Read More
+    <i class="fas fa-arrow-right"></i>
+</a>
+        </div>
+
+    </div>
+</section>
+
+<!-- ================= BLOG ================= -->
+<section id="service" class="container py-5 blog-section">
+    <div class="text-center mb-5">
+        <h6 class="text-uppercase text-info fw-bold letter-spacing">FINANCIAL INSIGHTS</h6>
+        <h2 class="blog-title">Latest Tips & Salary News</h2>
+    </div>
+
+    <div class="row g-4">
+        <!-- CARD 1 -->
+        <div class="col-md-4 wow animate__animated animate__fadeInUp" data-wow-delay="0.2s">
+
+            <div class="blog-card h-100">
+                <div class="blog-img-wrapper">
+                    <span class="blog-date">
+                        <i class="fas fa-calendar-alt me-2"></i> Feb 10 2026
+                    </span>
+                    <img src="{{ asset('img/a8.jpg') }}" alt="">
+                </div>
+                <div class="blog-content">
+                    <h4>How to Plan Your Monthly Salary Effectively</h4>
+                    <p>
+                        Learn practical methods to distribute your salary between
+                        expenses, savings, and financial goals without stress.
+                    </p>
+                    <a href="#" class="blog-link">Read More <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 2 -->
+        <div class="col-md-4 wow animate__animated animate__fadeInUp" data-wow-delay="0.4s">
+
+            <div class="blog-card h-100">
+                <div class="blog-img-wrapper">
+                    <span class="blog-date">
+                        <i class="fas fa-calendar-alt me-2"></i> Feb 18 2026
+                    </span>
+                    <img src="{{ asset('img/a9.jpg') }}" alt="">
+                </div>
+                <div class="blog-content">
+                    <h4>Tracking Expenses to Avoid End-Month Surprises</h4>
+                    <p>
+                        Discover how monitoring daily expenses helps you stay
+                        within budget and protect your financial stability.
+                    </p>
+                    <a href="#" class="blog-link">Read More <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 3 -->
+        <div class="col-md-4 wow animate__animated animate__fadeInUp" data-wow-delay="0.6s">
+
+            <div class="blog-card h-100">
+                <div class="blog-img-wrapper">
+                    <span class="blog-date">
+                        <i class="fas fa-calendar-alt me-2"></i> Feb 25 2026
+                    </span>
+                    <img src="{{ asset('img/a10.jpg') }}" alt="">
+                </div>
+                <div class="blog-content">
+                    <h4>Building Financial Security from Your Salary</h4>
+                    <p>
+                        Understand how to create emergency funds and savings
+                        strategies to handle unexpected expenses confidently.
+                    </p>
+                    <a href="#" class="blog-link">Read More <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer-decides">
+    <div class="container">
+
+        <div class="row gy-4">
+
+            <!-- BRAND -->
+            <div class="col-md-4 text-center text-md-start">
+                <h4 class="footer-brand">
+                    <i class="fas fa-wallet text-info me-2"></i> Decide$
+                </h4>
+                <p class="footer-text">
+                    Decide$ helps you manage your salary, control expenses,
+                    and build a secure financial future with confidence.
+                </p>
+            </div>
+
+            <!-- LINKS -->
+            <div class="col-md-4 text-center">
+                <h6 class="footer-title">Quick Links</h6>
+                <ul class="footer-links">
+                    <li><a href="{{ path('app_home') }}">Home</a></li>
+                    <li><a href="{{ path('app_about') }}">About</a></li>
+                    <li><a href="{{ path('app_service') }}">Services</a></li>
+                    <li><a href="{{ path('app_contact') }}">Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- SOCIAL -->
+            <div class="col-md-4 text-center text-md-end">
+                <h6 class="footer-title">Connect with us</h6>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-github"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+
+        </div>
+
+        <hr class="footer-divider">
+
+        <div class="footer-bottom text-center">
+            © {{ "now"|date("Y") }} Decide$ — All rights reserved
+        </div>
+
+    </div>
+</footer>
+ <script>
+    const heroCarousel = document.getElementById('heroCarousel');
+
+    heroCarousel.addEventListener('slide.bs.carousel', () => {
+        document.querySelectorAll('.animate-text').forEach(el => {
+            el.style.opacity = 0;
+            el.style.transform = 'translateY(30px)';
+        });
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
+<script>
+    new WOW().init();
+</script>
+
+</body>
+</html>

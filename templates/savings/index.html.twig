@@ -1,5 +1,5 @@
-{# templates/savings/index.html.twig #}
-{% extends 'base.html.twig' %}
+{# templates/savings/index.html.twig — same header & footer as Contact, Service, About #}
+{% extends 'base_pages.html.twig' %}
 
 {% block title %}Savings & Goals | Decide${% endblock %}
 
@@ -154,13 +154,7 @@
    PAGE PARTS
    ========================= #}
 
-{# ✅ IMPORTANT:
-   To keep THE SAME HEADER as base.html.twig,
-   we must NOT include a second header partial that overrides styling.
-   Leave base.html.twig navbar/header as the only one.
-#}
-
-{# {% include 'savings/partials/_header.html.twig' %} #}
+{# Header is in base_pages.html.twig (same as Contact, Service, About) #}
 {% include 'savings/partials/_hero.html.twig' %}
 
 <section class="savings-zone">
@@ -219,7 +213,7 @@
 {% include 'savings/partials/modals/_sim_modal.html.twig' %}
 {% include 'savings/partials/modals/_goal_edit_modal.html.twig' %}
 
-{% include 'savings/partials/_footer.html.twig' %}
+{# Footer is in base_pages.html.twig (same as Contact, Service, About) #}
 
 {# =========================
    ✅ AJAX (NO RELOAD) – PRO HANDLER

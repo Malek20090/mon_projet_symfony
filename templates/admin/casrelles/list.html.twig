@@ -1,0 +1,115 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Cas Réel | Decide${% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Cas Réel</h1>
+            <p class="mb-0">Traitement des demandes des utilisateurs</p>
+        </div>
+        <a href="{{ path('admin_casrelles_add') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Nouvelle demande</a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <div class="card-custom mb-4">
+        <form method="GET" action="{{ path('admin_casrelles_list') }}" class="row g-3">
+            <div class="col-md-5">
+                <label for="search" class="form-label">Rechercher</label>
+                <input type="text" class="form-control" id="search" name="search"
+                       value="{{ search ?? '' }}" placeholder="Titre, description, type...">
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">Trier par</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="id" {% if sort == 'id' %}selected{% endif %}>ID</option>
+                    <option value="titre" {% if sort == 'titre' %}selected{% endif %}>Titre</option>
+                    <option value="montant" {% if sort == 'montant' %}selected{% endif %}>Montant</option>
+                    <option value="dateEffet" {% if sort == 'dateEffet' %}selected{% endif %}>Date</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="order" class="form-label">Ordre</label>
+                <select class="form-select" id="order" name="order">
+                    <option value="desc" {% if order == 'desc' %}selected{% endif %}>Décroissant</option>
+                    <option value="asc" {% if order == 'asc' %}selected{% endif %}>Croissant</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="fas fa-search me-1"></i>Rechercher</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-custom">
+        <div class="table-responsive">
+            <table class="table table-custom table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Titre</th>
+                        <th>Type</th>
+                        <th>Montant</th>
+                        <th>Solution</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th style="width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cas in casrelles %}
+                        <tr>
+                            <td>{{ cas.id }}</td>
+                            <td><strong>{{ cas.titre }}</strong></td>
+                            <td>
+                                {% if cas.type == 'POSITIF' %}
+                                    <span class="badge bg-success">POSITIF</span>
+                                {% else %}
+                                    <span class="badge bg-danger">NÉGATIF</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-primary fw-bold">{{ cas.montant|number_format(2, ',', ' ') }} DT</td>
+                            <td>{{ cas.solution }}</td>
+                            <td>{{ cas.dateEffet|date('d/m/Y H:i') }}</td>
+                            <td>
+                                {% if cas.resultat == 'VALIDE' %}
+                                    <span class="badge bg-success">Acceptée</span>
+                                {% elseif cas.resultat == 'REFUSE' %}
+                                    <span class="badge bg-danger">Refusée</span>
+                                {% else %}
+                                    <span class="badge bg-warning">En attente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ path('admin_casrelles_process', { id: cas.id }) }}" class="btn btn-sm btn-outline-primary" title="Traiter"><i class="fas fa-eye"></i></a>
+                                <a href="{{ path('admin_casrelles_edit', { id: cas.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="fas fa-edit"></i></a>
+                                <form method="post" action="{{ path('admin_casrelles_delete', { id: cas.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer cette demande ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('casrelles_delete_' ~ cas.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="8" class="text-center text-muted py-4">Aucune demande.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <a href="{{ path('admin_index') }}" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left me-2"></i>Retour au dashboard</a>
+</div>
+{% endblock %}

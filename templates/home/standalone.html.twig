@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home | Decide$</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <!-- Animate.css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+    <!-- PAGE CSS (DIRECTEMENT ICI) -->
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: rgba(0,0,0,0.25);
+            backdrop-filter: blur(6px);
+        }
+        .navbar .nav-link,
+        .navbar-brand {
+            color: #fff !important;
+        }
+
+        /* HERO */
+        .hero-bg {
+            height: 80vh;
+            background-image: url("{{ asset('img/a1.jpg') }}");
+            background-size: cover;
+            background-position: center 65%;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero-bg::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, rgba(0,0,0,.3), rgba(0,0,0,.65));
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            color: #fff;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: 8%;
+        }
+
+        .hero-content h1 {
+            font-family: Georgia, serif;
+            font-size: 56px;
+            margin-bottom: 20px;
+        }
+
+        .hero-actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-hero-primary {
+            background: #00c6ef;
+            color: #fff;
+            padding: 14px 36px;
+            border-radius: 999px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .btn-hero-secondary {
+            background: #1b3f8b;
+            color: #fff;
+            padding: 14px 36px;
+            border-radius: 999px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        /* ABOUT */
+        .about-decides {
+            background: #f7fbfc;
+            padding: 100px 0;
+        }
+
+        .about-container {
+            max-width: 1200px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            padding: 0 24px;
+            align-items: center;
+        }
+
+        .about-image img {
+            width: 100%;
+            border-radius: 14px;
+        }
+
+        .experience-badge {
+            position: absolute;
+            background: #1b3f8b;
+            color: #fff;
+            padding: 16px 28px;
+            font-weight: 700;
+        }
+
+        .about-card {
+            display: flex;
+            gap: 18px;
+            background: #eef7f8;
+            padding: 22px 26px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+        }
+
+        .icon-circle {
+            width: 60px;
+            height: 60px;
+            background: #00c6ef;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 992px) {
+            .about-container {
+                grid-template-columns: 1fr;
+            }
+            .hero-content {
+                margin: auto;
+                text-align: center;
+            }
+            .hero-actions {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">
+            <i class="fa-solid fa-wallet"></i> Decide$
+        </a>
+
+        <ul class="navbar-nav mx-auto gap-4">
+            <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="#service">Service</a></li>
+            <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+        </ul>
+
+        <a href="#" class="btn btn-info rounded-pill px-4">To Start</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section id="home" class="hero-bg">
+    <div class="hero-content animate__animated animate__fadeInRight">
+        <h1>Control Your Salary.<br>Master Your Expenses.</h1>
+        <p>Track your income, manage your expenses, and plan your savings.</p>
+
+        <div class="hero-actions">
+            <a href="#" class="btn-hero-primary">Track Expenses</a>
+            <a href="#" class="btn-hero-secondary">Savings Goals</a>
+        </div>
+    </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="about-decides">
+    <div class="about-container">
+
+        <div class="about-image">
+            <span class="experience-badge">20 Years Experience</span>
+            <img src="{{ asset('img/a3.jpg') }}" alt="">
+        </div>
+
+        <div class="about-content">
+            <h2>Manage Your Salary<br>Smarter.</h2>
+
+            <p class="about-desc">
+                Decide$ is a personal financial management platform designed to help users track income,
+                control expenses, and make smarter budgeting decisions.
+            </p>
+
+            <div class="about-card">
+                <div class="icon-circle"><i class="fas fa-coins"></i></div>
+                <div>
+                    <h4>Salary Tracking</h4>
+                    <p>Visualize how your income is distributed.</p>
+                </div>
+            </div>
+
+            <div class="about-card">
+                <div class="icon-circle"><i class="fas fa-chart-line"></i></div>
+                <div>
+                    <h4>Budget Analysis</h4>
+                    <p>Optimize your spending with clear insights.</p>
+                </div>
+            </div>
+
+            <a href="#" class="btn btn-primary rounded-pill px-4">Read More</a>
+        </div>
+
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-dark text-center py-4">
+    <p class="mb-0 text-white">
+        © {{ "now"|date("Y") }} Decide$ — All rights reserved
+    </p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

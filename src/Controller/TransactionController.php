@@ -37,20 +37,19 @@ class TransactionController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
-            // Date auto si nécessaire
-            if (method_exists($transaction, 'setDate')) {
-                $transaction->setDate(new \DateTime());
+            // 🔐 utilisateur connecté = propriétaire de la transaction
+            $user = $this->getUser();
+            if (!$user) {
+                $this->addFlash('error', 'Aucun utilisateur connecté.');
+                return $this->redirectToRoute('app_transaction_index');
             }
 
-            // Lier la transaction au user (si le formulaire fournit user)
-            $user = $transaction->getUser();
-            if ($user) {
-                // Important pour la relation OneToMany
-                if (method_exists($user, 'addTransaction')) {
-                    $user->addTransaction($transaction);
-                }
-            }
+            // Date auto
+            $transaction->setDate(new \DateTime());
+            $transaction->setUser($user);
+
+            // Lier transaction au user
+            $user->addTransaction($transaction);
 
             $em->persist($transaction);
             $em->flush();

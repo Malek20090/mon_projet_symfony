@@ -3,8 +3,6 @@
 namespace App\Form;
 
 use App\Entity\Transaction;
-use App\Entity\User;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
@@ -32,12 +30,8 @@ class TransactionType extends AbstractType
             ->add('moduleSource', null, [
                 'required' => false,
             ])
-            ->add('user', EntityType::class, [
-                'class' => User::class,
-                // ✅ Si "nom" n'existe pas dans User, remplace par "email" ou "id"
-                'choice_label' => 'nom',
-                'placeholder' => 'Choose user',
-            ])
+            // ❌ plus de choix d'utilisateur dans le formulaire :
+            // l'utilisateur sera toujours le user connecté dans le contrôleur
             ->add('date', DateType::class, [
                 'widget' => 'single_text',
                 'data' => new \DateTime(),

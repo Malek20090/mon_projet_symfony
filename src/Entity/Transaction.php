@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\TransactionRepository;
+use App\Entity\Expense;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -32,6 +33,10 @@ class Transaction
     #[ORM\ManyToOne(inversedBy: 'transactions')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
+
+    #[ORM\ManyToOne(targetEntity: Expense::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    private ?Expense $expense = null;
 
     public function __construct()
     {
@@ -106,6 +111,17 @@ class Transaction
     public function setUser(?User $user): self
     {
         $this->user = $user;
+        return $this;
+    }
+
+    public function getExpense(): ?Expense
+    {
+        return $this->expense;
+    }
+
+    public function setExpense(?Expense $expense): self
+    {
+        $this->expense = $expense;
         return $this;
     }
 }

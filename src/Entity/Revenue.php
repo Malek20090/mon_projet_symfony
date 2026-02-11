@@ -3,63 +3,51 @@
 namespace App\Entity;
 
 use App\Repository\RevenueRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: RevenueRepository::class)]
+#[ORM\Table(name: 'revenue')]
 class Revenue
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::FLOAT)]
-    private ?float $amount = null;
+    #[ORM\Column(name: 'amount', type: Types::FLOAT)]
+    private float $amount;
 
-    #[ORM\Column(length: 20)]
-    private ?string $type = null; // FIXE | VARIABLE
+    #[ORM\Column(name: 'type', length: 20)]
+    private string $type;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $receivedAt = null;
+    #[ORM\Column(name: 'received_at', type: Types::DATE_MUTABLE)]
+    private \DateTimeInterface $receivedAt;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[ORM\Column(name: 'description', type: Types::STRING, length: 255, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
-    private ?\DateTimeInterface $createdAt = null;
+    #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $createdAt;
 
-    #[ORM\ManyToOne(inversedBy: 'revenues')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $user = null;
-
-    /**
-     * @var Collection<int, Expense>
-     */
-    #[ORM\OneToMany(
-        mappedBy: 'revenue',
-        targetEntity: Expense::class,
-        cascade: ['persist', 'remove'],
-        orphanRemoval: true
-    )]
-    private Collection $expenses;
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'revenues')]
+    #[ORM\JoinColumn(name: 'user_id', nullable: false, onDelete: 'CASCADE')]
+    private User $user;
 
     public function __construct()
     {
-        $this->expenses = new ArrayCollection();
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->receivedAt = new \DateTime();
     }
 
-    /* ===================== GETTERS / SETTERS ===================== */
+    /* ================= GETTERS / SETTERS ================= */
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getAmount(): ?float
+    public function getAmount(): float
     {
         return $this->amount;
     }
@@ -70,7 +58,7 @@ class Revenue
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): string
     {
         return $this->type;
     }
@@ -81,7 +69,7 @@ class Revenue
         return $this;
     }
 
-    public function getReceivedAt(): ?\DateTimeInterface
+    public function getReceivedAt(): \DateTimeInterface
     {
         return $this->receivedAt;
     }
@@ -103,7 +91,7 @@ class Revenue
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): \DateTimeInterface
     {
         return $this->createdAt;
     }
@@ -114,7 +102,7 @@ class Revenue
         return $this;
     }
 
-    public function getUser(): ?User
+    public function getUser(): User
     {
         return $this->user;
     }
@@ -124,33 +112,5 @@ class Revenue
         $this->user = $user;
         return $this;
     }
-
-    /**
-     * @return Collection<int, Expense>
-     */
-    public function getExpenses(): Collection
-    {
-        return $this->expenses;
-    }
-
-    public function addExpense(Expense $expense): self
-    {
-        if (!$this->expenses->contains($expense)) {
-            $this->expenses->add($expense);
-            $expense->setRevenue($this);
-        }
-
-        return $this;
-    }
-
-    public function removeExpense(Expense $expense): self
-    {
-        if ($this->expenses->removeElement($expense)) {
-            if ($expense->getRevenue() === $this) {
-                $expense->setRevenue(null);
-            }
-        }
-
-        return $this;
-    }
 }
+

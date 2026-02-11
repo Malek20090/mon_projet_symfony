@@ -34,8 +34,8 @@ class Investissement
     #[ORM\JoinColumn(nullable: true)]
     private ?Objectif $objectif = null;
 
-    #[ORM\ManyToOne(inversedBy: 'investissements')]
-    #[ORM\JoinColumn(nullable: true)]
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id')]
     private ?User $user_id = null;
 
     public function getId(): ?int
