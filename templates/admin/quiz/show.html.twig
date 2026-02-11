@@ -1,0 +1,81 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails du Quiz{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <h3 class="mb-0"><i class="fas fa-question-circle"></i> Détails du Quiz</h3>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th>Question</th>
+                        <td>
+                            <div class="border p-3 rounded bg-light">
+                                <strong>{{ quiz.question }}</strong>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Choix de réponses</th>
+                        <td>
+                            {% if quiz.choixReponses|length > 0 %}
+                                <ul class="list-group">
+                                    {% for choix in quiz.choixReponses %}
+                                        <li class="list-group-item {% if choix == quiz.reponseCorrecte %}list-group-item-success{% endif %}">
+                                            <strong>{{ loop.index0 == 0 ? 'A' : (loop.index0 == 1 ? 'B' : (loop.index0 == 2 ? 'C' : 'D')) }}.</strong> {{ choix }}
+                                            {% if choix == quiz.reponseCorrecte %}
+                                                <span class="badge bg-success ms-2">Correcte</span>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="text-muted">Aucun choix défini</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Réponse Correcte</th>
+                        <td>
+                            <span class="badge bg-success fs-6">{{ quiz.reponseCorrecte }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Valeur en Points</th>
+                        <td>
+                            <span class="badge bg-primary fs-6">{{ quiz.pointsValeur }} points</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Cours associé</th>
+                        <td>
+                            {% if quiz.cours %}
+                                <a href="{{ path('admin_cours_show', {'id': quiz.cours.id}) }}" class="text-decoration-none">
+                                    <i class="fas fa-book"></i> {{ quiz.cours.titre }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Aucun cours associé</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ path('admin_quiz_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                </a>
+                <div>
+                    <a href="{{ path('admin_quiz_edit', {'id': quiz.id}) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

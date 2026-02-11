@@ -12,6 +12,9 @@
         <a href="{{ path('admin_casrelles_list') }}" class="nav-link {% if 'casrelles' in app.request.attributes.get('_route') %}active{% endif %}">
             <i class="fas fa-clipboard-list"></i> <span>Cas Réels</span>
         </a>
+        <a href="{{ path('admin_dashboard') }}" class="nav-link {% if 'admin_dashboard' in app.request.attributes.get('_route') or 'admin_cours' in app.request.attributes.get('_route') or 'admin_quiz' in app.request.attributes.get('_route') %}active{% endif %}">
+            <i class="fas fa-graduation-cap"></i> <span>Cours & Quiz</span>
+        </a>
     </nav>
 </div>
 

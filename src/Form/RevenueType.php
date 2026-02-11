@@ -38,11 +38,7 @@ class RevenueType extends AbstractType
                 'label' => 'Description',
                 'required' => false,
             ])
-            ->add('user', EntityType::class, [
-                'class' => User::class,
-                'choice_label' => fn(User $user) => $user->getNom() ?: $user->getEmail() ?: 'User #' . $user->getId(),
-                'label' => 'Utilisateur',
-            ])
+            
         ;
     }
 

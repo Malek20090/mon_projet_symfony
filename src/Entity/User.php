@@ -5,7 +5,6 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -27,9 +26,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private string $password;
 
-    /**
-     * ✅ UNIQUE source des rôles
-     */
     #[ORM\Column(type: 'json')]
     private array $roles = [];
 
@@ -71,7 +67,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        $roles[] = 'ROLE_USER'; // toujours garanti
+        $roles[] = 'ROLE_USER';
 
         return array_values(array_unique($roles));
     }
@@ -95,7 +91,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void {}
 
-    /* ================= GETTERS / SETTERS ================= */
+    /* ================= BASIC GETTERS ================= */
 
     public function getId(): ?int
     {
@@ -133,5 +129,128 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->soldeTotal = $solde;
         return $this;
+    }
+
+    /* ================= TRANSACTIONS ================= */
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function getTransactions(): Collection
+    {
+        return $this->transactions;
+    }
+
+    public function addTransaction(Transaction $transaction): self
+    {
+        if (!$this->transactions->contains($transaction)) {
+            $this->transactions->add($transaction);
+            $transaction->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTransaction(Transaction $transaction): self
+    {
+        if ($this->transactions->removeElement($transaction)) {
+            if ($transaction->getUser() === $this) {
+                $transaction->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /* ================= REVENUES ================= */
+
+    /**
+     * @return Collection<int, Revenue>
+     */
+    public function getRevenues(): Collection
+    {
+        return $this->revenues;
+    }
+
+    public function addRevenue(Revenue $revenue): self
+    {
+        if (!$this->revenues->contains($revenue)) {
+            $this->revenues->add($revenue);
+            $revenue->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRevenue(Revenue $revenue): self
+    {
+        if ($this->revenues->removeElement($revenue)) {
+            if ($revenue->getUser() === $this) {
+                $revenue->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /* ================= BUSINESS ================= */
+
+    public function recalculateSolde(): void
+    {
+        $total = 0;
+
+        foreach ($this->transactions as $transaction) {
+            if ($transaction->getType() === 'SAVING') {
+                $total += $transaction->getMontant();
+            } elseif ($transaction->getType() === 'EXPENSE') {
+                $total -= $transaction->getMontant();
+            }
+        }
+
+        $this->soldeTotal = $total;
+    }
+
+    /* ================= QUIZZES ================= */
+
+    /**
+     * @return Collection<int, Quiz>
+     */
+    public function getQuizzes(): Collection
+    {
+        return $this->quizzes;
+    }
+
+    public function addQuiz(Quiz $quiz): self
+    {
+        if (!$this->quizzes->contains($quiz)) {
+            $this->quizzes->add($quiz);
+            $quiz->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeQuiz(Quiz $quiz): self
+    {
+        if ($this->quizzes->removeElement($quiz)) {
+            if ($quiz->getUser() === $this) {
+                $quiz->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function __toString(): string
+    {
+        if ($this->nom && $this->email) {
+            return $this->nom . ' (' . $this->email . ')';
+        } elseif ($this->email) {
+            return $this->email;
+        } elseif ($this->nom) {
+            return $this->nom;
+        } else {
+            return 'User #' . $this->id;
+        }
     }
 }

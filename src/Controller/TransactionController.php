@@ -37,19 +37,13 @@ class TransactionController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // 🔐 utilisateur connecté = propriétaire de la transaction
-            $user = $this->getUser();
+
+            $user = $transaction->getUser();
+
             if (!$user) {
-                $this->addFlash('error', 'Aucun utilisateur connecté.');
+                $this->addFlash('error', 'Veuillez choisir un utilisateur.');
                 return $this->redirectToRoute('app_transaction_index');
             }
-
-            // Date auto
-            $transaction->setDate(new \DateTime());
-            $transaction->setUser($user);
-
-            // Lier transaction au user
-            $user->addTransaction($transaction);
 
             $em->persist($transaction);
             $em->flush();
@@ -59,6 +53,8 @@ class TransactionController extends AbstractController
                 $user->recalculateSolde();
                 $em->flush();
             }
+
+            $this->addFlash('success', 'Transaction ajoutée avec succès.');
 
             return $this->redirectToRoute('app_transaction_index');
         }
@@ -131,6 +127,8 @@ class TransactionController extends AbstractController
                 $user->recalculateSolde();
                 $em->flush();
             }
+
+            $this->addFlash('success', 'Transaction modifiée.');
 
             return $this->redirectToRoute('app_transaction_index');
         }

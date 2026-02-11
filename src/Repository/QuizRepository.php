@@ -11,33 +11,44 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class QuizRepository extends ServiceEntityRepository
 {
+    public const SORT_QUESTION = 'question';
+    public const SORT_POINTS = 'pointsValeur';
+    public const SORT_REPONSE = 'reponseCorrecte';
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Quiz::class);
     }
 
-    //    /**
-    //     * @return Quiz[] Returns an array of Quiz objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('q')
-    //            ->andWhere('q.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('q.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Recherche et tri des quiz (sans critère sur l'id).
+     *
+     * @param string|null $search Mot-clé (question, reponseCorrecte)
+     * @param string      $sortBy Champ de tri : question, pointsValeur, reponseCorrecte
+     * @param string      $order  ASC ou DESC
+     * @return Quiz[]
+     */
+    public function searchAndSort(?string $search = null, string $sortBy = self::SORT_QUESTION, string $order = 'ASC'): array
+    {
+        $qb = $this->createQueryBuilder('q');
 
-    //    public function findOneBySomeField($value): ?Quiz
-    //    {
-    //        return $this->createQueryBuilder('q')
-    //            ->andWhere('q.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        if ($search !== null && $search !== '') {
+            $qb->andWhere(
+                $qb->expr()->orX(
+                    $qb->expr()->like('q.question', ':search'),
+                    $qb->expr()->like('q.reponseCorrecte', ':search')
+                )
+            )->setParameter('search', '%' . $search . '%');
+        }
+
+        $allowedSort = [self::SORT_QUESTION, self::SORT_POINTS, self::SORT_REPONSE];
+        if (!\in_array($sortBy, $allowedSort, true)) {
+            $sortBy = self::SORT_QUESTION;
+        }
+        $order = strtoupper($order) === 'DESC' ? 'DESC' : 'ASC';
+
+        $qb->orderBy('q.' . $sortBy, $order);
+
+        return $qb->getQuery()->getResult();
+    }
 }

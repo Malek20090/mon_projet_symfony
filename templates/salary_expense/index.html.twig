@@ -70,6 +70,7 @@
         </div>
         <div class="icon-bubble"><i class="fa-solid fa-wallet"></i></div>
       </div>
+      
       <div class="stat-card">
         <div>
           <h4>Total Expenses</h4>
@@ -117,7 +118,7 @@
               <div class="mb-3">{{ form_row(formRevenue.type, { 'attr': { 'class': 'form-select' } }) }}</div>
               <div class="mb-3">{{ form_row(formRevenue.receivedAt, { 'attr': { 'class': 'form-control' }, 'label': 'Date' }) }}</div>
               <div class="mb-3">{{ form_row(formRevenue.description, { 'attr': { 'class': 'form-control' }, 'required': false }) }}</div>
-              <div class="mb-3">{{ form_row(formRevenue.user, { 'attr': { 'class': 'form-select' } }) }}</div>
+              
               <button type="submit" class="btn-primary2 w-100"><i class="fas fa-plus-circle me-2"></i>Ajouter</button>
             {{ form_end(formRevenue) }}
           </div>

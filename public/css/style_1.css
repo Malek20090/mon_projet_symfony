@@ -1047,3 +1047,142 @@ body.admin-body {
     color: #6a0dad;
     text-decoration: none;
 }
+/* =============================
+   STYLE IDENTIQUE IMPREVUS
+============================= */
+
+.card-soft {
+    background: #f8fafc;
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+    border: 1px solid #e2e8f0;
+}
+
+.search-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full {
+    grid-column: 1 / -1;
+}
+
+.input {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #3949ab;
+}
+
+/* TABLE */
+
+.table-wrapper {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.table-modern {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-modern thead {
+    background: #e2e8f0;
+}
+
+.table-modern th {
+    text-align: left;
+    padding: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.table-modern td {
+    padding: 16px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+
+.table-modern tbody tr:hover {
+    background: #f1f5f9;
+}
+
+/* BADGES */
+
+.badge {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+}
+
+.badge-success {
+    background: #16a34a;
+}
+
+.badge-danger {
+    background: #dc2626;
+}
+
+.badge-info {
+    background: #2563eb;
+}
+
+/* ACTION BUTTONS */
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #e0e7ff;
+    color: #3949ab;
+    text-decoration: none;
+    margin: 0 4px;
+    transition: 0.2s;
+}
+
+.btn-icon:hover {
+    background: #c7d2fe;
+}
+
+.btn-danger-icon {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-danger-icon:hover {
+    background: #fecaca;
+}
+
+.text-muted {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.amount {
+    font-weight: 600;
+}
+
+.empty {
+    text-align: center;
+    padding: 30px;
+    color: #64748b;
+}

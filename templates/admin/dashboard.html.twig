@@ -1,6 +1,136 @@
 {% extends 'admin/layout.html.twig' %}
 
+{% block title %}Tableau de Bord - Administration{% endblock %}
+
 {% block content %}
-    <h1>Dashboard Admin</h1>
-    <p>Bienvenue dans l’espace admin Decide$</p>
+<div class="container mt-5">
+    <h1 class="display-4 mb-4">Tableau de Bord - Administration</h1>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card shadow border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-muted">Total Cours</h5>
+                            <h2 class="mb-0 text-primary">{{ cours_count }}</h2>
+                        </div>
+                        <div class="display-1 text-primary opacity-25">
+                            <i class="fas fa-book"></i>
+                        </div>
+                    </div>
+                    <a href="{{ path('admin_cours_index') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-list"></i> Voir tous les cours
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card shadow border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title text-muted">Total Quiz</h5>
+                            <h2 class="mb-0 text-success">{{ quiz_count }}</h2>
+                        </div>
+                        <div class="display-1 text-success opacity-25">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                    </div>
+                    <a href="{{ path('admin_quiz_index') }}" class="btn btn-success mt-3">
+                        <i class="fas fa-list"></i> Voir tous les quiz
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Actions Rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ path('admin_cours_new') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Nouveau Cours
+                        </a>
+                        <a href="{{ path('admin_quiz_new') }}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Nouveau Quiz
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cours récents -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Cours Récents</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_cours|length > 0 %}
+                        <div class="list-group">
+                            {% for cour in recent_cours %}
+                                <a href="{{ path('admin_cours_show', {'id': cour.id}) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ cour.titre }}</h6>
+                                    </div>
+                                    <small class="text-muted">{{ cour.typeMedia }}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">Aucun cours récent</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz récents -->
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Quiz Récents</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_quizzes|length > 0 %}
+                        <div class="list-group">
+                            {% for quiz in recent_quizzes %}
+                                <a href="{{ path('admin_quiz_show', {'id': quiz.id}) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ quiz.question|slice(0, 50) }}{% if quiz.question|length > 50 %}...{% endif %}</h6>
+                                    </div>
+                                    <small class="text-muted">{{ quiz.pointsValeur }} points</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">Aucun quiz récent</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="mt-4">
+        <a href="{{ path('admin_index') }}" class="btn btn-secondary">
+            <i class="fas fa-home"></i> Retour à l'accueil
+        </a>
+    </div>
+</div>
 {% endblock %}

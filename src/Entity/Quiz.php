@@ -17,8 +17,9 @@ class Quiz
     #[ORM\Column(type: Types::TEXT)]
     private ?string $question = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::JSON)]
     private array $choixReponses = [];
+
 
     #[ORM\Column(length: 100)]
     private ?string $reponseCorrecte = null;
@@ -27,11 +28,11 @@ class Quiz
     private ?int $pointsValeur = null;
 
     #[ORM\ManyToOne(inversedBy: 'quizzes')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Cours $cours = null;
 
     #[ORM\ManyToOne(inversedBy: 'quizzes')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?User $user = null;
 
     public function getId(): ?int
@@ -44,7 +45,7 @@ class Quiz
         return $this->question;
     }
 
-    public function setQuestion(string $question): static
+    public function setQuestion(?string $question): static
     {
         $this->question = $question;
 
@@ -68,7 +69,7 @@ class Quiz
         return $this->reponseCorrecte;
     }
 
-    public function setReponseCorrecte(string $reponseCorrecte): static
+    public function setReponseCorrecte(?string $reponseCorrecte): static
     {
         $this->reponseCorrecte = $reponseCorrecte;
 
@@ -80,7 +81,7 @@ class Quiz
         return $this->pointsValeur;
     }
 
-    public function setPointsValeur(int $pointsValeur): static
+    public function setPointsValeur(?int $pointsValeur): static
     {
         $this->pointsValeur = $pointsValeur;
 

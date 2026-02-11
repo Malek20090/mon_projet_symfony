@@ -30,7 +30,7 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
         }
 
         if (in_array('ROLE_ETUDIANT', $roles)) {
-            return new RedirectResponse($this->router->generate('etudiant_dashboard'));
+            return new RedirectResponse($this->router->generate('student_cours_index'));
         }
 
         // sécurité

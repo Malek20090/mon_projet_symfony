@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ cour.titre }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('css/home.css') }}" rel="stylesheet">
+    <style>
+        .course-content {
+            background: #fff;
+            padding: 2rem;
+            line-height: 1.8;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .course-content h1, .course-content h2, .course-content h3 {
+            color: #1e3fa3;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .course-content h2 {
+            color: #d32f2f;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .course-content strong {
+            font-weight: bold;
+        }
+        .course-content .note {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .course-content .note strong {
+            color: #2e7d32;
+        }
+        .media-container {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .media-container.video {
+            background: #000;
+        }
+        .media-container.image {
+            background: #f5f5f5;
+            padding: 0;
+            text-align: center;
+        }
+        .media-container iframe {
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+        }
+        .media-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        .terminal-prompt {
+            color: #4caf50;
+        }
+        .terminal-path {
+            color: #2196f3;
+        }
+        .terminal-command {
+            color: #fff;
+        }
+        .terminal-output {
+            color: #fff;
+            background: rgba(255, 235, 59, 0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('student_cours_index') }}">Accueil</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('student_cours_index') }}">Cours</a></li>
+            <li class="breadcrumb-item active">{{ cour.titre }}</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Titre du cours -->
+            <h1 class="mb-4" style="color: #1e3fa3; font-weight: bold;">{{ cour.titre }}</h1>
+
+            <!-- Contenu du cours -->
+            <div class="course-content">
+                {{ cour.contenuTexte|raw|nl2br }}
+            </div>
+
+            <!-- Média associé intégré -->
+            {% if cour.urlMedia %}
+                <div class="media-container {% if cour.typeMedia == 'video' %}video{% elseif cour.typeMedia == 'image' %}image{% endif %}">
+                    {% if cour.typeMedia == 'video' %}
+                        <div class="ratio ratio-16x9">
+                            {% if 'youtube.com' in cour.urlMedia or 'youtu.be' in cour.urlMedia %}
+                                {% set videoId = cour.urlMedia|split('v=')[1]|split('&')[0] %}
+                                <iframe src="https://www.youtube.com/embed/{{ videoId }}" allowfullscreen style="border-radius: 8px;"></iframe>
+                            {% elseif 'vimeo.com' in cour.urlMedia %}
+                                {% set videoId = cour.urlMedia|split('/')|last %}
+                                <iframe src="https://player.vimeo.com/video/{{ videoId }}" allowfullscreen style="border-radius: 8px;"></iframe>
+                            {% else %}
+                                <video controls style="width: 100%; border-radius: 8px;">
+                                    <source src="{{ cour.urlMedia }}" type="video/mp4">
+                                    Votre navigateur ne supporte pas la lecture de vidéos.
+                                </video>
+                            {% endif %}
+                        </div>
+                    {% elseif cour.typeMedia == 'image' %}
+                        <img src="{{ cour.urlMedia }}" class="img-fluid" alt="{{ cour.titre }}" style="max-width: 100%; height: auto; border-radius: 8px;">
+                    {% else %}
+                        <div class="p-3 text-white">
+                            <p class="mb-2">Média associé :</p>
+                            <a href="{{ cour.urlMedia }}" target="_blank" class="btn btn-light">
+                                <i class="fas fa-external-link-alt"></i> Ouvrir le média
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <!-- Navigation -->
+            <div class="text-center mt-4 mb-4">
+                {% if cour.quizzes|length > 0 %}
+                    <a href="{{ path('student_cours_quiz', {'id': cour.id}) }}" class="btn btn-success me-2">
+                        <i class="fas fa-question-circle"></i> Quiz du cours ({{ cour.quizzes|length }})
+                    </a>
+                {% endif %}
+                <a href="{{ path('student_cours_index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Retour à la liste des cours
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
