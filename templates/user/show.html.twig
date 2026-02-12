@@ -1,55 +1,240 @@
-﻿{% extends 'admin/layout.html.twig' %}
+{% extends 'admin/layout.html.twig' %}
 
-{% block title %}User{% endblock %}
+{% block title %}User #{{ user.id }} | Decide${% endblock %}
 
 {% block content %}
-<h1>User details</h1>
-<div style="text-align:center; margin-bottom:20px;">
-    <img src="{{ asset('uploads/users/chat1.png') }}"
-         alt="Default photo"
-         style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:2px solid #ddd;">
+<div class="admin-page user-show-page">
+    <div class="page-header-card">
+        <div>
+            <h1>User Profile #{{ user.id }}</h1>
+            <p class="mb-0">Detailed account information and role overview</p>
+        </div>
+        <a href="{{ path('app_user_index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to list
+        </a>
+    </div>
+
+    <div class="card-custom user-profile-card mb-3">
+        <div class="user-profile-top">
+            <div class="user-profile-avatar-wrap">
+                <img src="{{ asset(user.image ? 'uploads/users/' ~ user.image : 'uploads/users/chat1.png') }}" alt="User photo" class="user-profile-avatar" width="84" height="84">
+                <a href="{{ path('app_user_edit', {'id': user.id}) }}" class="btn btn-sm btn-outline-primary change-photo-btn">
+                    <i class="fas fa-camera me-1"></i>Changer la photo
+                </a>
+            </div>
+            <div class="user-profile-headline">
+                <h2>{{ user.nom ?: 'Unknown user' }}</h2>
+                <p class="mb-2">{{ user.email }}</p>
+                <div class="user-profile-badges">
+                    {% if 'ROLE_ADMIN' in user.roles %}
+                        <span class="badge badge-admin">Admin</span>
+                    {% endif %}
+                    {% if 'ROLE_SALARY' in user.roles %}
+                        <span class="badge badge-salary">Salary</span>
+                    {% endif %}
+                    {% if 'ROLE_ETUDIANT' in user.roles %}
+                        <span class="badge badge-etudiant">Student</span>
+                    {% endif %}
+                    {% if user.roles is empty %}
+                        <span class="badge bg-secondary">No role</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="user-profile-kpi">
+                <span class="label">Current Balance</span>
+                <span class="value">{{ user.soldeTotal|number_format(2, '.', ' ') }} TND</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-custom mb-3">
+        <h5 class="mb-3"><i class="fas fa-id-card text-primary me-2"></i>User details</h5>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 user-details-table">
+                <tbody>
+                    <tr><th>ID</th><td>{{ user.id }}</td></tr>
+                    <tr><th>Name</th><td>{{ user.nom ?: '-' }}</td></tr>
+                    <tr><th>Email</th><td>{{ user.email }}</td></tr>
+                    <tr><th>Roles</th><td>{{ user.roles|join(', ') ?: '-' }}</td></tr>
+                    <tr><th>Balance</th><td class="fw-bold text-primary">{{ user.soldeTotal|number_format(2, '.', ' ') }} TND</td></tr>
+                    <tr><th>Registration date</th><td>{{ user.dateInscription ? user.dateInscription|date('d/m/Y') : '-' }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-custom mb-3">
+        <h5 class="mb-3"><i class="fas fa-chart-simple text-primary me-2"></i>Statistics</h5>
+        <div class="user-stats-grid mb-3">
+            <div class="user-stat-tile">
+                <span class="k">Total transactions</span>
+                <strong>{{ stats.total_transactions }}</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Total revenues</span>
+                <strong>{{ stats.total_revenues|number_format(2, '.', ' ') }} TND</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Total expenses</span>
+                <strong>{{ stats.total_expenses|number_format(2, '.', ' ') }} TND</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Savings transactions</span>
+                <strong>{{ stats.saving_count }}</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Expense transactions</span>
+                <strong>{{ stats.expense_tx_count }}</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Investment transactions</span>
+                <strong>{{ stats.investment_count }}</strong>
+            </div>
+            <div class="user-stat-tile user-stat-wide">
+                <span class="k">Last activity</span>
+                <strong>{{ stats.last_activity_date ? stats.last_activity_date|date('d/m/Y') : '-' }}</strong>
+            </div>
+        </div>
+
+        <div class="user-smart-kpis">
+            <div class="user-smart-kpi">
+                <span class="k">Net cash flow</span>
+                <strong class="{{ stats.net_cash_flow >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ stats.net_cash_flow|number_format(2, '.', ' ') }} TND
+                </strong>
+            </div>
+            <div class="user-smart-kpi">
+                <span class="k">Financial health</span>
+                <strong>{{ stats.financial_health }}</strong>
+            </div>
+            <div class="user-smart-kpi">
+                <span class="k">Savings rate</span>
+                <strong>{{ stats.savings_rate|number_format(1, '.', ' ') }}%</strong>
+            </div>
+        </div>
+
+        <div class="user-charts-grid mt-3">
+            <div class="user-chart-card">
+                <h6 class="mb-2">Revenue vs Expense Trend (6 months)</h6>
+                <canvas id="userTrendChart"></canvas>
+            </div>
+            <div class="user-chart-card">
+                <h6 class="mb-2">Transaction Distribution</h6>
+                <canvas id="userDistributionChart"></canvas>
+            </div>
+        </div>
+
+        <div class="user-insights mt-3">
+            <h6 class="mb-2"><i class="fas fa-lightbulb text-warning me-2"></i>Smart insights</h6>
+            <ul class="mb-0">
+                {% for line in insights %}
+                    <li>{{ line }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="card-custom mb-3">
+        <h5 class="mb-3"><i class="fas fa-cloud-arrow-down text-primary me-2"></i>Live API Data</h5>
+        {% if api_error %}
+            <div class="alert alert-warning mb-0">{{ api_error }}</div>
+        {% else %}
+            <div class="user-api-grid">
+                <div class="user-api-tile">
+                    <span class="k">Bitcoin (BTC)</span>
+                    <strong>${{ api_prices.bitcoin.usd|default(0)|number_format(2, '.', ',') }}</strong>
+                </div>
+                <div class="user-api-tile">
+                    <span class="k">Ethereum (ETH)</span>
+                    <strong>${{ api_prices.ethereum.usd|default(0)|number_format(2, '.', ',') }}</strong>
+                </div>
+                <div class="user-api-tile">
+                    <span class="k">Tether (USDT)</span>
+                    <strong>${{ api_prices.tether.usd|default(0)|number_format(4, '.', ',') }}</strong>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="card-custom">
+        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <div>
+                <h6 class="mb-1 text-danger"><i class="fas fa-triangle-exclamation me-2"></i>Danger zone</h6>
+                <small class="text-muted">Deleting this user is permanent.</small>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ path('app_user_edit', {'id': user.id}) }}" class="btn btn-primary">
+                    <i class="fas fa-pen me-2"></i>Edit
+                </a>
+                <form method="post" action="{{ path('app_user_delete', {'id': user.id}) }}" onsubmit="return confirm('Delete this user?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
+                    <button class="btn btn-danger" type="submit">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
-<table class="table">
-    <tbody>
-        <tr>    
-            <th>ID</th>
-            <td>{{ user.id }}</td>
-        </tr>
-        <tr>
-            <th>Name</th>
-            <td>{{ user.nom }}</td>
-        </tr>
-        <tr>
-            <th>Email</th>
-            <td>{{ user.email }}</td>
-        </tr>
-        <tr>
-    <th>Role</th>
-    <td>
-        {{ user.roles | join(', ') }}
-    </td>
-</tr>
-        <tr>
-            <th>Solde</th>
-            <td>{{ user.soldeTotal }}</td>
-        </tr>
-        <tr>
-            <th>Registration date</th>
-            <td>{{ user.dateInscription ? user.dateInscription|date('Y-m-d') : '' }}</td>
-        </tr>
-    </tbody>
-</table>
-
-<a href="{{ path('app_user_index') }}" class="btn-primary">Back</a>
-<a href="{{ path('app_user_edit', {'id': user.id}) }}" class="btn-edit">Edit</a>
-
-<form method="post"
-      action="{{ path('app_user_delete', {'id': user.id}) }}"
-      style="display:inline-block">
-    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
-    <button class="btn-delete">Delete</button>
-</form>
 {% endblock %}
 
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const trendEl = document.getElementById('userTrendChart');
+    const distEl = document.getElementById('userDistributionChart');
+    if (!trendEl || !distEl || typeof Chart === 'undefined') return;
 
+    const chartData = {{ chart_data|json_encode|raw }};
 
+    new Chart(trendEl, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [
+                {
+                    label: 'Revenues',
+                    data: chartData.revenues,
+                    borderColor: '#16a34a',
+                    backgroundColor: 'rgba(22, 163, 74, 0.15)',
+                    fill: true,
+                    tension: 0.35
+                },
+                {
+                    label: 'Expenses',
+                    data: chartData.expenses,
+                    borderColor: '#dc2626',
+                    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+                    fill: true,
+                    tension: 0.35
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    new Chart(distEl, {
+        type: 'doughnut',
+        data: {
+            labels: ['Saving', 'Expense', 'Investment'],
+            datasets: [{
+                data: chartData.distribution,
+                backgroundColor: ['#16a34a', '#dc2626', '#2563eb'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+});
+</script>
+{% endblock %}

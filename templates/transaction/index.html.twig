@@ -9,7 +9,7 @@
             <h1>Transactions</h1>
             <p class="mb-0">History of financial movements (income, expenses, savings)</p>
         </div>
-        <a href="{{ path('app_transaction_new') }}" class="btn btn-primary">
+        <a href="{{ path('app_transaction_new') }}" class="btn btn-primary tx-btn-main">
             <i class="fas fa-plus me-2"></i>Nouvelle transaction
         </a>
     </div>
@@ -34,7 +34,14 @@
                 <input type="date" id="to" name="to" class="form-control">
             </div>
             <div class="col-auto">
-                <button class="btn btn-primary"><i class="fas fa-filter me-1"></i>Filtrer</button>
+                <div class="tx-filter-actions">
+                    <button class="btn btn-primary tx-btn-filter" type="submit">
+                        <i class="fas fa-filter me-1"></i>Filtrer
+                    </button>
+                    <a href="{{ path('app_transaction_index') }}" class="btn btn-outline-secondary tx-btn-reset">
+                        <i class="fas fa-rotate-left me-1"></i>Reset
+                    </a>
+                </div>
             </div>
         </form>
     </div>
@@ -63,17 +70,17 @@
                                 <td>{{ transaction.date ? transaction.date|date('d/m/Y') : '' }}</td>
                                 <td>{{ transaction.description }}</td>
                                 <td>{{ transaction.user ? transaction.user.nom : '-' }}</td>
-                                <td>
-                                    <a href="{{ path('app_transaction_edit', {id: transaction.id}) }}" class="btn btn-sm btn-outline-primary" title="Edit">
-                                        <i class="fas fa-edit"></i>
+                                <td class="tx-actions-col">
+                                    <a href="{{ path('app_transaction_edit', {id: transaction.id}) }}" class="btn btn-sm btn-outline-primary tx-action-btn" title="Edit">
+                                        <i class="fas fa-edit me-1"></i>Edit
                                     </a>
                                     <form method="post"
                                           action="{{ path('app_transaction_delete', {id: transaction.id}) }}"
                                           class="d-inline"
                                           onsubmit="return confirm('Delete cette transaction ?');">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ transaction.id) }}">
-                                        <button class="btn btn-sm btn-outline-danger" title="Delete">
-                                            <i class="fas fa-trash"></i>
+                                        <button class="btn btn-sm btn-outline-danger tx-action-btn" type="submit" title="Delete">
+                                            <i class="fas fa-trash me-1"></i>Delete
                                         </button>
                                     </form>
                                 </td>

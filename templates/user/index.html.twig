@@ -1,101 +1,123 @@
-﻿{% extends 'admin/layout.html.twig' %}
+{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Users{% endblock %}
+{% block title %}Users | Decide${% endblock %}
 
 {% block content %}
-
-<h1>Users</h1>
-
-{# ================= ADMIN SECTION ================= #}
-<h2>Administrateurs</h2>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Solde</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% set hasAdmin = false %}
-
-        {% for user in users %}
-            {% if 'ROLE_ADMIN' in user.roles %}
-                {% set hasAdmin = true %}
-                <tr>
-                    <td>{{ user.nom }}</td>
-                    <td>{{ user.email }}</td>
-                    <td><span class="badge badge-danger">Admin</span></td>
-                    <td>{{ user.soldeTotal }}</td>
-                    <td>
-                        <a href="{{ path('app_user_show', {'id': user.id}) }}">Show</a>
-                        <a href="{{ path('app_user_edit', {'id': user.id}) }}">Edit</a>
-                    </td>
-                </tr>
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Users</h1>
+            <p class="mb-0">Manage admin and user accounts from one workspace</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            {% if current_admin_id %}
+                <a href="{{ path('app_user_show', {'id': current_admin_id}) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-user-shield me-2"></i>My profile
+                </a>
+                <a href="{{ path('app_user_edit', {'id': current_admin_id}) }}" class="btn btn-primary">
+                    <i class="fas fa-pen-to-square me-2"></i>Edit my profile
+                </a>
             {% endif %}
-        {% endfor %}
+            <a href="{{ path('app_user_new') }}" class="btn btn-success">
+                <i class="fas fa-user-plus me-2"></i>Add user
+            </a>
+        </div>
+    </div>
 
-        {% if not hasAdmin %}
-            <tr>
-                <td colspan="5">No administrateur</td>
-            </tr>
-        {% endif %}
-    </tbody>
-</table>
-
-
-{# ================= OTHER USERS SECTION ================= #}
-<h2 class="section-title">Utilisateurs</h2>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Solde</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% set hasUsers = false %}
-    {% for user in users %}
-        {% if 'ROLE_ADMIN' not in user.roles %}
-            {% set hasUsers = true %}
-            <tr>
-                <td>{{ user.nom }}</td>
-                <td>{{ user.email }}</td>
-                <td>
-                    {% if 'ROLE_SALARY' in user.roles %}
-                        <span class="badge badge-salary">Salary</span>
-                    {% elseif 'ROLE_ETUDIANT' in user.roles %}
-                        <span class="badge badge-student">Student</span>
+    <div class="card-custom mb-3">
+        <h5 class="mb-3"><i class="fas fa-user-shield text-primary me-2"></i>Administrators</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Balance</th>
+                        <th style="width: 220px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in admins %}
+                        <tr>
+                            <td>
+                                <div class="user-name-cell">
+                                    <img
+                                        src="{{ asset(admin.image ? 'uploads/users/' ~ admin.image : 'uploads/users/chat1.png') }}"
+                                        alt="{{ admin.nom ?: 'User' }}"
+                                        class="user-list-avatar"
+                                    >
+                                    <span>{{ admin.nom ?: '-' }}</span>
+                                </div>
+                            </td>
+                            <td>{{ admin.email }}</td>
+                            <td><span class="badge badge-admin">Admin</span></td>
+                            <td>{{ admin.soldeTotal|number_format(2, '.', ' ') }} TND</td>
+                            <td>
+                                <a href="{{ path('app_user_show', {'id': admin.id}) }}" class="btn btn-sm btn-outline-primary">Show</a>
+                                <a href="{{ path('app_user_edit', {'id': admin.id}) }}" class="btn btn-sm btn-primary">Edit</a>
+                            </td>
+                        </tr>
                     {% else %}
-                        {{ user.roles|join(', ') }}
-                    {% endif %}
-                </td>
-                <td>{{ user.soldeTotal }}</td>
-                <td>
-                    <a href="{{ path('app_user_show', {'id': user.id}) }}">Show</a>
-                    <a href="{{ path('app_user_edit', {'id': user.id}) }}">Edit</a>
-                </td>
-            </tr>
-        {% endif %}
-    {% endfor %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-3">No administrator found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-    {% if not hasUsers %}
-        <tr>
-            <td colspan="5">No utilisateur</td>
-        </tr>
-    {% endif %}
-    </tbody>
-</table>
-
-<a href="{{ path('app_user_new') }}" class="btn-primary">Add User</a>
-
+    <div class="card-custom">
+        <h5 class="mb-3"><i class="fas fa-users text-primary me-2"></i>Users</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Balance</th>
+                        <th style="width: 220px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>
+                                <div class="user-name-cell">
+                                    <img
+                                        src="{{ asset(user.image ? 'uploads/users/' ~ user.image : 'uploads/users/chat1.png') }}"
+                                        alt="{{ user.nom ?: 'User' }}"
+                                        class="user-list-avatar"
+                                    >
+                                    <span>{{ user.nom ?: '-' }}</span>
+                                </div>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if 'ROLE_SALARY' in user.roles %}
+                                    <span class="badge badge-salary">Salary</span>
+                                {% elseif 'ROLE_ETUDIANT' in user.roles %}
+                                    <span class="badge badge-student">Student</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ user.roles|join(', ') ?: 'User' }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.soldeTotal|number_format(2, '.', ' ') }} TND</td>
+                            <td>
+                                <a href="{{ path('app_user_show', {'id': user.id}) }}" class="btn btn-sm btn-outline-primary">Show</a>
+                                <a href="{{ path('app_user_edit', {'id': user.id}) }}" class="btn btn-sm btn-primary">Edit</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-3">No user found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}
-
-

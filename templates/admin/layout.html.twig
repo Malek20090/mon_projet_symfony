@@ -11,28 +11,34 @@
 </head>
 <body class="admin-body">
 
-<div class="admin-container">
+<div class="admin-container" id="adminContainer">
+    <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Open menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <!-- SIDEBAR (même style que Transactions, Reports, Users) -->
-    <aside class="sidebar">
-        <div class="brand">
-            Decide<span>$</span>
+    <aside class="sidebar" id="adminSidebar">
+        <div class="sidebar-top">
+            <div class="brand">
+                Decide<span>$</span>
+            </div>
         </div>
 
-        <nav>
+        <nav class="sidebar-nav">
             {% set _route = app.request.attributes.get('_route') ?? '' %}
             <a href="{{ path('admin_index') }}"
                class="{{ _route == 'admin_index' ? 'active' : '' }}">
-                <i class="fas fa-home"></i> <span>Dashboard</span>
+                <i class="fas fa-gauge-high"></i> <span>Dashboard</span>
             </a>
             <a href="{{ path('app_user_index') }}"
                class="{{ _route starts with 'app_user' ? 'active' : '' }}">
-                <i class="fas fa-users"></i> <span>Utilisateurs</span>
+                <i class="fas fa-users"></i> <span>Users</span>
             </a>
 
             <a href="{{ path('app_transaction_index') }}"
                class="{{ _route starts with 'app_transaction' ? 'active' : '' }}">
-                <i class="fas fa-file-invoice-dollar"></i> <span>Transactions</span>
+                <i class="fas fa-arrow-right-arrow-left"></i> <span>Transactions</span>
             </a>
 
             <a href="{{ path('admin_dashboard') }}"
@@ -47,44 +53,51 @@
 
             <a href="{{ path('admin_casrelles_list') }}"
                class="{{ 'admin_casrelles' in _route ? 'active' : '' }}">
-                <i class="fas fa-clipboard-list"></i> <span>Real Case</span>
+                <i class="fas fa-clipboard-check"></i> <span>Real Cases</span>
             </a>
 
             <a href="{{ path('app_revenue_index') }}"
                class="{{ _route starts with 'app_revenue' ? 'active' : '' }}">
-                <i class="fas fa-coins"></i> <span>Revenus</span>
+                <i class="fas fa-sack-dollar"></i> <span>Revenues</span>
             </a>
 
             <a href="{{ path('app_expense_index') }}"
                class="{{ _route starts with 'app_expense' ? 'active' : '' }}">
-                <i class="fas fa-wallet"></i> <span>Expenses</span>
+                <i class="fas fa-credit-card"></i> <span>Expenses</span>
             </a>
 
             <a href="{{ path('app_reports') }}"
                class="{{ _route starts with 'app_reports' ? 'active' : '' }}">
-                <i class="fas fa-chart-line"></i> <span>Rapports</span>
+                <i class="fas fa-chart-column"></i> <span>Reports</span>
             </a>
 
             <a href="{{ path('admin_investissements') }}"
                class="{{ _route starts with 'admin_investissements' ? 'active' : '' }}">
-                <i class="fas fa-chart-line"></i> <span>Investissements</span>
+                <i class="fas fa-chart-line"></i> <span>Investments</span>
             </a>
            
             <a href="{{ path('admin_objectifs') }}"
                class="{{ _route starts with 'admin_objectifs' ? 'active' : '' }}">
-                <i class="fas fa-bullseye"></i> <span>Objectifs</span>
+                <i class="fas fa-bullseye"></i> <span>Objectives</span>
             </a>
            
            <a href="{{ path('admin_goals_admin_goals_index')
 }}"
    class="{{ _route starts with 'admin_goals' ? 'active' : '' }}">
-    <i class="fas fa-bullseye"></i> <span>Goals</span>
+    <i class="fas fa-flag-checkered"></i> <span>Goals</span>
 </a>
 
           
         </nav>
 
         <div class="sidebar-footer">
+            <div class="admin-identity">
+                <img src="{{ asset(app.user and app.user.image ? 'uploads/users/' ~ app.user.image : 'uploads/users/chat1.png') }}" alt="Admin profile" class="admin-identity-avatar">
+                <div class="admin-identity-meta">
+                    <div class="admin-identity-name">{{ app.user ? (app.user.nom ?: app.user.email) : 'Administrator' }}</div>
+                    <div class="admin-identity-role">Admin Panel</div>
+                </div>
+            </div>
             <a href="{{ path('app_logout') }}">
                 <i class="fas fa-sign-out-alt"></i> <span>Sign out</span>
             </a>
@@ -125,6 +138,37 @@
                 }, false);
             });
         }, false);
+    })();
+</script>
+<script>
+    (function () {
+        const container = document.getElementById('adminContainer');
+        const toggle = document.getElementById('sidebarToggle');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        const sidebarLinks = document.querySelectorAll('.sidebar-nav a, .sidebar-footer a');
+
+        if (!container || !toggle || !backdrop) return;
+
+        function closeSidebar() {
+            container.classList.remove('sidebar-open');
+        }
+
+        function toggleSidebar() {
+            container.classList.toggle('sidebar-open');
+        }
+
+        toggle.addEventListener('click', toggleSidebar);
+        backdrop.addEventListener('click', closeSidebar);
+
+        sidebarLinks.forEach((link) => {
+            link.addEventListener('click', function () {
+                if (window.innerWidth <= 1100) closeSidebar();
+            });
+        });
+
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 1100) closeSidebar();
+        });
     })();
 </script>
 {% block javascripts %}{% endblock %}

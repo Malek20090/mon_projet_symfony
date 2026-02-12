@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\RevenueRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -34,10 +36,14 @@ class Revenue
     #[ORM\JoinColumn(name: 'user_id', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
+    #[ORM\OneToMany(mappedBy: 'revenue', targetEntity: Expense::class, orphanRemoval: true)]
+    private Collection $expenses;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
         $this->receivedAt = new \DateTime();
+        $this->expenses = new ArrayCollection();
     }
 
     /* ================= GETTERS / SETTERS ================= */
@@ -110,6 +116,35 @@ class Revenue
     public function setUser(User $user): self
     {
         $this->user = $user;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Expense>
+     */
+    public function getExpenses(): Collection
+    {
+        return $this->expenses;
+    }
+
+    public function addExpense(Expense $expense): self
+    {
+        if (!$this->expenses->contains($expense)) {
+            $this->expenses->add($expense);
+            $expense->setRevenue($this);
+        }
+
+        return $this;
+    }
+
+    public function removeExpense(Expense $expense): self
+    {
+        if ($this->expenses->removeElement($expense)) {
+            if ($expense->getRevenue() === $this) {
+                $expense->setRevenue(null);
+            }
+        }
+
         return $this;
     }
 }

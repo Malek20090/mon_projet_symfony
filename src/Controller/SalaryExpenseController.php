@@ -26,47 +26,32 @@ class SalaryExpenseController extends AbstractController
         EntityManagerInterface $entityManager
     ): Response {
         $user = $this->getUser();
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
 
-if (!$user) {
-    return $this->redirectToRoute('app_login');
-}
+        $revenues = $revenueRepository->findBy(['user' => $user], ['receivedAt' => 'DESC']);
+        $expenses = $expenseRepository->findBy(['user' => $user], ['expenseDate' => 'DESC']);
 
-// ✅ On récupère uniquement les données du user connecté
-$revenues = $revenueRepository->findBy(
-    ['user' => $user],
-    ['receivedAt' => 'DESC']
-);
-
-$expenses = $expenseRepository->findBy(
-    ['user' => $user],
-    ['expenseDate' => 'DESC']
-);
-
-        // -------- REVENUS : Tri (2 critères) ou Recherche --------
         $revenueSearch = trim((string) $request->query->get('revenue_search', ''));
-        $revenueSort1 = $request->query->get('revenue_sort1', 'receivedAt');
-        $revenueDir1 = $request->query->get('revenue_dir1', 'DESC');
-        $revenueSort2 = $request->query->get('revenue_sort2', 'amount');
-        $revenueDir2 = $request->query->get('revenue_dir2', 'DESC');
+        $revenueSort1 = (string) $request->query->get('revenue_sort1', 'receivedAt');
+        $revenueDir1 = strtoupper((string) $request->query->get('revenue_dir1', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
+        $revenueSort2 = (string) $request->query->get('revenue_sort2', 'amount');
+        $revenueDir2 = strtoupper((string) $request->query->get('revenue_dir2', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
 
-       
-
-        // -------- DÉPENSES : Tri (2 critères) ou Recherche --------
         $expenseSearch = trim((string) $request->query->get('expense_search', ''));
-        $expenseSort1 = $request->query->get('expense_sort1', 'expenseDate');
-        $expenseDir1 = $request->query->get('expense_dir1', 'DESC');
-        $expenseSort2 = $request->query->get('expense_sort2', 'amount');
-        $expenseDir2 = $request->query->get('expense_dir2', 'DESC');
-
-       
+        $expenseSort1 = (string) $request->query->get('expense_sort1', 'expenseDate');
+        $expenseDir1 = strtoupper((string) $request->query->get('expense_dir1', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
+        $expenseSort2 = (string) $request->query->get('expense_sort2', 'amount');
+        $expenseDir2 = strtoupper((string) $request->query->get('expense_dir2', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
 
         $totalIncome = array_sum(array_map(fn(Revenue $r) => $r->getAmount(), $revenues));
         $totalExpenses = array_sum(array_map(fn(Expense $e) => $e->getAmount(), $expenses));
         $netBalance = $totalIncome - $totalExpenses;
 
         $lastTransactionDate = null;
-        $lastRevenue = $revenueRepository->findOneBy([], ['receivedAt' => 'DESC']);
-        $lastExpense = $expenseRepository->findOneBy([], ['expenseDate' => 'DESC']);
+        $lastRevenue = $revenueRepository->findOneBy(['user' => $user], ['receivedAt' => 'DESC']);
+        $lastExpense = $expenseRepository->findOneBy(['user' => $user], ['expenseDate' => 'DESC']);
         if ($lastRevenue && $lastExpense) {
             $lastTransactionDate = $lastRevenue->getReceivedAt() > $lastExpense->getExpenseDate()
                 ? $lastRevenue->getReceivedAt()
@@ -77,76 +62,202 @@ $expenses = $expenseRepository->findBy(
             $lastTransactionDate = $lastExpense->getExpenseDate();
         }
 
+        if ($revenueSearch !== '') {
+            $revenues = array_values(array_filter(
+                $revenues,
+                static function (Revenue $revenue) use ($revenueSearch): bool {
+                    $type = (string) $revenue->getType();
+                    $description = (string) ($revenue->getDescription() ?? '');
+
+                    return stripos($type, $revenueSearch) !== false || stripos($description, $revenueSearch) !== false;
+                }
+            ));
+        }
+
+        if ($expenseSearch !== '') {
+            $expenses = array_values(array_filter(
+                $expenses,
+                static function (Expense $expense) use ($expenseSearch): bool {
+                    $category = (string) $expense->getCategory();
+                    $description = (string) ($expense->getDescription() ?? '');
+
+                    return stripos($category, $expenseSearch) !== false || stripos($description, $expenseSearch) !== false;
+                }
+            ));
+        }
+
+        $revenueAllowedSorts = ['id', 'amount', 'type', 'receivedAt', 'createdAt'];
+        if (!in_array($revenueSort1, $revenueAllowedSorts, true)) {
+            $revenueSort1 = 'receivedAt';
+        }
+        if (!in_array($revenueSort2, $revenueAllowedSorts, true)) {
+            $revenueSort2 = 'amount';
+        }
+
+        $expenseAllowedSorts = ['id', 'amount', 'category', 'expenseDate'];
+        if (!in_array($expenseSort1, $expenseAllowedSorts, true)) {
+            $expenseSort1 = 'expenseDate';
+        }
+        if (!in_array($expenseSort2, $expenseAllowedSorts, true)) {
+            $expenseSort2 = 'amount';
+        }
+
+        $compareValues = static function (mixed $a, mixed $b, string $direction): int {
+            if ($a instanceof \DateTimeInterface) {
+                $a = $a->getTimestamp();
+            }
+            if ($b instanceof \DateTimeInterface) {
+                $b = $b->getTimestamp();
+            }
+            if ($a === null && $b === null) {
+                return 0;
+            }
+            if ($a === null) {
+                return $direction === 'ASC' ? -1 : 1;
+            }
+            if ($b === null) {
+                return $direction === 'ASC' ? 1 : -1;
+            }
+
+            $result = is_numeric($a) && is_numeric($b)
+                ? ($a <=> $b)
+                : strcasecmp((string) $a, (string) $b);
+
+            return $direction === 'ASC' ? $result : -$result;
+        };
+
+        usort($revenues, static function (Revenue $a, Revenue $b) use ($revenueSort1, $revenueDir1, $revenueSort2, $revenueDir2, $compareValues): int {
+            $firstA = match ($revenueSort1) {
+                'id' => $a->getId(),
+                'amount' => $a->getAmount(),
+                'type' => $a->getType(),
+                'createdAt' => $a->getCreatedAt(),
+                default => $a->getReceivedAt(),
+            };
+            $firstB = match ($revenueSort1) {
+                'id' => $b->getId(),
+                'amount' => $b->getAmount(),
+                'type' => $b->getType(),
+                'createdAt' => $b->getCreatedAt(),
+                default => $b->getReceivedAt(),
+            };
+            $firstResult = $compareValues($firstA, $firstB, $revenueDir1);
+            if ($firstResult !== 0) {
+                return $firstResult;
+            }
+
+            $secondA = match ($revenueSort2) {
+                'id' => $a->getId(),
+                'amount' => $a->getAmount(),
+                'type' => $a->getType(),
+                'createdAt' => $a->getCreatedAt(),
+                default => $a->getReceivedAt(),
+            };
+            $secondB = match ($revenueSort2) {
+                'id' => $b->getId(),
+                'amount' => $b->getAmount(),
+                'type' => $b->getType(),
+                'createdAt' => $b->getCreatedAt(),
+                default => $b->getReceivedAt(),
+            };
+
+            return $compareValues($secondA, $secondB, $revenueDir2);
+        });
+
+        usort($expenses, static function (Expense $a, Expense $b) use ($expenseSort1, $expenseDir1, $expenseSort2, $expenseDir2, $compareValues): int {
+            $firstA = match ($expenseSort1) {
+                'id' => $a->getId(),
+                'amount' => $a->getAmount(),
+                'category' => $a->getCategory(),
+                default => $a->getExpenseDate(),
+            };
+            $firstB = match ($expenseSort1) {
+                'id' => $b->getId(),
+                'amount' => $b->getAmount(),
+                'category' => $b->getCategory(),
+                default => $b->getExpenseDate(),
+            };
+            $firstResult = $compareValues($firstA, $firstB, $expenseDir1);
+            if ($firstResult !== 0) {
+                return $firstResult;
+            }
+
+            $secondA = match ($expenseSort2) {
+                'id' => $a->getId(),
+                'amount' => $a->getAmount(),
+                'category' => $a->getCategory(),
+                default => $a->getExpenseDate(),
+            };
+            $secondB = match ($expenseSort2) {
+                'id' => $b->getId(),
+                'amount' => $b->getAmount(),
+                'category' => $b->getCategory(),
+                default => $b->getExpenseDate(),
+            };
+
+            return $compareValues($secondA, $secondB, $expenseDir2);
+        });
+
         $revenue = new Revenue();
         $formRevenue = $this->createForm(RevenueType::class, $revenue);
         $formRevenue->handleRequest($request);
         if ($formRevenue->isSubmitted() && $formRevenue->isValid()) {
+            $user = $this->getUser();
+            if (!$user) {
+                $this->addFlash('error', 'Vous devez etre connecte.');
+                return $this->redirectToRoute('app_salary_expense_index');
+            }
 
-    $user = $this->getUser();
-    if (!$user) {
-        $this->addFlash('error', 'Vous devez être connecté.');
-        return $this->redirectToRoute('app_salary_expense_index');
-    }
+            $revenue->setUser($user);
+            $entityManager->persist($revenue);
 
-    // 1️⃣ Lier revenu au user
-    $revenue->setUser($user);
-    $entityManager->persist($revenue);
+            $newSolde = $user->getSoldeTotal() + $revenue->getAmount();
+            $user->setSoldeTotal($newSolde);
 
-    // 2️⃣ Ajouter le montant au soldeTotal
-    $newSolde = $user->getSoldeTotal() + $revenue->getAmount();
-    $user->setSoldeTotal($newSolde);
+            $entityManager->flush();
 
-    // 3️⃣ Flush
-    $entityManager->flush();
+            $this->addFlash('success', 'Revenu ajoute et solde mis a jour.');
 
-    $this->addFlash('success', 'Revenu ajouté et solde mis à jour.');
+            return $this->redirectToRoute('app_salary_expense_index');
+        }
 
-    return $this->redirectToRoute('app_salary_expense_index');
-}
+        $expense = new Expense();
+        $formExpense = $this->createForm(ExpenseType::class, $expense);
+        $formExpense->handleRequest($request);
 
+        if ($formExpense->isSubmitted() && $formExpense->isValid()) {
+            $user = $this->getUser();
 
-       $expense = new Expense();
-$formExpense = $this->createForm(ExpenseType::class, $expense);
-$formExpense->handleRequest($request);
+            if (!$user) {
+                $this->addFlash('error', 'Vous devez etre connecte.');
+                return $this->redirectToRoute('app_salary_expense_index');
+            }
 
-if ($formExpense->isSubmitted() && $formExpense->isValid()) {
+            $expense->setUser($user);
+            $entityManager->persist($expense);
 
-    $user = $this->getUser();
+            $user->setSoldeTotal(
+                $user->getSoldeTotal() - $expense->getAmount()
+            );
 
-    if (!$user) {
-        $this->addFlash('error', 'Vous devez être connecté.');
-        return $this->redirectToRoute('app_salary_expense_index');
-    }
+            $transaction = new Transaction();
+            $transaction->setType('EXPENSE');
+            $transaction->setMontant($expense->getAmount());
+            $transaction->setDate($expense->getExpenseDate() ?? new \DateTime());
+            $transaction->setDescription($expense->getDescription());
+            $transaction->setModuleSource('SALARY_EXPENSE_MODULE');
+            $transaction->setUser($user);
+            $transaction->setExpense($expense);
 
-    // 🔹 Lier la dépense au user
-    $expense->setUser($user);
-    $entityManager->persist($expense);
+            $entityManager->persist($transaction);
 
-    // 🔹 Soustraire du soldeTotal
-    $user->setSoldeTotal(
-        $user->getSoldeTotal() - $expense->getAmount()
-    );
+            $entityManager->flush();
 
-    // 🔹 Créer transaction
-    $transaction = new Transaction();
-    $transaction->setType('EXPENSE');
-    $transaction->setMontant($expense->getAmount());
-    $transaction->setDate($expense->getExpenseDate() ?? new \DateTime());
-    $transaction->setDescription($expense->getDescription());
-    $transaction->setModuleSource('SALARY_EXPENSE_MODULE');
-    $transaction->setUser($user);
-    $transaction->setExpense($expense);
+            $this->addFlash('success', 'Depense ajoutee et solde mis a jour.');
 
-    $entityManager->persist($transaction);
+            return $this->redirectToRoute('app_salary_expense_index');
+        }
 
-    $entityManager->flush();
-
-    $this->addFlash('success', 'Dépense ajoutée et solde mis à jour.');
-
-    return $this->redirectToRoute('app_salary_expense_index');
-}
-
-        
         return $this->render('salary_expense/index.html.twig', [
             'revenues' => $revenues,
             'expenses' => $expenses,
@@ -167,7 +278,7 @@ if ($formExpense->isSubmitted() && $formExpense->isValid()) {
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
-            $this->addFlash('success', 'Revenu mis à jour.');
+            $this->addFlash('success', 'Revenu mis a jour.');
             return $this->redirectToRoute('app_salary_expense_index');
         }
 
@@ -182,15 +293,15 @@ if ($formExpense->isSubmitted() && $formExpense->isValid()) {
     {
         if ($this->isCsrfTokenValid('delete' . $revenue->getId(), $request->request->get('_token', ''))) {
             $user = $revenue->getUser();
-if ($user) {
-    $user->setSoldeTotal(
-        $user->getSoldeTotal() - $revenue->getAmount()
-    );
-}
+            if ($user) {
+                $user->setSoldeTotal(
+                    $user->getSoldeTotal() - $revenue->getAmount()
+                );
+            }
 
             $entityManager->remove($revenue);
             $entityManager->flush();
-            $this->addFlash('success', 'Revenu supprimé.');
+            $this->addFlash('success', 'Revenu supprime.');
         }
 
         return $this->redirectToRoute('app_salary_expense_index');
@@ -204,7 +315,7 @@ if ($user) {
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
-            $this->addFlash('success', 'Dépense mise à jour.');
+            $this->addFlash('success', 'Depense mise a jour.');
             return $this->redirectToRoute('app_salary_expense_index');
         }
 
@@ -220,7 +331,7 @@ if ($user) {
         if ($this->isCsrfTokenValid('delete' . $expense->getId(), $request->request->get('_token', ''))) {
             $entityManager->remove($expense);
             $entityManager->flush();
-            $this->addFlash('success', 'Dépense supprimée.');
+            $this->addFlash('success', 'Depense supprimee.');
         }
 
         return $this->redirectToRoute('app_salary_expense_index');

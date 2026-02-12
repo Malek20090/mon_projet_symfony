@@ -49,6 +49,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Quiz::class)]
     private Collection $quizzes;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null;
+
     public function __construct()
     {
         $this->transactions = new ArrayCollection();
@@ -139,6 +142,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setDateInscription(?\DateTime $dateInscription): self
     {
         $this->dateInscription = $dateInscription;
+        return $this;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): self
+    {
+        $this->image = $image;
         return $this;
     }
 

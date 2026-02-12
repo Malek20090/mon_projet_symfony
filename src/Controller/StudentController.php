@@ -4,13 +4,21 @@ namespace App\Controller;
 
 use App\Entity\Cours;
 use App\Entity\Quiz;
+use App\Entity\User;
+use App\Form\SalaryProfileType;
 use App\Repository\CoursRepository;
 use App\Repository\QuizRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
+#[IsGranted('ROLE_ETUDIANT')]
 #[Route('/student', name: 'student_')]
 class StudentController extends AbstractController
 {
@@ -104,6 +112,54 @@ class StudentController extends AbstractController
         return $this->render('student/quiz/cours_quiz.html.twig', [
             'cour' => $cour,
             'quizzes' => $cour->getQuizzes(),
+        ]);
+    }
+
+    #[Route('/profile', name: 'profile', methods: ['GET', 'POST'])]
+    public function profile(
+        Request $request,
+        EntityManagerInterface $em,
+        SluggerInterface $slugger,
+        UserPasswordHasherInterface $passwordHasher
+    ): Response {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('User session is required.');
+        }
+
+        $form = $this->createForm(SalaryProfileType::class, $user);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $plainPassword = (string) $form->get('plainPassword')->getData();
+            if (trim($plainPassword) !== '') {
+                $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
+            }
+
+            /** @var UploadedFile|null $imageFile */
+            $imageFile = $form->get('image')->getData();
+            if ($imageFile) {
+                $safeFilename = $slugger->slug(pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME));
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+
+                $imageFile->move(
+                    $this->getParameter('user_images_directory'),
+                    $newFilename
+                );
+
+                $user->setImage($newFilename);
+            }
+
+            $em->flush();
+            $this->addFlash('success', 'Profile updated successfully.');
+
+            return $this->redirectToRoute('student_profile');
+        }
+
+        return $this->render('student/profile.html.twig', [
+            'user' => $user,
+            'form' => $form->createView(),
         ]);
     }
 }

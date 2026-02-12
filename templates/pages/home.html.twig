@@ -48,7 +48,49 @@
 </li>
         </ul>
 
-        <a href="#" class="btn btn-info rounded-pill px-4">To Start</a>
+        <style>
+            .header-user-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: .5rem;
+                padding: .35rem .8rem .35rem .35rem;
+                border-radius: 999px;
+                border: 1px solid rgba(255,255,255,.35);
+                background: rgba(255,255,255,.14);
+                color: #fff;
+                text-decoration: none;
+                margin-right: .5rem;
+            }
+            .header-user-btn:hover {
+                color: #fff;
+                background: rgba(255,255,255,.22);
+            }
+            .header-user-avatar {
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid rgba(255,255,255,.55);
+            }
+            .header-user-name {
+                max-width: 120px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-weight: 700;
+                font-size: .88rem;
+            }
+        </style>
+
+        {% if app.user %}
+            {% set profileRoute = ('ROLE_SALARY' in app.user.roles) ? 'salary_profile' : 'app_home' %}
+            <a href="{{ path(profileRoute) }}" class="header-user-btn" title="My profile">
+                <img src="{{ asset(app.user.image ? 'uploads/users/' ~ app.user.image : 'uploads/users/chat1.png') }}" alt="User image" class="header-user-avatar">
+                <span class="header-user-name">{{ app.user.nom ?: app.user.email }}</span>
+            </a>
+        {% endif %}
+
+        <a href="{{ path('salary_dashboard') }}" class="btn btn-info rounded-pill px-4">To Start</a>
         <a href="{{ path('app_logout') }}" class="btn btn-outline-danger rounded-pill px-4 ms-2">Logout</a>
     </div>
 </nav>

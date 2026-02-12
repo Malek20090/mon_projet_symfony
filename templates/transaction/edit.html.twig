@@ -6,7 +6,7 @@
 <div class="admin-page">
     <div class="page-header-card">
         <div>
-            <h1>Edit la transaction</h1>
+            <h1>Edit transaction #{{ transaction.id }}</h1>
             <p class="mb-0">Update transaction information</p>
         </div>
         <a href="{{ path('app_transaction_index') }}" class="btn btn-secondary">
@@ -15,10 +15,12 @@
     </div>
 
     <div class="card-custom mb-3">
+        <h5 class="mb-3"><i class="fas fa-pen-to-square text-primary me-2"></i>Transaction details</h5>
         {{ include('transaction/_form.html.twig', {'button_label': 'Update'}) }}
     </div>
 
     <div class="card-custom">
+        <h5 class="mb-3">Delete</h5>
         {{ include('transaction/_delete_form.html.twig') }}
     </div>
 </div>

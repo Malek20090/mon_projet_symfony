@@ -133,7 +133,7 @@
                 <div class="col-auto">
                   <label class="form-label small mb-0">Sort (criterion 1)</label>
                   <select name="revenue_sort1" class="form-select form-select-sm">
-                    <option value="receivedAt" {{ app.request.query.get('revenue_sort1') == 'receivedAt' ? 'selected' : '' }}>Date</option>
+                    <option value="receivedAt" {{ app.request.query.get('revenue_sort1', 'receivedAt') == 'receivedAt' ? 'selected' : '' }}>Date</option>
                     <option value="amount" {{ app.request.query.get('revenue_sort1') == 'amount' ? 'selected' : '' }}>Montant</option>
                     <option value="type" {{ app.request.query.get('revenue_sort1') == 'type' ? 'selected' : '' }}>Type</option>
                     <option value="createdAt" {{ app.request.query.get('revenue_sort1') == 'createdAt' ? 'selected' : '' }}>Created on</option>
@@ -240,7 +240,7 @@
                 <div class="col-auto">
                   <label class="form-label small mb-0">Sort (criterion 1)</label>
                   <select name="expense_sort1" class="form-select form-select-sm">
-                    <option value="expenseDate" {{ app.request.query.get('expense_sort1') == 'expenseDate' ? 'selected' : '' }}>Date</option>
+                    <option value="expenseDate" {{ app.request.query.get('expense_sort1', 'expenseDate') == 'expenseDate' ? 'selected' : '' }}>Date</option>
                     <option value="amount" {{ app.request.query.get('expense_sort1') == 'amount' ? 'selected' : '' }}>Montant</option>
                     <option value="category" {{ app.request.query.get('expense_sort1') == 'category' ? 'selected' : '' }}>Category</option>
                   </select>
