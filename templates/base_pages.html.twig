@@ -119,8 +119,9 @@
         </ul>
 
         <div class="d-flex align-items-center">
-            {% if app.user and ('ROLE_SALARY' in app.user.roles) %}
-                <a href="{{ path('salary_profile') }}" class="header-user-btn" title="My profile">
+            {% if app.user and (('ROLE_SALARY' in app.user.roles) or ('ROLE_ETUDIANT' in app.user.roles)) %}
+                {% set userProfileRoute = ('ROLE_SALARY' in app.user.roles) ? 'salary_profile' : 'student_profile' %}
+                <a href="{{ path(userProfileRoute) }}" class="header-user-btn" title="My profile">
                     <img src="{{ asset(app.user.image ? 'uploads/users/' ~ app.user.image : 'uploads/users/chat1.png') }}" alt="User image" class="header-user-avatar">
                     <span class="header-user-name">{{ app.user.nom ?: app.user.email }}</span>
                 </a>

@@ -83,7 +83,12 @@
         </style>
 
         {% if app.user %}
-            {% set profileRoute = ('ROLE_SALARY' in app.user.roles) ? 'salary_profile' : 'app_home' %}
+            {% set profileRoute = 'app_home' %}
+            {% if 'ROLE_SALARY' in app.user.roles %}
+                {% set profileRoute = 'salary_profile' %}
+            {% elseif 'ROLE_ETUDIANT' in app.user.roles %}
+                {% set profileRoute = 'student_profile' %}
+            {% endif %}
             <a href="{{ path(profileRoute) }}" class="header-user-btn" title="My profile">
                 <img src="{{ asset(app.user.image ? 'uploads/users/' ~ app.user.image : 'uploads/users/chat1.png') }}" alt="User image" class="header-user-avatar">
                 <span class="header-user-name">{{ app.user.nom ?: app.user.email }}</span>
