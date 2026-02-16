@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -20,6 +20,7 @@
 
     <!-- Page CSS -->
     <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
 </head>
 
 <body>
@@ -39,6 +40,7 @@
         </ul>
 
         <a href="#" class="btn btn-info rounded-pill px-4">To Start</a>
+        <a href="{{ path('app_logout') }}" class="btn btn-outline-danger rounded-pill px-4 ms-2">Logout</a>
     </div>
 </nav>
 
@@ -49,7 +51,7 @@
             Contactez-Nous
         </h1>
         <p class="text-light">
-            Nous sommes là pour répondre à toutes vos questions
+            We are here to answer all your questions
         </p>
     </div>
 </div>
@@ -197,6 +199,7 @@
 <!-- ================= JS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
+<script src="{{ asset('js/theme-toggle.js') }}"></script>
 <script>
     new WOW().init();
 </script>

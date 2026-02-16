@@ -1,11 +1,23 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}New FinancialGoal{% endblock %}
+{% block title %}Nouvel objectif financier | Decide${% endblock %}
 
-{% block body %}
-    <h1>Create new FinancialGoal</h1>
+{% block content %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Nouvel objectif financier</h1>
+            <p class="mb-0">Define a new savings project</p>
+        </div>
+        <a href="{{ path('app_financial_goal_index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to list
+        </a>
+    </div>
 
-    {{ include('financial_goal/_form.html.twig') }}
-
-    <a href="{{ path('app_financial_goal_index') }}">back to list</a>
+    <div class="card-custom">
+        {{ include('financial_goal/_form.html.twig') }}
+    </div>
+</div>
 {% endblock %}
+
+

@@ -1,115 +1,223 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
 {% block content %}
-
-<div class="transactions-page">
-
-    <!-- HEADER -->
-    <div class="page-header">
+<div class="admin-page tx-admin">
+    <div class="page-header-card tx-header">
         <div>
-            <h1>Transactions</h1>
-            <p class="page-subtitle">
-                Manage all user transactions and balances
-            </p>
+            <h1>Transactions Management</h1>
+            <p>Track, filter, and create transactions in a structured workspace.</p>
         </div>
     </div>
 
-    <!-- FILTERS -->
-    <div class="toolbar-card">
-        <form method="get" class="toolbar">
+    <section class="card-custom tx-card">
+        {% set expenseCount = 0 %}
+        {% set savingCount = 0 %}
+        {% set investmentCount = 0 %}
+        {% for transaction in transactions %}
+            {% if transaction.type == 'EXPENSE' %}{% set expenseCount = expenseCount + 1 %}{% endif %}
+            {% if transaction.type == 'SAVING' %}{% set savingCount = savingCount + 1 %}{% endif %}
+            {% if transaction.type == 'INVESTMENT' %}{% set investmentCount = investmentCount + 1 %}{% endif %}
+        {% endfor %}
 
+        <div class="tx-kpi-grid">
+            <div class="tx-kpi tx-kpi-expense">
+                <span class="tx-kpi-label">Expenses</span>
+                <strong class="tx-kpi-value">{{ expenseCount }}</strong>
+            </div>
+            <div class="tx-kpi tx-kpi-saving">
+                <span class="tx-kpi-label">Savings</span>
+                <strong class="tx-kpi-value">{{ savingCount }}</strong>
+            </div>
+            <div class="tx-kpi tx-kpi-investment">
+                <span class="tx-kpi-label">Investments</span>
+                <strong class="tx-kpi-value">{{ investmentCount }}</strong>
+            </div>
+        </div>
+
+        <div class="tx-card-title-row">
+            <h2>Filters</h2>
+            <a class="btn btn-outline-secondary btn-sm" href="{{ path('app_transaction_index') }}">
+                <i class="fas fa-undo-alt me-1"></i> Reset
+            </a>
+        </div>
+
+        <form method="get" class="tx-filters-grid">
             <input type="text"
                    name="user"
-                   class="input"
+                   class="form-control"
                    placeholder="User name"
+                   maxlength="60"
+                   pattern="[A-Za-z0-9@._\\-\\s]{0,60}"
+                   title="Use letters, numbers, @ . _ - and spaces only."
                    value="{{ app.request.get('user') }}">
 
-            <select name="type" class="input">
+            <select name="type" class="form-select">
                 <option value="">All types</option>
                 <option value="EXPENSE" {{ app.request.get('type') == 'EXPENSE' ? 'selected' : '' }}>Expense</option>
                 <option value="SAVING" {{ app.request.get('type') == 'SAVING' ? 'selected' : '' }}>Saving</option>
                 <option value="INVESTMENT" {{ app.request.get('type') == 'INVESTMENT' ? 'selected' : '' }}>Investment</option>
             </select>
 
-            <input type="date" name="date_from" class="input" value="{{ app.request.get('date_from') }}">
-            <input type="date" name="date_to" class="input" value="{{ app.request.get('date_to') }}">
+            <input type="date" name="date_from" class="form-control" value="{{ app.request.get('date_from') }}">
+            <input type="date" name="date_to" class="form-control" value="{{ app.request.get('date_to') }}">
 
-            <button class="btn-primary">Filter</button>
+            <button class="btn btn-primary tx-filter-btn" type="submit">
+                <i class="fas fa-filter me-1"></i> Filter
+            </button>
         </form>
-    </div>
+    </section>
 
-    <!-- CREATE -->
-    <div class="create-card">
-        <h3>Create New Transaction</h3>
+    <section class="card-custom tx-card">
+        <div class="tx-card-title-row">
+            <h2>Create New Transaction</h2>
+        </div>
 
         {{ form_start(form) }}
-        <div class="form-grid">
-            {{ form_widget(form.type, { attr: { class: 'input' } }) }}
-            {{ form_widget(form.montant, { attr: { class: 'input' } }) }}
-            {{ form_widget(form.date, { attr: { class: 'input' } }) }}
-            {{ form_widget(form.description, { attr: { class: 'input' } }) }}
-            {{ form_widget(form.moduleSource, { attr: { class: 'input' } }) }}
-            {# user n'est plus dans le formulaire : il est pris depuis l'utilisateur connecté #}
-            <button class="btn-primary full">Add Transaction</button>
+        <div class="tx-form-grid">
+            <div class="tx-field tx-field-full">
+                {{ form_label(form.user) }}
+                {{ form_widget(form.user, { attr: { class: 'form-select' } }) }}
+                {{ form_errors(form.user) }}
+            </div>
+
+            <div class="tx-field">
+                {{ form_label(form.type) }}
+                {{ form_widget(form.type, { attr: { class: 'form-select' } }) }}
+                {{ form_errors(form.type) }}
+            </div>
+
+            <div class="tx-field">
+                {{ form_label(form.montant) }}
+                {{ form_widget(form.montant, { attr: { class: 'form-control', placeholder: '0.00' } }) }}
+                {{ form_errors(form.montant) }}
+            </div>
+
+            <div class="tx-field">
+                {{ form_label(form.date) }}
+                {{ form_widget(form.date, { attr: { class: 'form-control' } }) }}
+                {{ form_errors(form.date) }}
+            </div>
+
+            <div class="tx-field">
+                {{ form_label(form.description) }}
+                {{ form_widget(form.description, { attr: { class: 'form-control', rows: 2, maxlength: 500, 'data-counter': 'tx-desc-counter' } }) }}
+                <small id="tx-desc-counter" class="tx-counter">0 / 500</small>
+                {{ form_errors(form.description) }}
+            </div>
+
+            <div class="tx-field tx-field-full">
+                {{ form_label(form.moduleSource) }}
+                {{ form_widget(form.moduleSource, { attr: { class: 'form-control', maxlength: 50, pattern: '[A-Za-z0-9 _.-]*', title: 'Allowed: letters, numbers, space, dot, underscore, dash.', 'data-counter': 'tx-source-counter' } }) }}
+                <small id="tx-source-counter" class="tx-counter">0 / 50</small>
+                {{ form_errors(form.moduleSource) }}
+            </div>
+        </div>
+
+        <div class="tx-actions">
+            <button class="btn btn-primary" type="submit">
+                <i class="fas fa-plus-circle me-1"></i> Add Transaction
+            </button>
         </div>
         {{ form_end(form) }}
-    </div>
+    </section>
 
-    <!-- TABLE -->
-    <div class="table-card">
-        <table class="modern-table">
-            <thead>
-            <tr>
-                <th>#</th>
-                <th>User</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Balance</th>
-            </tr>
-            </thead>
+    <section class="card-custom tx-card">
+        <div class="tx-card-title-row tx-card-title-row-wrap">
+            <h2>Transactions List</h2>
+            <div class="tx-stats">
+                <span>Total: <strong>{{ transactions.getTotalItemCount() }}</strong></span>
+                <span>Page: <strong>{{ transactions.getCurrentPageNumber() }}/{{ transactions.getPageCount() }}</strong></span>
+            </div>
+        </div>
 
-            <tbody>
-            {% for transaction in transactions %}
+        <div class="table-responsive">
+            <table class="table tx-table">
+                <thead>
                 <tr>
-                    <td>{{ transaction.id }}</td>
-
-                    <td>
-                        <strong>{{ transaction.user.nom }}</strong><br>
-                        <small>ID {{ transaction.user.id }}</small>
-                    </td>
-
-                    <td>
-                        <span class="pill {{ transaction.type|lower }}">
-                            {{ transaction.type }}
-                        </span>
-                    </td>
-
-                    <td class="{{ transaction.type == 'EXPENSE' ? 'danger' : 'success' }}">
-                        {{ transaction.montant }} DT
-                    </td>
-
-                    <td>{{ transaction.date|date('Y-m-d') }}</td>
-                    <td>{{ transaction.description ?: '-' }}</td>
-
-                    <td class="balance">
-                        {{ transaction.user.soldeTotal }} DT
-                    </td>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Source</th>
+                    <th>Balance</th>
+                    <th>Actions</th>
                 </tr>
-            {% else %}
-                <tr>
-                    <td colspan="7" class="empty">No transactions found</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.id }}</td>
+
+                        <td>
+                            <strong>{{ transaction.user.nom }}</strong><br>
+                            <small class="text-muted">{{ transaction.user.email }}</small>
+                        </td>
+
+                        <td>
+                            <span class="tx-pill {{ transaction.type|lower }}">
+                                {{ transaction.type }}
+                            </span>
+                        </td>
+
+                        <td class="{{ transaction.type == 'EXPENSE' ? 'tx-amount-negative' : 'tx-amount-positive' }}">
+                            <strong>{{ transaction.montant }} DT</strong>
+                        </td>
+
+                        <td>{{ transaction.date|date('d/m/Y') }}</td>
+                        <td>{{ transaction.description ?: '-' }}</td>
+                        <td>{{ transaction.moduleSource ?: '-' }}</td>
+
+                        <td class="tx-balance">
+                            {{ transaction.user.soldeTotal }} DT
+                        </td>
+
+                        <td class="tx-actions-cell">
+                            <a href="{{ path('app_transaction_show', {id: transaction.id}) }}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{{ path('app_transaction_edit', {id: transaction.id}) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="9" class="tx-empty">No transactions found</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
         <div class="pagination-wrapper">
             {{ knp_pagination_render(transactions) }}
         </div>
-    </div>
-
+    </section>
 </div>
+{% endblock %}
 
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            function attachCounter(selector) {
+                const input = document.querySelector(selector);
+                if (!input) return;
+                const counterId = input.getAttribute('data-counter');
+                const counter = counterId ? document.getElementById(counterId) : null;
+                if (!counter) return;
+                const max = Number(input.getAttribute('maxlength')) || 0;
+
+                const render = () => {
+                    const len = input.value.length;
+                    counter.textContent = max ? `${len} / ${max}` : `${len}`;
+                    counter.classList.toggle('tx-counter-limit', max > 0 && len >= max);
+                };
+                input.addEventListener('input', render);
+                render();
+            }
+
+            attachCounter('textarea[name$=\"[description]\"]');
+            attachCounter('input[name$=\"[moduleSource]\"]');
+        })();
+    </script>
 {% endblock %}

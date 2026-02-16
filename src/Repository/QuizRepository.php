@@ -28,7 +28,7 @@ class QuizRepository extends ServiceEntityRepository
      * @param string      $order  ASC ou DESC
      * @return Quiz[]
      */
-    public function searchAndSort(?string $search = null, string $sortBy = self::SORT_QUESTION, string $order = 'ASC'): array
+    public function searchAndSort(?string $search = null, ?int $courseId = null, ?int $pointsMin = null, ?int $pointsMax = null, string $sortBy = self::SORT_QUESTION, string $order = 'ASC'): array
     {
         $qb = $this->createQueryBuilder('q');
 
@@ -39,6 +39,21 @@ class QuizRepository extends ServiceEntityRepository
                     $qb->expr()->like('q.reponseCorrecte', ':search')
                 )
             )->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($courseId !== null && $courseId > 0) {
+            $qb->andWhere('q.cours = :courseId')
+               ->setParameter('courseId', $courseId);
+        }
+
+        if ($pointsMin !== null) {
+            $qb->andWhere('q.pointsValeur >= :pointsMin')
+               ->setParameter('pointsMin', $pointsMin);
+        }
+
+        if ($pointsMax !== null) {
+            $qb->andWhere('q.pointsValeur <= :pointsMax')
+               ->setParameter('pointsMax', $pointsMax);
         }
 
         $allowedSort = [self::SORT_QUESTION, self::SORT_POINTS, self::SORT_REPONSE];

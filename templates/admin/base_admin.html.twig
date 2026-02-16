@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -41,7 +42,7 @@
         <nav class="nav">
            
             <a href="{{ path('admin_imprevus_list') }}" class="nav-link {% if 'imprevus' in app.request.attributes.get('_route') %}active{% endif %}">
-                <i class="fas fa-exclamation-triangle"></i> <span>Imprévus</span>
+                <i class="fas fa-exclamation-triangle"></i> <span>Unexpected Events</span>
             </a>
         </nav>
     </div>
@@ -51,7 +52,7 @@
     {% block navbar %}
         <nav class="navbar-custom">
             <h4 class="mb-0" style="color: #3b82f6;">Admin Panel</h4>
-            <span class="text-muted">Gestion Financière</span>
+            <span class="text-muted">Financial management</span>
         </nav>
     {% endblock %}
     
@@ -61,5 +62,7 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('js/theme-toggle.js') }}"></script>
 </body>
 </html>
+

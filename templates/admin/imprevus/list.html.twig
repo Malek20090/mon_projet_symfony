@@ -1,15 +1,15 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Imprévus | Decide${% endblock %}
+{% block title %}Unexpected Events | Decide${% endblock %}
 
 {% block content %}
 <div class="admin-page">
     <div class="page-header-card">
         <div>
-            <h1>Imprévus</h1>
-            <p class="mb-0">Gestion des imprévus financiers</p>
+            <h1>Unexpected Events</h1>
+            <p class="mb-0">Unexpected financial events management</p>
         </div>
-        <a href="{{ path('admin_imprevus_add') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Nouvel imprévu</a>
+        <a href="{{ path('admin_imprevus_add') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>New unexpected event</a>
     </div>
 
     {% for message in app.flashes('success') %}
@@ -43,7 +43,7 @@
             <div class="col-md-2">
                 <label for="order" class="form-label">Ordre</label>
                 <select class="form-select" id="order" name="order">
-                    <option value="desc" {% if order == 'desc' %}selected{% endif %}>Décroissant</option>
+                    <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending</option>
                     <option value="asc" {% if order == 'asc' %}selected{% endif %}>Croissant</option>
                 </select>
             </div>
@@ -62,7 +62,7 @@
                         <th>Titre</th>
                         <th>Type</th>
                         <th>Budget</th>
-                        <th>Message éducatif</th>
+                        <th>Educational message</th>
                         <th style="width: 140px;">Actions</th>
                     </tr>
                 </thead>
@@ -75,28 +75,28 @@
                                 {% if item.type == 'POSITIF' %}
                                     <span class="badge bg-success">POSITIF</span>
                                 {% else %}
-                                    <span class="badge bg-danger">NÉGATIF</span>
+                                    <span class="badge bg-danger">NEGATIVE</span>
                                 {% endif %}
                             </td>
                             <td class="text-primary fw-bold">{{ item.budget|number_format(2, ',', ' ') }} DT</td>
                             <td>{{ item.messageEducatif|default('-') }}</td>
                             <td>
-                                <a href="{{ path('admin_imprevus_edit', { id: item.id }) }}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="fas fa-edit"></i></a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                <a href="{{ path('admin_imprevus_edit', { id: item.id }) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
                                         onclick="confirmDelete({{ item.id }}, '{{ item.titre|e('js') }}')">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </td>
                         </tr>
                     {% else %}
-                        <tr><td colspan="6" class="text-center text-muted py-4">Aucun imprévu.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-4">No unexpected event.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 
-    <a href="{{ path('admin_index') }}" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left me-2"></i>Retour au dashboard</a>
+    <a href="{{ path('admin_index') }}" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left me-2"></i>Back to dashboard</a>
 </div>
 
 <div class="modal fade" id="deleteModal" tabindex="-1">
@@ -108,13 +108,13 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Êtes-vous sûr de vouloir supprimer l'imprévu suivant ?</p>
+                    <p>Are you sure you want to delete the following unexpected event?</p>
                     <p><strong id="deleteItemTitle"></strong></p>
                     <input type="hidden" name="_token" id="deleteToken" value="">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i>Supprimer</button>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i>Delete</button>
                 </div>
             </form>
         </div>
@@ -130,3 +130,6 @@ function confirmDelete(id, title) {
 }
 </script>
 {% endblock %}
+
+
+

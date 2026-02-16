@@ -36,5 +36,5 @@ security:
 
     # Role-based sections
     - { path: ^/salary, roles: ROLE_SALARY }
-    - { path: ^/etudiant, roles: ROLE_ETUDIANT }
+    - { path: ^/student, roles: ROLE_ETUDIANT }
 

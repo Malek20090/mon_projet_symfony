@@ -1,4 +1,4 @@
-{# templates/savings/index.html.twig — same header & footer as Contact, Service, About #}
+﻿{# templates/savings/index.html.twig — same header & footer as Contact, Service, About #}
 {% extends 'base_pages.html.twig' %}
 
 {% block title %}Savings & Goals | Decide${% endblock %}
@@ -166,6 +166,22 @@
       <p>Simple dashboard. Clear actions. Visible progress.</p>
     </div>
 
+    {% for message in app.flashes('success') %}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+    {% for message in app.flashes('danger') %}
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+    {% for message in app.flashes('warning') %}
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+
     {# KPIs #}
     {% include 'savings/partials/_kpis.html.twig' with {
       stats: stats,
@@ -304,6 +320,7 @@
     const isModuleForm = (f) => {
       const action = (f.getAttribute('action') || '').toLowerCase();
       if(!action) return false;
+      if (f.classList.contains('goalContributeForm')) return false;
       return action.includes('/savings') || action.includes('/goal');
     };
 
@@ -332,23 +349,27 @@
 
           const data = await safeJson(res);
 
-          // If server didn't return JSON, fallback to normal redirect
+          // If server didn't return JSON, follow redirect or reload once (avoid double POST)
           if(!data){
-            toast('warning', 'Connexion au serveur', "Réponse inattendue. Rechargement sécurisé…");
-            form.submit();
+            toast('warning', 'Server connection', "Unexpected response. Reloading...");
+            if (res.redirected && res.url) {
+              window.location.href = res.url;
+            } else {
+              window.location.reload();
+            }
             return;
           }
 
           if(!res.ok || data.ok === false){
             // professional error copy
-            const title = data.title || "Action refusée";
-            const msg   = data.message || "Vérifie les champs et réessaie.";
+            const title = data.title || "Action denied";
+            const msg   = data.message || "Check the fields and try again.";
             toast(data.type || 'danger', title, msg, data.code || null);
             return;
           }
 
           // success
-          toast(data.type || 'success', data.title || "Opération réussie", data.message || "Enregistré ✅", data.code || null);
+          toast(data.type || 'success', data.title || "Operation successful", data.message || "Saved ✅", data.code || null);
 
           // optional UI updates
           if(data.newBalance !== undefined) updateBalanceIfPresent(data.newBalance);
@@ -367,7 +388,7 @@
           }
 
         }catch(err){
-          toast('danger', 'Connexion impossible', "Erreur réseau. Vérifie ta connexion et réessaie.");
+          toast('danger', 'Connection failed', "Network error. Check your connection and try again.");
         }finally{
           btns.forEach(b => b.disabled = false);
         }
@@ -582,13 +603,13 @@
       const prio  = btn.getAttribute('data-goal-prio')  || '3';
 
       const elId   = document.getElementById('edit_id');
-      const elNom  = document.getElementById('edit_nom');
+      const elName  = document.getElementById('edit_nom');
       const elCibl = document.getElementById('edit_cible');
       const elDate = document.getElementById('edit_date');
       const elPrio = document.getElementById('edit_prio');
 
       if (elId)   elId.value = id;
-      if (elNom)  elNom.value = nom;
+      if (elName)  elName.value = nom;
       if (elCibl) elCibl.value = cible;
       if (elDate) elDate.value = date;
       if (elPrio) elPrio.value = prio;
@@ -694,3 +715,5 @@
 </script>
 
 {% endblock %}
+
+

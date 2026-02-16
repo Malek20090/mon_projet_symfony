@@ -1,0 +1,67 @@
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}My Student Profile | Decide${% endblock %}
+{% block body_class %}alea-page learning-page{% endblock %}
+
+{% block body %}
+<section class="hero">
+    <div class="container text-center wrap">
+        <div class="learning-hero-tag">
+            <i class="fas fa-user-graduate"></i> Student space
+        </div>
+        <h1>My Profile</h1>
+        <p>Update your personal information and account image.</p>
+    </div>
+</section>
+
+<section class="container py-5">
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'error' ? 'danger' : label }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <img src="{{ asset(user.image ? 'uploads/users/' ~ user.image : 'uploads/users/chat1.png') }}"
+                     alt="Profile image"
+                     style="width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid #dbeafe;">
+                <div>
+                    <h5 class="mb-1">{{ user.nom ?: 'Student' }}</h5>
+                    <div class="text-muted">{{ user.email }}</div>
+                </div>
+            </div>
+
+            {{ form_start(form, {'attr': {'class': 'row g-3'}}) }}
+                <div class="col-md-6">
+                    {{ form_label(form.nom) }}
+                    {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.nom) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.email) }}
+                    {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.email) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.plainPassword) }}
+                    {{ form_widget(form.plainPassword, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.plainPassword) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_label(form.image) }}
+                    {{ form_widget(form.image, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.image) }}
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-primary rounded-pill px-4" type="submit">
+                        <i class="fas fa-floppy-disk me-2"></i>Save profile
+                    </button>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</section>
+{% endblock %}
+

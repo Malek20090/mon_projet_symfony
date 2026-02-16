@@ -33,7 +33,14 @@ class UserType extends AbstractType
 ])
             ->add('nom', TextType::class)
             ->add('email', TextType::class)
-            ->add('password', PasswordType::class)
+            ->add('password', PasswordType::class, [
+                'mapped' => false,
+                'required' => false,
+                'label' => 'Password',
+                'attr' => [
+                    'autocomplete' => 'new-password',
+                ],
+            ])
             ->add('roles', ChoiceType::class, [
                 'label' => 'Rôle',
                 'choices' => [

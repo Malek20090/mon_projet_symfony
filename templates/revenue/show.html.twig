@@ -1,4 +1,4 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
 {% block title %}Revenu #{{ revenue.id }} | Decide${% endblock %}
 
@@ -7,38 +7,38 @@
     <div class="page-header-card">
         <div>
             <h1>Revenu #{{ revenue.id }}</h1>
-            <p class="mb-0">Détail du revenu</p>
+            <p class="mb-0">Income details</p>
         </div>
         <div>
-            <a href="{{ path('app_revenue_edit', { id: revenue.id }) }}" class="btn btn-primary me-2"><i class="fas fa-edit me-2"></i>Modifier</a>
-            <form method="post" action="{{ path('app_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer ce revenu ?');">
+            <a href="{{ path('app_revenue_edit', { id: revenue.id }) }}" class="btn btn-primary me-2"><i class="fas fa-edit me-2"></i>Edit</a>
+            <form method="post" action="{{ path('app_revenue_delete', { id: revenue.id }) }}" class="d-inline" onsubmit="return confirm('Delete this income?');">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ revenue.id) }}">
-                <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i>Supprimer</button>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-2"></i>Delete</button>
             </form>
         </div>
     </div>
 
     <div class="card-custom">
-        <h5 class="mb-4"><i class="fas fa-wallet text-primary me-2"></i>Détails</h5>
+        <h5 class="mb-4"><i class="fas fa-wallet text-primary me-2"></i>Details</h5>
         <table class="table table-bordered align-middle mb-0">
             <tbody>
                 <tr><th>Id</th><td>{{ revenue.id }}</td></tr>
                 <tr><th>Montant</th><td class="text-primary fw-bold">{{ revenue.amount|number_format(2, '.', ' ') }} TND</td></tr>
                 <tr><th>Type</th><td>{{ revenue.type }}</td></tr>
-                <tr><th>Date de réception</th><td>{{ revenue.receivedAt ? revenue.receivedAt|date('d/m/Y') : '' }}</td></tr>
+                <tr><th>Received date</th><td>{{ revenue.receivedAt ? revenue.receivedAt|date('d/m/Y') : '' }}</td></tr>
                 <tr><th>Description</th><td>{{ revenue.description ?? '-' }}</td></tr>
-                <tr><th>Créé le</th><td>{{ revenue.createdAt ? revenue.createdAt|date('d/m/Y H:i') : '' }}</td></tr>
+                <tr><th>Created on</th><td>{{ revenue.createdAt ? revenue.createdAt|date('d/m/Y H:i') : '' }}</td></tr>
                 <tr><th>Utilisateur</th><td>{{ revenue.user ? (revenue.user.nom ?? revenue.user.email ?? 'User #' ~ revenue.user.id) : '-' }}</td></tr>
             </tbody>
         </table>
     </div>
 
     <div class="card-custom">
-        <h5 class="mb-3"><i class="fas fa-credit-card text-primary me-2"></i>Dépenses liées ({{ revenue.expenses|length }})</h5>
+        <h5 class="mb-3"><i class="fas fa-credit-card text-primary me-2"></i>Linked expenses ({{ revenue.expenses|length }})</h5>
         {% if revenue.expenses|length > 0 %}
             <div class="table-responsive">
                 <table class="table table-bordered align-middle mb-0">
-                    <thead class="table-light"><tr><th>Montant</th><th>Catégorie</th><th>Date</th><th></th></tr></thead>
+                    <thead class="table-light"><tr><th>Montant</th><th>Category</th><th>Date</th><th></th></tr></thead>
                     <tbody>
                         {% for expense in revenue.expenses %}
                             <tr>
@@ -52,12 +52,15 @@
                 </table>
             </div>
         {% else %}
-            <p class="text-muted mb-0">Aucune dépense liée.</p>
+            <p class="text-muted mb-0">No linked expense.</p>
         {% endif %}
     </div>
 
     <div class="admin-page-footer">
-        <a href="{{ path('app_revenue_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
+        <a href="{{ path('app_revenue_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to list</a>
     </div>
 </div>
 {% endblock %}
+
+
+

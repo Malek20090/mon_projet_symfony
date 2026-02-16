@@ -1,0 +1,115 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Admin - Objectifs{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Objectifs</h1>
+            <p class="mb-0">Suivi global des objectifs et progression</p>
+        </div>
+    </div>
+
+    {% set completed = 0 %}
+    {% set inProgress = 0 %}
+    {% for obj in objectifs %}
+        {% if obj.isCompleted %}
+            {% set completed = completed + 1 %}
+        {% else %}
+            {% set inProgress = inProgress + 1 %}
+        {% endif %}
+    {% endfor %}
+
+    <div class="card-custom mb-3">
+        <div class="text-center">
+            <h5 class="mb-3">Statistiques globales</h5>
+            <div style="max-width: 320px; margin: 0 auto;">
+                <canvas id="objectifChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-custom">
+        {% if objectifs|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-custom table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Montant actuel</th>
+                            <th>Multiplicateur</th>
+                            <th>Montant cible</th>
+                            <th>Statut</th>
+                            <th style="width: 140px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for obj in objectifs %}
+                            {% set currentAmount = calculator.calculateCurrentAmountForObjectif(obj) %}
+                            <tr>
+                                <td>{{ obj.name }}</td>
+                                <td class="text-primary fw-bold">{{ currentAmount|number_format(2) }}</td>
+                                <td>x{{ obj.targetMultiplier }}</td>
+                                <td>{{ obj.targetAmount|number_format(2) }}</td>
+                                <td>
+                                    {% if obj.isCompleted %}
+                                        <span class="text-success fw-bold">Atteint</span>
+                                    {% else %}
+                                        <span class="text-warning fw-bold">En cours</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form method="post"
+                                          action="{{ path('admin_objectif_delete', {id: obj.id}) }}"
+                                          class="d-inline"
+                                          onsubmit="return confirm('Confirmer la suppression ?');">
+                                        <input type="hidden"
+                                               name="_token"
+                                               value="{{ csrf_token('delete_objectif_' ~ obj.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-bullseye fa-3x mb-3"></i>
+                <p class="mb-2">Aucun objectif</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('objectifChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Atteints', 'En cours'],
+                datasets: [{
+                    data: [{{ completed }}, {{ inProgress }}],
+                    backgroundColor: [
+                        'rgba(75, 192, 75, 0.8)',
+                        'rgba(255, 159, 64, 0.8)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

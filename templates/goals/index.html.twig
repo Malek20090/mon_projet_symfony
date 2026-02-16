@@ -1,24 +1,14 @@
-{% extends 'base.html.twig' %}
-{% block title %}Goals | Backoffice{% endblock %}
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Goals | Admin{% endblock %}
 
-{% block body %}
+{% block content %}
 
-{# ---------------------------
-   SAFE DEFAULTS (no errors)
-   --------------------------- #}
+{# -------- SAFE DEFAULTS -------- #}
+{% set dash = '-' %}
 {% set goals = goals|default([]) %}
 {% set savingAccounts = savingAccounts|default([]) %}
-{% set stats = stats|default({
-  total: goals|length,
-  active: 0,
-  overdue: 0,
-  completed: 0
-}) %}
-{% set saStats = saStats|default({
-  total: savingAccounts|length,
-  sum_sold: 0,
-  avg_rate: 0
-}) %}
+{% set stats = stats|default({ total: goals|length, active: 0, overdue: 0, completed: 0 }) %}
+{% set saStats = saStats|default({ total: savingAccounts|length, sum_sold: 0, avg_rate: 0 }) %}
 
 <style>
   :root{
@@ -29,13 +19,10 @@
     --muted:#6f7f8c;
     --border:rgba(0,0,0,.08);
     --blue:#2f6fed;
-    --radius:18px;
     --shadow: 0 18px 40px rgba(0,0,0,.08);
   }
-
   body{ background:var(--bg); color:var(--text); }
   .page-wrap{ padding:28px 28px 40px; max-width:1200px; margin:0 auto; }
-
   h1{ margin:0 0 6px; font-size:36px; letter-spacing:-0.6px; }
   .sub{ color:var(--muted); margin-bottom:22px; }
 
@@ -55,6 +42,7 @@
     padding:18px;
     border-radius:22px;
     background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.85));
+    border:1px solid var(--border);
   }
 
   .inp, .sel{
@@ -107,61 +95,25 @@
     color:var(--muted);
   }
 
-  table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:12px;
-    overflow:hidden;
-    border-radius:18px;
-  }
-  th, td{
-    padding:14px 12px;
-    border-bottom:1px solid var(--border);
-    font-size:14px;
-    vertical-align:middle;
-  }
-  th{
-    text-align:left;
-    color:var(--muted);
-    font-weight:900;
-    background:#fff;
-  }
+  table{ width:100%; border-collapse:collapse; margin-top:12px; overflow:hidden; border-radius:18px; }
+  th, td{ padding:14px 12px; border-bottom:1px solid var(--border); font-size:14px; vertical-align:middle; }
+  th{ text-align:left; color:var(--muted); font-weight:900; background:#fff; }
   tr:hover td{ background:rgba(47,111,237,.05); }
 
-  .badge{
-    padding:8px 12px;
-    border-radius:999px;
-    font-weight:900;
-    font-size:12px;
-    display:inline-block;
-  }
+  .badge{ padding:8px 12px; border-radius:999px; font-weight:900; font-size:12px; display:inline-block; }
   .b-active{ background:rgba(47,111,237,.12); color:#1f56c7; }
   .b-overdue{ background:rgba(255,0,0,.10); color:#c01212; }
   .b-completed{ background:rgba(0,200,120,.12); color:#0c7b4f; }
 
-  .progress{
-    height:10px;
-    border-radius:999px;
-    background:rgba(0,0,0,.06);
-    overflow:hidden;
-    border:1px solid var(--border);
-  }
-  .progress > div{
-    height:100%;
-    background:var(--blue);
-    width:0;
-  }
+  .progress{ height:10px; border-radius:999px; background:rgba(0,0,0,.06); overflow:hidden; border:1px solid var(--border); }
+  .progress > div{ height:100%; background:var(--blue); width:0; }
 
   .money{ font-weight:950; }
   .muted{ color:var(--muted); }
   .exports{ display:flex; gap:10px; flex-wrap:wrap; }
   .linkbtn{ text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
 
-  .section-title{
-    margin:26px 0 8px;
-    font-size:20px;
-    font-weight:950;
-  }
+  .section-title{ margin:26px 0 8px; font-size:20px; font-weight:950; }
 
   @media (max-width: 900px){
     .filterbar{ grid-template-columns: 1fr 1fr; }
@@ -175,32 +127,31 @@
   <div class="sub">Manage user goals and progress</div>
 
   {# ===========================
-     GOALS FILTER BAR (uses g_*)
+     GOALS FILTER BAR (g_*)
      =========================== #}
-  <form class="card filterbar" method="get" action="">
-    <input class="inp" type="text" name="g_q" placeholder="User name / email"
-           value="{{ app.request.get('g_q') }}">
+  <form method="get" action="{{ path('admin_goals_admin_goals_index') }}" class="filterbar">
+    <input class="inp" name="g_q" value="{{ app.request.get('g_q') }}" placeholder="User name / email">
 
     <select class="sel" name="g_status">
-      {% set st = app.request.get('g_status') %}
-      <option value="" {{ st == '' ? 'selected' : '' }}>All status</option>
-      <option value="active" {{ st == 'active' ? 'selected' : '' }}>Active</option>
-      <option value="overdue" {{ st == 'overdue' ? 'selected' : '' }}>Overdue</option>
-      <option value="completed" {{ st == 'completed' ? 'selected' : '' }}>Completed</option>
+      {% set gs = app.request.get('g_status') %}
+      <option value="" {{ gs == '' ? 'selected' : '' }}>All status</option>
+      <option value="active" {{ gs == 'active' ? 'selected' : '' }}>Active</option>
+      <option value="completed" {{ gs == 'completed' ? 'selected' : '' }}>Completed</option>
+      <option value="overdue" {{ gs == 'overdue' ? 'selected' : '' }}>Overdue</option>
     </select>
 
     <select class="sel" name="g_priority">
-      {% set pr = app.request.get('g_priority') %}
-      <option value="" {{ pr == '' ? 'selected' : '' }}>All priorities</option>
-      <option value="1" {{ pr == '1' ? 'selected' : '' }}>P1</option>
-      <option value="2" {{ pr == '2' ? 'selected' : '' }}>P2</option>
-      <option value="3" {{ pr == '3' ? 'selected' : '' }}>P3</option>
+      {% set gp = app.request.get('g_priority') %}
+      <option value="" {{ gp == '' ? 'selected' : '' }}>All priorities</option>
+      {% for p in 1..5 %}
+        <option value="{{ p }}" {{ gp == p ? 'selected' : '' }}>P{{ p }}</option>
+      {% endfor %}
     </select>
 
     <input class="inp" type="date" name="g_from" value="{{ app.request.get('g_from') }}">
     <input class="inp" type="date" name="g_to" value="{{ app.request.get('g_to') }}">
 
-    <button class="btn btn-primary" type="submit">Filter</button>
+    <button type="submit" class="btn btn-primary">Filter</button>
   </form>
 
   {# ===========================
@@ -218,12 +169,12 @@
 
       <div class="exports">
         <a class="btn btn-ghost linkbtn"
-           href="{{ path('admin_goals_export_goals_csv', app.request.query.all) }}">
+           href="{{ path('admin_goals_admin_goals_export_goals_csv', app.request.query.all) }}">
           Export CSV
         </a>
 
         <a class="btn btn-ghost linkbtn"
-           href="{{ path('admin_goals_export_goals_pdf', app.request.query.all) }}">
+           href="{{ path('admin_goals_admin_goals_export_goals_pdf', app.request.query.all) }}">
           Export PDF
         </a>
       </div>
@@ -248,28 +199,32 @@
       {% for r in goals %}
         {% set pct = r.progress|default(0) %}
         <tr>
-          <td class="muted">{{ r.id|default('—') }}</td>
+          <td class="muted">{{ r.id|default(dash) }}</td>
 
           <td>
-            <div style="font-weight:950;">{{ r.u_label|default('—') }}</div>
-            <div class="muted" style="font-size:12px;">SA #{{ r.saving_account_id|default('—') }}</div>
+            <div style="font-weight:950;">{{ r.u_label|default(dash) }}</div>
+            <div class="muted" style="font-size:12px;">SA #{{ r.saving_account_id|default(dash) }}</div>
           </td>
 
-          <td style="font-weight:900;">🎯 {{ r.nom|default('—') }}</td>
+          <td style="font-weight:900;">🎯 {{ r.nom|default(dash) }}</td>
 
           <td class="money">{{ r.montant_cible|default(0) }} DT</td>
           <td class="money">{{ r.montant_actuel|default(0) }} DT</td>
 
           <td>
             <div class="progress"><div style="width: {{ pct }}%"></div></div>
-            <div class="muted" style="font-size:12px; margin-top:6px;">
-              {{ pct|round }}%
-            </div>
+            <div class="muted" style="font-size:12px; margin-top:6px;">{{ pct|round }}%</div>
           </td>
 
-          <td>{{ r.date_limite|default('—') }}</td>
+          <td>
+            {% if r.date_limite is not empty %}
+              {{ r.date_limite is iterable ? r.date_limite : r.date_limite }}
+            {% else %}
+              {{ dash }}
+            {% endif %}
+          </td>
 
-          <td><span class="pill">🏷️ P{{ r.priorite|default('—') }}</span></td>
+          <td><span class="pill">🏷️ P{{ r.priorite|default(dash) }}</span></td>
 
           <td>
             {% set stt = r.status|default('active') %}
@@ -289,35 +244,19 @@
     </table>
   </div>
 
-
   {# ===========================
      SAVING ACCOUNTS SECTION
      =========================== #}
   <div class="section-title">Saving Accounts</div>
   <div class="sub" style="margin-top:0;">Manage user saving accounts (balance & rate)</div>
 
-  {# Filter bar for saving accounts (uses sa_*) #}
-  <form class="card filterbar" method="get" action="" style="margin-top:10px;">
-    {# keep goals filters when filtering SA (optional) #}
-    <input type="hidden" name="g_q" value="{{ app.request.get('g_q') }}">
-    <input type="hidden" name="g_status" value="{{ app.request.get('g_status') }}">
-    <input type="hidden" name="g_priority" value="{{ app.request.get('g_priority') }}">
-    <input type="hidden" name="g_from" value="{{ app.request.get('g_from') }}">
-    <input type="hidden" name="g_to" value="{{ app.request.get('g_to') }}">
-
-    <input class="inp" type="text" name="sa_q" placeholder="User name / email"
-           value="{{ app.request.get('sa_q') }}">
-
-    <input class="inp" type="number" step="0.01" name="sa_min" placeholder="Min balance"
-           value="{{ app.request.get('sa_min') }}">
-
-    <input class="inp" type="number" step="0.01" name="sa_max" placeholder="Max balance"
-           value="{{ app.request.get('sa_max') }}">
-
+  <form method="get" action="{{ path('admin_goals_admin_goals_index') }}" class="filterbar">
+    <input class="inp" name="sa_q" value="{{ app.request.get('sa_q') }}" placeholder="User name / email">
+    <input class="inp" name="sa_min" value="{{ app.request.get('sa_min') }}" placeholder="Min balance">
+    <input class="inp" name="sa_max" value="{{ app.request.get('sa_max') }}" placeholder="Max balance">
     <input class="inp" type="date" name="sa_from" value="{{ app.request.get('sa_from') }}">
     <input class="inp" type="date" name="sa_to" value="{{ app.request.get('sa_to') }}">
-
-    <button class="btn btn-primary" type="submit">Filter</button>
+    <button type="submit" class="btn btn-primary">Filter</button>
   </form>
 
   <div class="card" style="margin-top:18px;">
@@ -331,12 +270,12 @@
 
       <div class="exports">
         <a class="btn btn-ghost linkbtn"
-           href="{{ path('admin_goals_export_saving_csv', app.request.query.all) }}">
+           href="{{ path('admin_goals_admin_goals_export_saving_csv', app.request.query.all) }}">
           Export CSV
         </a>
 
         <a class="btn btn-ghost linkbtn"
-           href="{{ path('admin_goals_export_saving_pdf', app.request.query.all) }}">
+           href="{{ path('admin_goals_admin_goals_export_saving_pdf', app.request.query.all) }}">
           Export PDF
         </a>
       </div>
@@ -356,11 +295,17 @@
       <tbody>
       {% for sa in savingAccounts %}
         <tr>
-          <td class="muted">{{ sa.id|default('—') }}</td>
-          <td style="font-weight:950;">{{ sa.u_label|default('—') }}</td>
+          <td class="muted">{{ sa.id|default(dash) }}</td>
+          <td style="font-weight:950;">{{ sa.u_label|default(dash) }}</td>
           <td class="money">{{ sa.sold|default(0) }} DT</td>
           <td>{{ sa.taux_interet|default(0) }}%</td>
-          <td>{{ sa.date_creation|default('—') }}</td>
+          <td>
+            {% if sa.date_creation is not empty %}
+              {{ sa.date_creation|date("Y-m-d") }}
+            {% else %}
+              {{ dash }}
+            {% endif %}
+          </td>
         </tr>
       {% else %}
         <tr><td colspan="5" class="muted">No saving accounts found for current filters.</td></tr>
@@ -370,5 +315,4 @@
   </div>
 
 </div>
-
 {% endblock %}

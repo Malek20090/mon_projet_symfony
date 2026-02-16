@@ -1,0 +1,49 @@
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}Ajuster investissement{% endblock %}
+
+{% block body_class %}savings-page{% endblock %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}?v=1000">
+{% endblock %}
+
+{% block body %}
+<section class="savings-zone">
+  <div class="container">
+    <div class="section-title">
+      <div class="kicker">DECIDE$ MODULE</div>
+      <h2>Ajuster l’investissement</h2>
+      <p>Ajoutez ou retirez un montant, puis validez la mise à jour.</p>
+    </div>
+
+    <div class="big-card">
+      {% for message in app.flashes('error') %}
+        <div class="info-row" style="border-color: rgba(232,65,65,.35);">
+          <span>{{ message }}</span>
+          <b style="color:#e84141;">Erreur</b>
+        </div>
+      {% endfor %}
+
+      <div class="info-row">
+        <span>Crypto</span>
+        <b>{{ investissement.crypto.name }}</b>
+      </div>
+      <div class="info-row">
+        <span>Montant actuel</span>
+        <b>{{ investissement.amountInvested }} USD</b>
+      </div>
+
+      <form method="post" class="mt-20">
+        <label class="form-label">Montant à ajouter ou retirer (USD)</label>
+        <input type="number" name="amount" step="0.01" required class="form-control">
+
+        <div class="mt-20">
+          <button type="submit" class="primary-btn">Valider</button>
+          <a href="{{ path('crypto_index') }}" class="ghost-btn">← Retour</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,13 +1,27 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Edit FinancialGoal{% endblock %}
+{% block title %}Edit l’objectif | Decide${% endblock %}
 
-{% block body %}
-    <h1>Edit FinancialGoal</h1>
+{% block content %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Edit l’objectif</h1>
+            <p class="mb-0">Adjust your financial goal settings</p>
+        </div>
+        <a href="{{ path('app_financial_goal_index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to list
+        </a>
+    </div>
 
-    {{ include('financial_goal/_form.html.twig', {'button_label': 'Update'}) }}
+    <div class="card-custom mb-3">
+        {{ include('financial_goal/_form.html.twig', {'button_label': 'Update'}) }}
+    </div>
 
-    <a href="{{ path('app_financial_goal_index') }}">back to list</a>
-
-    {{ include('financial_goal/_delete_form.html.twig') }}
+    <div class="card-custom">
+        {{ include('financial_goal/_delete_form.html.twig') }}
+    </div>
+</div>
 {% endblock %}
+
+

@@ -1,11 +1,12 @@
-<!-- templates/registration/register.html.twig -->
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Inscription | FinanceLogo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign Up | FinanceLogo</title>
 
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -15,68 +16,72 @@
 
     <div class="auth-container">
 
-        <!-- LEFT SIDE -->
         <div class="auth-left">
             <div class="brand">
-    <img src="{{ asset('img/chat1.png') }}"
-     alt="DECIDE$ Logo"
-     class="brand-logo animate-logo">
-</div>
+                <img src="{{ asset('img/chat1.png') }}" alt="DECIDE$ Logo" class="brand-logo animate-logo">
+            </div>
 
             <h2>
-                Rejoignez-nous et gérez<br>
-                <span>votre avenir financier</span>
+                Join us and manage<br>
+                <span>your financial future</span>
             </h2>
 
             <div class="accent-line"></div>
 
             <p class="side-text">
-                Optimisez vos investissements et suivez votre solde en temps réel
-                avec nos outils avancés.
+                Optimize investments and monitor your balance in real time with advanced tools.
             </p>
         </div>
 
-        <!-- RIGHT SIDE -->
         <div class="auth-right">
             <div class="auth-card register">
 
-                <h2>Inscription</h2>
-                <p class="subtitle">Créez votre compte sécurisé</p>
+                <h2>Sign Up</h2>
+                <p class="subtitle">Create your secure account</p>
+
+                {% for message in app.flashes('error') %}
+                    <div class="error-message mb-2">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
 
                 <form method="post" class="register-grid">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
 
                     <div class="input-group">
-                        <label>Nom complet</label>
-                        <input type="text" name="nom" placeholder="Nom complet" required>
+                        <label>Full name</label>
+                        <input type="text" name="nom" placeholder="Full name" minlength="2" maxlength="100" required value="{{ form_data.nom|default('') }}">
                     </div>
 
                     <div class="input-group">
                         <label>Email</label>
-                        <input type="email" name="email" placeholder="Email" required>
+                        <input type="email" name="email" placeholder="Email" maxlength="180" required value="{{ form_data.email|default('') }}">
                     </div>
 
                     <div class="input-group">
-                        <label>Mot de passe</label>
-                        <input type="password" name="password" placeholder="Mot de passe" required>
+                        <label>Password</label>
+                        <input type="password" name="password" placeholder="Password" minlength="8" maxlength="255" required>
+                        <small class="text-muted">At least 8 characters, with uppercase, lowercase and a number.</small>
                     </div>
 
                     <div class="input-group">
-                        <label>Confirmer le mot de passe</label>
-                        <input type="password" name="confirm_password" placeholder="Confirmer" required>
+                        <label>Confirm password</label>
+                        <input type="password" name="confirm_password" placeholder="Confirm password" minlength="8" maxlength="255" required>
                     </div>
 
                     <div class="input-group">
-                        <label>Rôle</label>
+                        <label>Role</label>
                         <select name="role" required>
-                            <option value="">Choisir un rôle</option>
-                            <option value="ETUDIANT">Étudiant</option>
-                            <option value="SALARIE">Salarié</option>
+                            <option value="">Choose a role</option>
+                            <option value="ETUDIANT" {{ form_data.role|default('') == 'ETUDIANT' ? 'selected' : '' }}>Student</option>
+                            <option value="SALARIE" {{ form_data.role|default('') == 'SALARIE' ? 'selected' : '' }}>Employee</option>
                         </select>
                     </div>
 
                     <div class="input-group">
-                        <label>Solde initial</label>
-                        <input type="number" name="solde" placeholder="Solde initial" value="0" min="0">
+                        <label>Initial balance</label>
+                        <input type="number" name="solde" placeholder="0" value="{{ form_data.solde|default('0') }}" min="0" step="0.01" required>
                     </div>
 
                     <button type="submit" class="btn-auth full-width">
@@ -85,8 +90,8 @@
                 </form>
 
                 <div class="auth-footer">
-                    Déjà un compte ?
-                    <a href="{{ path('app_login') }}">Se connecter</a>
+                    Already have an account?
+                    <a href="{{ path('app_login') }}">Sign in</a>
                 </div>
 
                 <div class="ssl-badge">
@@ -99,5 +104,6 @@
     </div>
 </div>
 
+<script src="{{ asset('js/theme-toggle.js') }}"></script>
 </body>
 </html>

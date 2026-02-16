@@ -1,0 +1,46 @@
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}Modifier objectif{% endblock %}
+
+{% block body_class %}savings-page{% endblock %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}?v=1000">
+{% endblock %}
+
+{% block body %}
+<section class="savings-zone">
+  <div class="container">
+    <div class="section-title">
+      <div class="kicker">DECIDE$ MODULE</div>
+      <h2>Modifier l’objectif</h2>
+      <p>Mettre à jour les informations de l’objectif : {{ objectif.name }}.</p>
+    </div>
+
+    <div class="big-card">
+      {{ form_start(form) }}
+        <div class="grid-2">
+          <div>
+            <label class="form-label">Nom</label>
+            {{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+          </div>
+          <div>
+            <label class="form-label">Multiplicateur</label>
+            {{ form_widget(form.targetMultiplier, {'attr': {'class': 'form-control'}}) }}
+          </div>
+        </div>
+
+        <div class="mt-20">
+          <div class="mini-title">Investissements</div>
+          {{ form_widget(form.investissements, {'attr': {'class': 'form-control'}}) }}
+        </div>
+
+        <div class="mt-20">
+          <button type="submit" class="primary-btn">Enregistrer</button>
+          <a href="{{ path('objectif_index') }}" class="ghost-btn">← Retour aux objectifs</a>
+        </div>
+      {{ form_end(form) }}
+    </div>
+  </div>
+</section>
+{% endblock %}

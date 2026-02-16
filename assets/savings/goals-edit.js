@@ -1,4 +1,4 @@
-alert("goals-edit.js loaded");
+﻿alert("goals-edit.js loaded");
 console.log("✅ goals-edit.js LOADED");
 
 function initGoalEdit() {
@@ -7,14 +7,14 @@ function initGoalEdit() {
   const modal = document.getElementById('goalEditModal');
   const form  = document.getElementById('goalEditForm');
 
-  const geNom   = document.getElementById('ge_nom');
+  const geName   = document.getElementById('ge_nom');
   const geCible = document.getElementById('ge_cible');
   const gePrio  = document.getElementById('ge_prio');
   const geDate  = document.getElementById('ge_date');
 
   console.log("buttons found:", document.querySelectorAll('[data-open-goal-edit]').length);
 
-  if (!modal || !form || !geNom || !geCible || !gePrio || !geDate) {
+  if (!modal || !form || !geName || !geCible || !gePrio || !geDate) {
     console.error("❌ Missing modal/form/inputs");
     return;
   }
@@ -35,7 +35,7 @@ function initGoalEdit() {
     const id = btn.dataset.goalId || '';
     form.action = window.__goalEditUrlPattern.replace('__ID__', id);
 
-    geNom.value   = btn.dataset.goalNom   || '';
+    geName.value   = btn.dataset.goalName   || '';
     geCible.value = btn.dataset.goalCible || '';
     gePrio.value  = btn.dataset.goalPrio  || '3';
     geDate.value  = btn.dataset.goalDate  || '';
@@ -46,3 +46,4 @@ function initGoalEdit() {
 
 document.addEventListener('DOMContentLoaded', initGoalEdit);
 document.addEventListener('turbo:load', initGoalEdit); // au cas où Turbo est activé
+

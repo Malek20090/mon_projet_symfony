@@ -1,9 +1,4 @@
-{# templates/goal/index.html.twig #}
-{% extends 'base.html.twig' %}
-
-{% block title %}Goals | Decide${% endblock %}
-
-{% block body %}
+{# templates/savings/partials/tabs/_goals_tab.html.twig #}
 
 <style>
 /* ===============================
@@ -475,27 +470,27 @@
       let ok = true;
 
       if(nom.length < 3){
-        showErr(addForm,'nom',"Le nom doit contenir au moins 3 caractères.");
+        showErr(addForm,'nom',"The name must contain at least 3 characters.");
         ok = false;
       }
       if(!(cible > 0)){
-        showErr(addForm,'montant_cible',"Le montant cible doit être > 0.");
+        showErr(addForm,'montant_cible',"The target amount must be > 0.");
         ok = false;
       }
       if(actuel < 0){
-        showErr(addForm,'montant_actuel',"Le montant actuel ne peut pas être négatif.");
+        showErr(addForm,'montant_actuel',"The current amount cannot be negative.");
         ok = false;
       }
       if(cible > 0 && actuel > cible){
-        showErr(addForm,'montant_actuel',"Le montant actuel ne peut pas dépasser le montant cible.");
+        showErr(addForm,'montant_actuel',"The current amount cannot exceed the target amount.");
         ok = false;
       }
       if(prio < 1 || prio > 5){
-        showErr(addForm,'priorite',"La priorité doit être entre 1 et 5.");
+        showErr(addForm,'priorite',"Priority must be between 1 and 5.");
         ok = false;
       }
       if(date && isPastDate(date)){
-        showErr(addForm,'date_limite',"La date limite doit être aujourd’hui ou dans le futur.");
+        showErr(addForm,'date_limite',"The deadline must be today or in the future.");
         ok = false;
       }
 
@@ -523,7 +518,7 @@
 
       if(!(v > 0)){
         e.preventDefault();
-        showErr(f,'add_amount',"La contribution doit être > 0.");
+        showErr(f,'add_amount',"The contribution must be > 0.");
         const inp = f.querySelector('[name="add_amount"]');
         if(inp) inp.focus();
       }
@@ -586,10 +581,10 @@
 
       let ok = true;
 
-      if(nom.length < 3){ showErr(form,'edit_nom',"Le nom doit contenir au moins 3 caractères."); ok=false; }
-      if(!(cible > 0)){ showErr(form,'edit_cible',"Le montant cible doit être > 0."); ok=false; }
-      if(prio < 1 || prio > 5){ showErr(form,'edit_prio',"La priorité doit être entre 1 et 5."); ok=false; }
-      if(date && isPastDate(date)){ showErr(form,'edit_date',"La date limite doit être aujourd’hui ou dans le futur."); ok=false; }
+      if(nom.length < 3){ showErr(form,'edit_nom',"The name must contain at least 3 characters."); ok=false; }
+      if(!(cible > 0)){ showErr(form,'edit_cible',"The target amount must be > 0."); ok=false; }
+      if(prio < 1 || prio > 5){ showErr(form,'edit_prio',"Priority must be between 1 and 5."); ok=false; }
+      if(date && isPastDate(date)){ showErr(form,'edit_date',"The deadline must be today or in the future."); ok=false; }
 
       if(!ok){
         e.preventDefault();
@@ -616,5 +611,3 @@
 
 })();
 </script>
-
-{% endblock %}

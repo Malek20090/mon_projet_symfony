@@ -1,0 +1,122 @@
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}Mes objectifs{% endblock %}
+
+{% block body_class %}savings-page{% endblock %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="{{ asset('css/decides-savings.css') }}?v=1000">
+{% endblock %}
+
+{% block body %}
+<section class="savings-zone">
+  <div class="container">
+    <div class="section-title">
+      <div class="kicker">DECIDE$ MODULE</div>
+      <h2>Mes objectifs</h2>
+      <p>Suivez la progression, ajustez vos objectifs et gardez le cap.</p>
+    </div>
+
+    <div class="big-card">
+      <div class="actions-row" style="justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div class="mini-title" style="margin:0;">Objectifs</div>
+        <a href="{{ path('objectif_new') }}">
+          <button class="primary-btn" type="button">Créer un objectif</button>
+        </a>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Montant actuel</th>
+              <th>Multiplicateur</th>
+              <th>
+                Montant cible
+                <a class="chip" href="{{ path('objectif_index', { sort: 'target', order: 'asc' }) }}">⬆</a>
+                <a class="chip" href="{{ path('objectif_index', { sort: 'target', order: 'desc' }) }}">⬇</a>
+              </th>
+              <th>Statut</th>
+              <th>
+                Progression
+                <a class="chip" href="{{ path('objectif_index', { sort: 'progress', order: 'asc' }) }}">⬆</a>
+                <a class="chip" href="{{ path('objectif_index', { sort: 'progress', order: 'desc' }) }}">⬇</a>
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+          {% for objectif in objectifs %}
+            {% set currentAmount = calculator.calculateCurrentAmountForObjectif(objectif) %}
+            {% set progress = 0 %}
+            {% if objectif.targetAmount > 0 %}
+              {% set progress = (currentAmount / objectif.targetAmount) * 100 %}
+            {% endif %}
+            {% set progress = progress > 100 ? 100 : progress %}
+
+            <tr>
+              <td><strong>{{ objectif.name }}</strong></td>
+              <td>${{ currentAmount|number_format(2) }}</td>
+              <td>x{{ objectif.targetMultiplier }}</td>
+              <td>${{ objectif.targetAmount|number_format(2) }}</td>
+
+              <td>
+                {% if objectif.isCompleted %}
+                  <span style="color:#16a34a; font-weight:900;">Atteint</span>
+                {% else %}
+                  <span style="color:#f59e0b; font-weight:900;">En cours</span>
+                {% endif %}
+              </td>
+
+              <td>
+                <div style="min-width: 180px;">
+                  <div style="background: rgba(0,0,0,.06); border-radius: 999px; height: 10px; overflow: hidden;">
+                    <div
+                      style="
+                        height: 100%;
+                        width: {{ progress }}%;
+                        background: {{ objectif.isCompleted ? '#16a34a' : '#f59e0b' }};
+                        border-radius: 999px;
+                      "
+                    ></div>
+                  </div>
+                  <div style="font-size: 12px; margin-top: 6px; color: #6b7c8a;">
+                    {{ progress|number_format(1) }}%
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <a href="{{ path('objectif_edit', { id: objectif.id }) }}">
+                  <button class="ghost-btn" type="button">Modifier</button>
+                </a>
+
+                <form
+                  method="post"
+                  action="{{ path('objectif_delete', { id: objectif.id }) }}"
+                  style="display:inline-block"
+                  onsubmit="return confirm('Supprimer cet objectif ?');"
+                >
+                  <button class="danger-btn" type="submit">Supprimer</button>
+                </form>
+              </td>
+            </tr>
+
+          {% else %}
+            <tr>
+              <td colspan="7" class="tiny-note">Aucun objectif pour le moment</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="actions-row" style="margin-top: 16px;">
+        <a href="{{ path('crypto_index') }}" class="ghost-btn">← Retour aux investissements</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

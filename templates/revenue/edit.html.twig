@@ -1,27 +1,30 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Modifier le revenu #{{ revenue.id }} | Decide${% endblock %}
+{% block title %}Edit income #{{ revenue.id }} | Decide${% endblock %}
 
 {% block content %}
 <div class="admin-page">
     <div class="page-header-card">
         <div>
-            <h1>Modifier le revenu #{{ revenue.id }}</h1>
-            <p class="mb-0">Mise à jour des informations</p>
+            <h1>Edit income #{{ revenue.id }}</h1>
+            <p class="mb-0">Information update</p>
         </div>
     </div>
 
     <div class="card-custom">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <h5 class="mb-4"><i class="fas fa-edit text-primary me-2"></i>Modifier le revenu</h5>
-                {{ include('revenue/_form.html.twig', { button_label: 'Mettre à jour' }) }}
+                <h5 class="mb-4"><i class="fas fa-edit text-primary me-2"></i>Edit income</h5>
+                {{ include('revenue/_form.html.twig', { button_label: 'Update' }) }}
                 <div class="admin-page-footer mt-4">
-                    <a href="{{ path('app_revenue_index') }}" class="btn btn-secondary me-2"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
-                    <a href="{{ path('app_revenue_show', { id: revenue.id }) }}" class="btn btn-outline-primary"><i class="fas fa-eye me-2"></i>Voir</a>
+                    <a href="{{ path('app_revenue_index') }}" class="btn btn-secondary me-2"><i class="fas fa-arrow-left me-2"></i>Back to list</a>
+                    <a href="{{ path('app_revenue_show', { id: revenue.id }) }}" class="btn btn-outline-primary"><i class="fas fa-eye me-2"></i>View</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+
+

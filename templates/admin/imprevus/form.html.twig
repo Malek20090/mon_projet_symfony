@@ -1,19 +1,19 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}{{ action == 'Ajouter' ? 'Nouvel imprévu' : 'Modifier l\'imprévu' }} | Decide${% endblock %}
+{% block title %}{{ action == 'Add' ? 'New unexpected event' : 'Edit unexpected event' }} | Decide${% endblock %}
 
 {% block content %}
 <div class="admin-page">
     <div class="page-header-card">
         <div>
-            <h1>{{ action == 'Ajouter' ? 'Nouvel imprévu' : 'Modifier l\'imprévu' }}</h1>
-            <p class="mb-0">{% if action == 'Ajouter' %}Créer un nouvel imprévu{% else %}Modifier les informations de l'imprévu{% endif %}</p>
+            <h1>{{ action == 'Add' ? 'New unexpected event' : 'Edit unexpected event' }}</h1>
+            <p class="mb-0">{% if action == 'Add' %}Create a new unexpected event{% else %}Edit unexpected event information{% endif %}</p>
         </div>
     </div>
 
     {% if errors is defined and errors is not empty %}
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Erreurs de validation</strong>
+            <strong>Errors de validation</strong>
             <ul class="mb-0 mt-2">
                 {% for field, error in errors %}
                     <li>{{ error }}</li>
@@ -26,7 +26,7 @@
     <div class="card-custom">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <h5 class="mb-4"><i class="fas fa-exclamation-circle text-primary me-2"></i>Informations de l'imprévu</h5>
+                <h5 class="mb-4"><i class="fas fa-exclamation-circle text-primary me-2"></i>Unexpected event information</h5>
                 <form method="POST">
                     <input type="hidden" name="_token" value="{{ csrf_token('imprevus_form') }}">
 
@@ -46,9 +46,9 @@
                         <div class="col-md-6 mb-3">
                             <label for="type" class="form-label fw-bold">Type <span class="text-danger">*</span></label>
                             <select name="type" id="type" class="form-select {% if errors.type is defined %}is-invalid{% endif %}" required>
-                                <option value="">Sélectionnez...</option>
-                                <option value="NEGATIF" {% if imprevus.type == 'NEGATIF' %}selected{% endif %}>Négatif (Dépense)</option>
-                                <option value="POSITIF" {% if imprevus.type == 'POSITIF' %}selected{% endif %}>Positif (Gain)</option>
+                                <option value="">Select...</option>
+                                <option value="NEGATIF" {% if imprevus.type == 'NEGATIF' %}selected{% endif %}>Negative (Expense)</option>
+                                <option value="POSITIF" {% if imprevus.type == 'POSITIF' %}selected{% endif %}>Positive (Gain)</option>
                             </select>
                             {% if errors.type is defined %}
                                 <div class="invalid-feedback">{{ errors.type }}</div>
@@ -66,7 +66,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="message" class="form-label">Message éducatif</label>
+                        <label for="message" class="form-label">Educational message</label>
                         <textarea name="message" id="message"
                                   class="form-control {% if errors.message is defined %}is-invalid{% endif %}"
                                   rows="4" placeholder="Description ou conseil pour l'utilisateur...">{{ imprevus.messageEducatif ?? '' }}</textarea>
@@ -81,10 +81,12 @@
                     </div>
                 </form>
                 <div class="admin-page-footer mt-4">
-                    <a href="{{ path('admin_imprevus_list') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
+                    <a href="{{ path('admin_imprevus_list') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Back to list</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+

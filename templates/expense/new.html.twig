@@ -1,26 +1,28 @@
-{% extends 'admin/layout.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Nouvelle dépense | Decide${% endblock %}
+{% block title %}New expense | Decide${% endblock %}
 
 {% block content %}
 <div class="admin-page">
     <div class="page-header-card">
         <div>
-            <h1>Nouvelle dépense</h1>
-            <p class="mb-0">Ajouter une dépense</p>
+            <h1>New expense</h1>
+            <p class="mb-0">Add an expense</p>
         </div>
     </div>
 
     <div class="card-custom">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <h5 class="mb-4"><i class="fas fa-credit-card text-primary me-2"></i>Ajouter une dépense</h5>
-                {{ include('expense/_form.html.twig', { button_label: 'Créer' }) }}
+                <h5 class="mb-4"><i class="fas fa-credit-card text-primary me-2"></i>Add an expense</h5>
+                {{ include('expense/_form.html.twig', { button_label: 'Create' }) }}
                 <div class="admin-page-footer mt-4">
-                    <a href="{{ path('app_expense_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Retour à la liste</a>
+                    <a href="{{ path('app_expense_index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to list</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+

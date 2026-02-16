@@ -1,12 +1,12 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base.html.twig' %}
 
-{% block title %}Détails du Cours{% endblock %}
+{% block title %}Details du Course{% endblock %}
 
 {% block body %}
 <div class="container mt-5">
     <div class="card shadow">
         <div class="card-header bg-info text-white">
-            <h3 class="mb-0"><i class="fas fa-book"></i> Détails du Cours</h3>
+            <h3 class="mb-0"><i class="fas fa-book"></i> Details du Course</h3>
         </div>
         <div class="card-body">
             <table class="table">
@@ -35,12 +35,12 @@
                                     <i class="fas fa-external-link-alt"></i> {{ cour.urlMedia }}
                                 </a>
                             {% else %}
-                                <span class="text-muted">Aucun média</span>
+                                <span class="text-muted">No media</span>
                             {% endif %}
                         </td>
                     </tr>
                     <tr>
-                        <th>Quizzes associés</th>
+                        <th>Related quizzes</th>
                         <td>
                             {% if cour.quizzes|length > 0 %}
                                 <ul class="list-group">
@@ -53,7 +53,7 @@
                                     {% endfor %}
                                 </ul>
                             {% else %}
-                                <span class="text-muted">Aucun quiz associé</span>
+                                <span class="text-muted">No related quiz</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -62,11 +62,11 @@
 
             <div class="d-flex justify-content-between mt-4">
                 <a href="{{ path('admin_cours_index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                    <i class="fas fa-arrow-left"></i> Back to list
                 </a>
                 <div>
                     <a href="{{ path('admin_cours_edit', {'id': cour.id}) }}" class="btn btn-warning">
-                        <i class="fas fa-edit"></i> Modifier
+                        <i class="fas fa-edit"></i> Edit
                     </a>
                 </div>
             </div>
@@ -74,3 +74,6 @@
     </div>
 </div>
 {% endblock %}
+
+
+

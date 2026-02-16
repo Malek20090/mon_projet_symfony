@@ -1,0 +1,79 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Admin - Investissements{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Investissements</h1>
+            <p class="mb-0">Liste complète des investissements</p>
+        </div>
+        <a href="{{ path('admin_investissement_create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Créer un investissement
+        </a>
+    </div>
+
+    <div class="card-custom">
+        {% if investissements|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-custom table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Crypto</th>
+                            <th>Montant investi</th>
+                            <th>Prix d'achat</th>
+                            <th>Quantité</th>
+                            <th>Gain / Perte</th>
+                            <th style="width: 160px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in investissements %}
+                            {% set gain = calculator.calculateGain(inv) %}
+                            <tr>
+                                <td>
+                                    {% if inv.userId %}
+                                        {{ inv.userId.email }}
+                                    {% else %}
+                                        <span class="text-danger">User supprimé</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ inv.crypto.name }}</td>
+                                <td>{{ inv.amountInvested }}</td>
+                                <td>{{ inv.buyPrice }}</td>
+                                <td>{{ inv.quantity|number_format(8) }}</td>
+                                <td class="{{ gain >= 0 ? 'text-success' : 'text-danger' }} fw-bold">
+                                    {{ gain|number_format(2) }}
+                                </td>
+                                <td>
+                                    <a href="{{ path('admin_investissement_adjust', { id: inv.id }) }}" class="btn btn-sm btn-outline-primary" title="Ajuster">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="post"
+                                          action="{{ path('admin_investissement_delete', { id: inv.id }) }}"
+                                          class="d-inline"
+                                          onsubmit="return confirm('Supprimer cet investissement ?');">
+                                        <button class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-chart-line fa-3x mb-3"></i>
+                <p class="mb-2">Aucun investissement</p>
+                <a href="{{ path('admin_investissement_create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Créer un investissement
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,29 +1,29 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'admin/layout.html.twig' %}
 
-{% block title %}Edit Transaction{% endblock %}
-
-{% block body %}
-    <h1>Edit Transaction</h1>
-
-    {{ include('transaction/_form.html.twig', {'button_label': 'Update'}) }}
-
-    <a href="{{ path('app_transaction_index') }}">back to list</a>
-
-    {{ include('transaction/_delete_form.html.twig') }}
-{% extends 'admin/layout.html.twig' %}
-
-{% block title %}Edit Transaction{% endblock %}
+{% block title %}Edit la transaction | Decide${% endblock %}
 
 {% block content %}
-<h1>Edit Transaction</h1>
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Edit transaction #{{ transaction.id }}</h1>
+            <p class="mb-0">Update transaction information</p>
+        </div>
+        <a href="{{ path('app_transaction_index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to list
+        </a>
+    </div>
 
-<div class="card">
-    {{ include('transaction/_form.html.twig', {'button_label': 'Update'}) }}
-</div>
+    <div class="card-custom mb-3">
+        <h5 class="mb-3"><i class="fas fa-pen-to-square text-primary me-2"></i>Transaction details</h5>
+        {{ include('transaction/_form.html.twig', {'button_label': 'Update'}) }}
+    </div>
 
-<a href="{{ path('app_transaction_index') }}" class="btn">Back</a>
-
-<div style="margin-top: 10px">
-    {{ include('transaction/_delete_form.html.twig') }}
+    <div class="card-custom">
+        <h5 class="mb-3">Delete</h5>
+        {{ include('transaction/_delete_form.html.twig') }}
+    </div>
 </div>
 {% endblock %}
+
+

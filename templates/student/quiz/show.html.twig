@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base.html.twig' %}
 
 {% block title %}Quiz : {{ quiz.question|slice(0, 50) }}...{% endblock %}
 
@@ -11,15 +11,15 @@
 <div class="container mt-5">
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ path('student_cours_index') }}">Accueil</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('student_cours_index') }}">Home</a></li>
             <li class="breadcrumb-item"><a href="{{ path('student_quiz_index') }}">Quiz</a></li>
-            <li class="breadcrumb-item active">Détails</li>
+            <li class="breadcrumb-item active">Details</li>
         </ol>
     </nav>
 
     <div class="card shadow">
         <div class="card-header bg-success text-white">
-            <h3 class="mb-0"><i class="fas fa-question-circle"></i> Détails du Quiz</h3>
+            <h3 class="mb-0"><i class="fas fa-question-circle"></i> Details du Quiz</h3>
         </div>
         <div class="card-body">
             {% if quiz.cours %}
@@ -34,18 +34,21 @@
             </p>
             <div class="d-flex flex-wrap gap-2 mt-4">
                 <a href="{{ path('student_quiz_pass', {'id': quiz.id}) }}" class="btn btn-success">
-                    <i class="fas fa-play"></i> Passer le quiz
+                    <i class="fas fa-play"></i> Take quiz
                 </a>
                 {% if quiz.cours %}
                     <a href="{{ path('student_cours_show', {'id': quiz.cours.id}) }}" class="btn btn-outline-primary">
-                        <i class="fas fa-book"></i> Voir le cours
+                        <i class="fas fa-book"></i> View course
                     </a>
                 {% endif %}
                 <a href="{{ path('student_quiz_index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                    <i class="fas fa-arrow-left"></i> Back to list
                 </a>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+
+
