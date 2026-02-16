@@ -43,7 +43,11 @@ class ExpenseType extends AbstractType
                 'label' => 'Description',
                 'required' => false,
             ])
-            
+            ->add('revenue', EntityType::class, [
+                'class' => Revenue::class,
+                'choice_label' => fn(Revenue $r) => sprintf('#%d - %s € (%s)', $r->getId(), number_format($r->getAmount(), 2), $r->getReceivedAt()?->format('d/m/Y') ?? ''),
+                'label' => 'Revenu associé',
+            ])
         ;
     }
 
