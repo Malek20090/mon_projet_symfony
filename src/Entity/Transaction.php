@@ -6,6 +6,7 @@ use App\Repository\TransactionRepository;
 use App\Entity\Expense;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TransactionRepository::class)]
 class Transaction
@@ -16,22 +17,36 @@ class Transaction
     private ?int $id = null;
 
     #[ORM\Column(length: 30)]
+    #[Assert\NotBlank(message: 'Transaction type is required.')]
+    #[Assert\Choice(choices: ['EXPENSE', 'SAVING', 'INVESTMENT'], message: 'Transaction type is invalid.')]
     private string $type;
 
     #[ORM\Column]
+    #[Assert\NotNull(message: 'Amount is required.')]
+    #[Assert\Positive(message: 'Amount must be greater than 0.')]
+    #[Assert\LessThanOrEqual(value: 1000000, message: 'Amount cannot exceed 1,000,000.')]
     private float $montant;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotNull(message: 'Date is required.')]
+    #[Assert\LessThanOrEqual('today', message: 'Date cannot be in the future.')]
     private \DateTime $date;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 500, maxMessage: 'Description cannot exceed 500 characters.')]
     private ?string $description = null;
 
     #[ORM\Column(length: 50, nullable: true)]
+    #[Assert\Length(max: 50, maxMessage: 'Source cannot exceed 50 characters.')]
+    #[Assert\Regex(
+        pattern: '/^[A-Za-z0-9 _.-]*$/',
+        message: 'Source can contain only letters, numbers, spaces, dot, underscore and dash.'
+    )]
     private ?string $moduleSource = null;
 
     #[ORM\ManyToOne(inversedBy: 'transactions')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Assert\NotNull(message: 'User is required.')]
     private ?User $user = null;
 
     #[ORM\ManyToOne(targetEntity: Expense::class)]

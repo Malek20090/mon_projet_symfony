@@ -3,13 +3,13 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class RegistrationController extends AbstractController
 {
@@ -18,7 +18,7 @@ class RegistrationController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         UserPasswordHasherInterface $passwordHasher,
-        UserRepository $userRepository
+        ValidatorInterface $validator
     ): Response {
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('register', (string) $request->request->get('_csrf_token'))) {
@@ -37,40 +37,33 @@ class RegistrationController extends AbstractController
 
             $errors = [];
 
-            if ($nom === '' || mb_strlen($nom) < 2) {
-                $errors[] = 'Full name must contain at least 2 characters.';
-            }
-
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $errors[] = 'Please enter a valid email address.';
-            }
-
-            if ($userRepository->findOneBy(['email' => $email])) {
-                $errors[] = 'This email is already used.';
-            }
-
-            if (strlen($password) < 8) {
-                $errors[] = 'Password must be at least 8 characters.';
-            }
-
-            if (!preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/\d/', $password)) {
-                $errors[] = 'Password must include uppercase, lowercase and a number.';
-            }
-
             if ($password !== $confirmPassword) {
                 $errors[] = 'Password confirmation does not match.';
             }
 
-            if (!in_array($role, ['ETUDIANT', 'SALARIE'], true)) {
+            $user = new User();
+            $user->setNom($nom);
+            $user->setEmail($email);
+            $user->setPassword($password);
+            $user->setSoldeTotal((float) $solde);
+
+            $roleMap = [
+                'ETUDIANT' => ['ROLE_ETUDIANT'],
+                'SALARIE' => ['ROLE_SALARY'],
+            ];
+
+            if (!isset($roleMap[$role])) {
                 $errors[] = 'Please choose a valid role.';
+            } else {
+                $user->setRoles($roleMap[$role]);
             }
 
-            if (!is_numeric($solde) || (float) $solde < 0) {
-                $errors[] = 'Initial balance must be a non-negative number.';
+            foreach ($validator->validate($user) as $violation) {
+                $errors[] = $violation->getMessage();
             }
 
             if (!empty($errors)) {
-                foreach ($errors as $error) {
+                foreach (array_unique($errors) as $error) {
                     $this->addFlash('error', $error);
                 }
 
@@ -84,20 +77,7 @@ class RegistrationController extends AbstractController
                 ]);
             }
 
-            $user = new User();
-            $user->setNom($nom);
-            $user->setEmail($email);
             $user->setPassword($passwordHasher->hashPassword($user, $password));
-
-            if ($role === 'ETUDIANT') {
-                $user->setRoles(['ROLE_ETUDIANT']);
-            } elseif ($role === 'SALARIE') {
-                $user->setRoles(['ROLE_SALARY']);
-            } else {
-                $user->setRoles(['ROLE_USER']);
-            }
-
-            $user->setSoldeTotal((float) $solde);
 
             $em->persist($user);
             $em->flush();

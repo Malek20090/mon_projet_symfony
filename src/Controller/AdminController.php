@@ -28,11 +28,8 @@ class AdminController extends AbstractController
     // =========================
 
     #[Route('/', name: 'admin_index')]
-    public function index(ImprevusRepository $imprevusRepository): Response
-    {
-        return $this->render('admin/index.html.twig', [
-            'imprevus' => $imprevusRepository->findAll(),
-        ]);
+    public function index(): Response {
+        return $this->redirectToRoute('admin_imprevus_list');
     }
 
     // =========================
@@ -70,7 +67,7 @@ class AdminController extends AbstractController
             $entityManager->persist($cour);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Le cours a été créé avec succès.');
+            $this->addFlash('success', 'Le cours a Ã©tÃ© crÃ©Ã© avec succÃ¨s.');
             return $this->redirectToRoute('admin_cours_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -97,7 +94,7 @@ class AdminController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            $this->addFlash('success', 'Le cours a été modifié avec succès.');
+            $this->addFlash('success', 'Le cours a Ã©tÃ© modifiÃ© avec succÃ¨s.');
             return $this->redirectToRoute('admin_cours_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -113,7 +110,7 @@ class AdminController extends AbstractController
         if ($this->isCsrfTokenValid('delete'.$cour->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($cour);
             $entityManager->flush();
-            $this->addFlash('success', 'Le cours a été supprimé avec succès.');
+            $this->addFlash('success', 'Le cours a Ã©tÃ© supprimÃ© avec succÃ¨s.');
         }
 
         return $this->redirectToRoute('admin_cours_index', [], Response::HTTP_SEE_OTHER);
@@ -159,7 +156,7 @@ class AdminController extends AbstractController
             $entityManager->persist($quiz);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Le quiz a été créé avec succès.');
+            $this->addFlash('success', 'Le quiz a Ã©tÃ© crÃ©Ã© avec succÃ¨s.');
             return $this->redirectToRoute('admin_quiz_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -186,7 +183,7 @@ class AdminController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            $this->addFlash('success', 'Le quiz a été modifié avec succès.');
+            $this->addFlash('success', 'Le quiz a Ã©tÃ© modifiÃ© avec succÃ¨s.');
             return $this->redirectToRoute('admin_quiz_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -202,7 +199,7 @@ class AdminController extends AbstractController
         if ($this->isCsrfTokenValid('delete'.$quiz->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($quiz);
             $entityManager->flush();
-            $this->addFlash('success', 'Le quiz a été supprimé avec succès.');
+            $this->addFlash('success', 'Le quiz a Ã©tÃ© supprimÃ© avec succÃ¨s.');
         }
 
         return $this->redirectToRoute('admin_quiz_index', [], Response::HTTP_SEE_OTHER);
@@ -224,7 +221,7 @@ class AdminController extends AbstractController
     }
 
     // =========================
-    // IMPRÉVUS CRUD
+    // IMPRÃ‰VUS CRUD
     // =========================
 
     #[Route('/imprevus', name: 'admin_imprevus_list')]
@@ -259,19 +256,19 @@ class AdminController extends AbstractController
             if (empty($titre)) {
                 $errors['titre'] = 'Le titre est obligatoire.';
             } elseif (strlen($titre) > 150) {
-                $errors['titre'] = 'Le titre ne peut pas dépasser 150 caractères.';
+                $errors['titre'] = 'Le titre ne peut pas dÃ©passer 150 caractÃ¨res.';
             }
             if (empty($type)) {
                 $errors['type'] = 'Le type est obligatoire.';
             } elseif (!in_array($type, ['POSITIF', 'NEGATIF'])) {
-                $errors['type'] = 'Le type doit être POSITIF ou NEGATIF.';
+                $errors['type'] = 'Le type doit Ãªtre POSITIF ou NEGATIF.';
             }
             if ($budget === '' || $budget === null) {
                 $errors['budget'] = 'Le budget est obligatoire.';
             } elseif (!is_numeric($budget) || (float)$budget < 0) {
-                $errors['budget'] = 'Le budget doit être un nombre positif.';
+                $errors['budget'] = 'Le budget doit Ãªtre un nombre positif.';
             } elseif ((float)$budget > 1000000) {
-                $errors['budget'] = 'Le budget ne peut pas dépasser 1 000 000 DT.';
+                $errors['budget'] = 'Le budget ne peut pas dÃ©passer 1 000 000 DT.';
             }
 
             if (empty($errors)) {
@@ -283,7 +280,7 @@ class AdminController extends AbstractController
                 $em->persist($imprevus);
                 $em->flush();
 
-                $this->addFlash('success', 'Imprévu ajouté avec succès!');
+                $this->addFlash('success', 'ImprÃ©vu ajoutÃ© avec succÃ¨s!');
                 return $this->redirectToRoute('admin_imprevus_list');
             }
         }
@@ -308,19 +305,19 @@ class AdminController extends AbstractController
             if (empty($titre)) {
                 $errors['titre'] = 'Le titre est obligatoire.';
             } elseif (strlen($titre) > 150) {
-                $errors['titre'] = 'Le titre ne peut pas dépasser 150 caractères.';
+                $errors['titre'] = 'Le titre ne peut pas dÃ©passer 150 caractÃ¨res.';
             }
             if (empty($type)) {
                 $errors['type'] = 'Le type est obligatoire.';
             } elseif (!in_array($type, ['POSITIF', 'NEGATIF'])) {
-                $errors['type'] = 'Le type doit être POSITIF ou NEGATIF.';
+                $errors['type'] = 'Le type doit Ãªtre POSITIF ou NEGATIF.';
             }
             if ($budget === '' || $budget === null) {
                 $errors['budget'] = 'Le budget est obligatoire.';
             } elseif (!is_numeric($budget) || (float)$budget < 0) {
-                $errors['budget'] = 'Le budget doit être un nombre positif.';
+                $errors['budget'] = 'Le budget doit Ãªtre un nombre positif.';
             } elseif ((float)$budget > 1000000) {
-                $errors['budget'] = 'Le budget ne peut pas dépasser 1 000 000 DT.';
+                $errors['budget'] = 'Le budget ne peut pas dÃ©passer 1 000 000 DT.';
             }
 
             if (empty($errors)) {
@@ -330,7 +327,7 @@ class AdminController extends AbstractController
                 $imprevus->setMessageEducatif($message);
                 $em->flush();
 
-                $this->addFlash('success', 'Imprévu modifié avec succès!');
+                $this->addFlash('success', 'ImprÃ©vu modifiÃ© avec succÃ¨s!');
                 return $this->redirectToRoute('admin_imprevus_list');
             }
         }
@@ -353,13 +350,13 @@ class AdminController extends AbstractController
 
         $em->remove($imprevus);
         $em->flush();
-        $this->addFlash('success', 'Imprévu supprimé avec succès!');
+        $this->addFlash('success', 'ImprÃ©vu supprimÃ© avec succÃ¨s!');
 
         return $this->redirectToRoute('admin_imprevus_list');
     }
 
     // =========================
-    // CAS RÉELS CRUD
+    // CAS RÃ‰ELS CRUD
     // =========================
 
     #[Route('/casrelles', name: 'admin_casrelles_list')]
@@ -424,19 +421,19 @@ class AdminController extends AbstractController
             if (empty($titre)) {
                 $errors['titre'] = 'Le titre est obligatoire.';
             } elseif (strlen($titre) > 150) {
-                $errors['titre'] = 'Le titre ne peut pas dépasser 150 caractères.';
+                $errors['titre'] = 'Le titre ne peut pas dÃ©passer 150 caractÃ¨res.';
             }
             if (empty($type)) {
                 $errors['type'] = 'Le type est obligatoire.';
             } elseif (!in_array($type, ['POSITIF', 'NEGATIF'])) {
-                $errors['type'] = 'Le type doit être POSITIF ou NEGATIF.';
+                $errors['type'] = 'Le type doit Ãªtre POSITIF ou NEGATIF.';
             }
             if (empty($montant)) {
                 $errors['montant'] = 'Le montant est obligatoire.';
             } elseif (!is_numeric($montant) || (float)$montant <= 0) {
-                $errors['montant'] = 'Le montant doit être un nombre positif.';
+                $errors['montant'] = 'Le montant doit Ãªtre un nombre positif.';
             } elseif ((float)$montant > 1000000) {
-                $errors['montant'] = 'Le montant ne peut pas dépasser 1 000 000 DT.';
+                $errors['montant'] = 'Le montant ne peut pas dÃ©passer 1 000 000 DT.';
             }
             if (empty($solution)) {
                 $errors['solution'] = 'La solution est obligatoire.';
@@ -450,7 +447,7 @@ class AdminController extends AbstractController
             if (empty($errors)) {
                 $user = $this->getUser();
                 if (!$user) {
-                    $this->addFlash('error', 'Vous devez être connecté.');
+                    $this->addFlash('error', 'Vous devez Ãªtre connectÃ©.');
                     return $this->redirectToRoute('admin_casrelles_list');
                 }
                 $cas->setUser($user);
@@ -467,7 +464,7 @@ class AdminController extends AbstractController
                     if ($epargne) {
                         $cas->setEpargne($epargne);
                         if ($type === 'NEGATIF' && $epargne->getSold() < $cas->getMontant()) {
-                            $errors['montant'] = "Solde insuffisant dans le compte d'épargne! Solde actuel: " . $epargne->getSold() . ' DT';
+                            $errors['montant'] = "Solde insuffisant dans le compte d'Ã©pargne! Solde actuel: " . $epargne->getSold() . ' DT';
                         }
                     }
                 }
@@ -476,7 +473,7 @@ class AdminController extends AbstractController
                     $em->persist($cas);
                     $em->flush();
 
-                    $this->addFlash('success', 'Demande créée avec succès!');
+                    $this->addFlash('success', 'Demande crÃ©Ã©e avec succÃ¨s!');
                     return $this->redirectToRoute('admin_casrelles_list');
                 }
             }
@@ -507,19 +504,19 @@ class AdminController extends AbstractController
             if (empty($titre)) {
                 $errors['titre'] = 'Le titre est obligatoire.';
             } elseif (strlen($titre) > 150) {
-                $errors['titre'] = 'Le titre ne peut pas dépasser 150 caractères.';
+                $errors['titre'] = 'Le titre ne peut pas dÃ©passer 150 caractÃ¨res.';
             }
             if (empty($type)) {
                 $errors['type'] = 'Le type est obligatoire.';
             } elseif (!in_array($type, ['POSITIF', 'NEGATIF'])) {
-                $errors['type'] = 'Le type doit être POSITIF ou NEGATIF.';
+                $errors['type'] = 'Le type doit Ãªtre POSITIF ou NEGATIF.';
             }
             if (empty($montant)) {
                 $errors['montant'] = 'Le montant est obligatoire.';
             } elseif (!is_numeric($montant) || (float)$montant <= 0) {
-                $errors['montant'] = 'Le montant doit être un nombre positif.';
+                $errors['montant'] = 'Le montant doit Ãªtre un nombre positif.';
             } elseif ((float)$montant > 1000000) {
-                $errors['montant'] = 'Le montant ne peut pas dépasser 1 000 000 DT.';
+                $errors['montant'] = 'Le montant ne peut pas dÃ©passer 1 000 000 DT.';
             }
             if (empty($solution)) {
                 $errors['solution'] = 'La solution est obligatoire.';
@@ -548,7 +545,7 @@ class AdminController extends AbstractController
                 }
 
                 $em->flush();
-                $this->addFlash('success', 'Demande modifiée avec succès!');
+                $this->addFlash('success', 'Demande modifiÃ©e avec succÃ¨s!');
                 return $this->redirectToRoute('admin_casrelles_list');
             }
         }
@@ -573,7 +570,7 @@ class AdminController extends AbstractController
 
         $em->remove($cas);
         $em->flush();
-        $this->addFlash('success', 'Demande supprimée avec succès!');
+        $this->addFlash('success', 'Demande supprimÃ©e avec succÃ¨s!');
 
         return $this->redirectToRoute('admin_casrelles_list');
     }
@@ -591,7 +588,7 @@ class AdminController extends AbstractController
                     $epargne = $cas->getEpargne();
 
                     if (!$epargne) {
-                        $this->addFlash('error', "Aucun compte d'épargne sélectionné pour cette demande");
+                        $this->addFlash('error', "Aucun compte d'Ã©pargne sÃ©lectionnÃ© pour cette demande");
                         return $this->redirectToRoute('admin_casrelles_process', ['id' => $cas->getId()]);
                     }
 
@@ -599,7 +596,7 @@ class AdminController extends AbstractController
 
                     if ($cas->getType() === 'NEGATIF') {
                         if ($epargne->getSold() < $cas->getMontant()) {
-                            $this->addFlash('error', 'Solde insuffisant! Le compte d\'épargne #' . $epargne->getId() . ' a un solde de ' . $epargne->getSold() . ' DT');
+                            $this->addFlash('error', 'Solde insuffisant! Le compte d\'Ã©pargne #' . $epargne->getId() . ' a un solde de ' . $epargne->getSold() . ' DT');
                             return $this->redirectToRoute('admin_casrelles_process', ['id' => $cas->getId()]);
                         }
                         $epargne->setSold($epargne->getSold() - $cas->getMontant());
@@ -611,7 +608,7 @@ class AdminController extends AbstractController
                 } elseif ($solution === 'FONDS_SECURITE') {
                     if ($cas->getType() === 'NEGATIF') {
                         if (!$securityFundService->hasSufficientBalance($cas->getMontant())) {
-                            $this->addFlash('error', 'Solde insuffisant dans le fonds de sécurité! Fonds actuel: ' . $securityFundService->getBalance() . ' DT');
+                            $this->addFlash('error', 'Solde insuffisant dans le fonds de sÃ©curitÃ©! Fonds actuel: ' . $securityFundService->getBalance() . ' DT');
                             return $this->redirectToRoute('admin_casrelles_process', ['id' => $cas->getId()]);
                         }
                         $securityFundService->subtract($cas->getMontant());
@@ -622,14 +619,14 @@ class AdminController extends AbstractController
 
                 $cas->setResultat('VALIDE');
                 $em->flush();
-                $this->addFlash('success', 'Demande acceptée et traitée avec succès!');
+                $this->addFlash('success', 'Demande acceptÃ©e et traitÃ©e avec succÃ¨s!');
 
             } elseif ($action === 'reject') {
                 $raison = $req->request->get('raisonRefus');
                 $cas->setResultat('REFUSE');
                 $cas->setRaisonRefus($raison);
                 $em->flush();
-                $this->addFlash('warning', 'Demande refusée');
+                $this->addFlash('warning', 'Demande refusÃ©e');
             }
 
             return $this->redirectToRoute('admin_casrelles_list');
@@ -652,18 +649,18 @@ class AdminController extends AbstractController
             if (empty($amount)) {
                 $errors[] = 'Le montant est obligatoire.';
             } elseif (!is_numeric($amount) || $amount <= 0) {
-                $errors[] = 'Le montant doit être un nombre positif.';
+                $errors[] = 'Le montant doit Ãªtre un nombre positif.';
             } elseif ($amount > 1000000) {
-                $errors[] = 'Le montant ne peut pas dépasser 1 000 000 DT.';
+                $errors[] = 'Le montant ne peut pas dÃ©passer 1 000 000 DT.';
             }
 
             if (empty($errors)) {
                 if ($action === 'add') {
                     $securityFundService->add($amount);
-                    $this->addFlash('success', 'Fonds de sécurité augmenté de ' . $amount . ' DT');
+                    $this->addFlash('success', 'Fonds de sÃ©curitÃ© augmentÃ© de ' . $amount . ' DT');
                 } elseif ($action === 'reset') {
                     $securityFundService->reset();
-                    $this->addFlash('info', 'Fonds de sécurité réinitialisé à 0 DT');
+                    $this->addFlash('info', 'Fonds de sÃ©curitÃ© rÃ©initialisÃ© Ã  0 DT');
                 }
             } else {
                 foreach ($errors as $error) {
@@ -679,3 +676,4 @@ class AdminController extends AbstractController
         ]);
     }
 }
+

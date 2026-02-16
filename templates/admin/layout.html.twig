@@ -27,10 +27,6 @@
 
         <nav class="sidebar-nav">
             {% set _route = app.request.attributes.get('_route') ?? '' %}
-            <a href="{{ path('admin_index') }}"
-               class="{{ _route == 'admin_index' ? 'active' : '' }}">
-                <i class="fas fa-gauge-high"></i> <span>Dashboard</span>
-            </a>
             <a href="{{ path('app_user_index') }}"
                class="{{ _route starts with 'app_user' ? 'active' : '' }}">
                 <i class="fas fa-users"></i> <span>Users</span>
@@ -112,7 +108,7 @@
             <div class="admin-footer-inner">
                 <span class="admin-footer-brand"><i class="fas fa-wallet me-1"></i> Decide$</span>
                 <span class="admin-footer-copy">&copy; {{ "now"|date("Y") }} Decide$ – Admin. All rights reserved.</span>
-                <a href="{{ path('admin_index') }}" class="admin-footer-link">Dashboard</a>
+                <a href="{{ path('admin_imprevus_list') }}" class="admin-footer-link">Unexpected Events</a>
                 <a href="{{ path('app_logout') }}" class="admin-footer-link">Sign out</a>
             </div>
         </footer>

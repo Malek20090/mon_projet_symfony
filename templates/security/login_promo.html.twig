@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decide$ | Intro</title>
+    <style>
+        :root {
+            --a: #020617;
+            --b: #0b1e52;
+            --c: #0ea5e9;
+            --d: #22d3ee;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 20%, #0b1e52 0%, #020617 45%, #020617 100%);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .scene {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 70% 30%, rgba(14, 165, 233, 0.24), transparent 35%),
+                radial-gradient(circle at 30% 70%, rgba(34, 211, 238, 0.18), transparent 35%);
+            animation: scenePulse 6s ease-in-out infinite;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(8px);
+            mix-blend-mode: screen;
+            animation: drift 10s ease-in-out infinite;
+        }
+
+        .orb.o1 {
+            width: 280px;
+            height: 280px;
+            left: -60px;
+            top: -60px;
+            background: rgba(56, 189, 248, 0.42);
+        }
+
+        .orb.o2 {
+            width: 360px;
+            height: 360px;
+            right: -100px;
+            bottom: -120px;
+            background: rgba(34, 211, 238, 0.36);
+            animation-delay: 1.6s;
+        }
+
+        .orb.o3 {
+            width: 180px;
+            height: 180px;
+            left: 50%;
+            top: 48%;
+            transform: translate(-50%, -50%);
+            background: rgba(59, 130, 246, 0.35);
+            animation-delay: 2.8s;
+        }
+
+        .ring-wrap {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            pointer-events: none;
+        }
+
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            animation: spin 8s linear infinite;
+        }
+
+        .r1 { width: min(72vw, 620px); aspect-ratio: 1; }
+        .r2 { width: min(58vw, 500px); aspect-ratio: 1; animation-duration: 6s; animation-direction: reverse; }
+        .r3 { width: min(44vw, 380px); aspect-ratio: 1; animation-duration: 5s; }
+
+        .logo-3d-wrap {
+            position: absolute;
+            width: min(52vw, 520px);
+            aspect-ratio: 1;
+            perspective: 1300px;
+            transform-style: preserve-3d;
+            pointer-events: none;
+        }
+
+        .logo-3d-wrap::before {
+            content: "";
+            position: absolute;
+            inset: 22% 18%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.55), rgba(2, 6, 23, 0) 70%);
+            filter: blur(12px);
+            transform: translateZ(-80px);
+            animation: glowPulse 2.8s ease-in-out infinite;
+        }
+
+        .logo-3d {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transform-style: preserve-3d;
+            filter:
+                drop-shadow(0 14px 26px rgba(8, 47, 73, 0.45))
+                drop-shadow(0 0 22px rgba(56, 189, 248, 0.45));
+            animation: logoOrbit 6.5s ease-in-out infinite;
+        }
+
+        .logo-reflect {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: linear-gradient(120deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0));
+            mix-blend-mode: screen;
+            transform: translateZ(18px) rotate(-12deg);
+            opacity: 0.45;
+            animation: reflectMove 4.2s ease-in-out infinite;
+        }
+
+        .particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .p {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(186, 230, 253, 0.9);
+            box-shadow: 0 0 12px rgba(125, 211, 252, 0.85);
+            animation: rise linear infinite;
+        }
+
+        .scan {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(34, 211, 238, 0.14) 48%,
+                rgba(34, 211, 238, 0.22) 50%,
+                rgba(34, 211, 238, 0.14) 52%,
+                transparent 100%
+            );
+            animation: scanMove 3.4s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .frame {
+            position: absolute;
+            inset: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+
+        .loading {
+            position: absolute;
+            left: 50%;
+            bottom: 8vh;
+            transform: translateX(-50%);
+            width: min(82vw, 760px);
+            height: 7px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.55);
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .loading::before {
+            content: "";
+            display: block;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0ea5e9, #22d3ee, #0ea5e9);
+            animation: load 5s linear forwards;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes logoOrbit {
+            0% {
+                transform: rotateX(0deg) rotateY(-18deg) rotateZ(-2deg) translateY(0) translateZ(10px) scale(0.98);
+            }
+            25% {
+                transform: rotateX(9deg) rotateY(0deg) rotateZ(0deg) translateY(-8px) translateZ(30px) scale(1.02);
+            }
+            50% {
+                transform: rotateX(0deg) rotateY(16deg) rotateZ(2deg) translateY(0) translateZ(42px) scale(1.05);
+            }
+            75% {
+                transform: rotateX(-7deg) rotateY(0deg) rotateZ(0deg) translateY(8px) translateZ(26px) scale(1.01);
+            }
+            100% {
+                transform: rotateX(0deg) rotateY(-18deg) rotateZ(-2deg) translateY(0) translateZ(10px) scale(0.98);
+            }
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.45; transform: translateZ(-80px) scale(0.95); }
+            50% { opacity: 0.8; transform: translateZ(-40px) scale(1.08); }
+        }
+
+        @keyframes reflectMove {
+            0%, 100% { transform: translateZ(18px) translateX(-12%) rotate(-12deg); opacity: 0.22; }
+            50% { transform: translateZ(30px) translateX(14%) rotate(8deg); opacity: 0.55; }
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(0, -24px, 0); }
+        }
+
+        @keyframes rise {
+            from { transform: translateY(110vh) scale(0.5); opacity: 0; }
+            20% { opacity: 1; }
+            to { transform: translateY(-20vh) scale(1); opacity: 0; }
+        }
+
+        @keyframes scanMove {
+            0%, 100% { transform: translateY(-100%); }
+            50% { transform: translateY(100%); }
+        }
+
+        @keyframes scenePulse {
+            0%, 100% { filter: saturate(1); }
+            50% { filter: saturate(1.2); }
+        }
+
+        @keyframes load {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        @media (max-width: 900px) {
+            .logo-3d-wrap {
+                width: min(74vw, 460px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <div class="orb o1"></div>
+        <div class="orb o2"></div>
+        <div class="orb o3"></div>
+
+        <div class="ring-wrap" aria-hidden="true">
+            <div class="ring r1"></div>
+            <div class="ring r2"></div>
+            <div class="ring r3"></div>
+            <div class="logo-3d-wrap">
+                <img class="logo-3d" src="{{ asset('img/chat1.png') }}" alt="">
+                <div class="logo-reflect"></div>
+            </div>
+        </div>
+
+        <div class="particles" id="particles"></div>
+        <div class="scan"></div>
+        <div class="frame"></div>
+        <div class="loading" aria-hidden="true"></div>
+    </div>
+
+    <script>
+        (function () {
+            const particlesHost = document.getElementById('particles');
+            const total = 48;
+            for (let i = 0; i < total; i += 1) {
+                const dot = document.createElement('span');
+                dot.className = 'p';
+                dot.style.left = Math.random() * 100 + 'vw';
+                dot.style.animationDuration = (3.5 + Math.random() * 5) + 's';
+                dot.style.animationDelay = (Math.random() * 5) + 's';
+                dot.style.width = dot.style.height = (4 + Math.random() * 7) + 'px';
+                particlesHost.appendChild(dot);
+            }
+
+            function goLogin() {
+                window.location.href = "{{ path('app_login_form') }}";
+            }
+
+            setTimeout(goLogin, 5000);
+            document.body.addEventListener('click', goLogin);
+        })();
+    </script>
+</body>
+</html>
