@@ -104,6 +104,14 @@
             <li class="nav-item">
                 <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_service' ? 'text-info fw-bold' : '' }}" href="{{ path('app_service') }}">Service</a>
             </li>
+            {% if app.user and ('ROLE_ETUDIANT' in app.user.roles) %}
+                <li class="nav-item">
+                    <a class="nav-link text-white {{ (app.request.attributes.get('_route') ?? '') starts with 'student_cours_' ? 'text-info fw-bold' : '' }}" href="{{ path('student_cours_index') }}">Cours</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white {{ (app.request.attributes.get('_route') ?? '') starts with 'student_quiz_' ? 'text-info fw-bold' : '' }}" href="{{ path('student_quiz_index') }}">Quiz</a>
+                </li>
+            {% endif %}
             <li class="nav-item">
                 <a class="nav-link text-white {{ (app.request.attributes.get('_route') ?? '') starts with 'app_salary_expense' ? 'text-info fw-bold' : '' }}" href="{{ path('app_salary_expense_index') }}">Income & Expenses</a>
             </li>
@@ -121,16 +129,19 @@
         <div class="d-flex align-items-center">
             {% if app.user and (('ROLE_SALARY' in app.user.roles) or ('ROLE_ETUDIANT' in app.user.roles)) %}
                 {% set userProfileRoute = ('ROLE_SALARY' in app.user.roles) ? 'salary_profile' : 'student_profile' %}
+                {% set startRoute = ('ROLE_ETUDIANT' in app.user.roles) ? 'student_cours_index' : 'app_salary_expense_index' %}
                 <a href="{{ path(userProfileRoute) }}" class="header-user-btn" title="My profile">
                     <img src="{{ asset(app.user.image ? 'uploads/users/' ~ app.user.image : 'uploads/users/chat1.png') }}" alt="User image" class="header-user-avatar">
                     <span class="header-user-name">{{ app.user.nom ?: app.user.email }}</span>
                 </a>
+            {% else %}
+                {% set startRoute = 'app_salary_expense_index' %}
             {% endif %}
             <button type="button" id="headerDarkModeBtn" class="flex-shrink-0" title="Dark mode" aria-label="Toggle dark mode">
                 <i class="fas fa-moon"></i>
                 <i class="fas fa-sun"></i>
             </button>
-            <a href="{{ path('app_salary_expense_index') }}" class="btn btn-info rounded-pill px-4">To Start</a>
+            <a href="{{ path(startRoute) }}" class="btn btn-info rounded-pill px-4">To Start</a>
             <a href="{{ path('app_logout') }}" class="btn btn-outline-danger rounded-pill px-4 ms-2">Logout</a>
         </div>
     </div>

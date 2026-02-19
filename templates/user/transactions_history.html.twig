@@ -1,0 +1,86 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Transactions History - {{ user.nom ?: user.email }}{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Transactions History</h1>
+            <p class="mb-0">{{ user.nom ?: 'User' }} - {{ user.email }}</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ path('app_user_show', {'id': user.id}) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to profile
+            </a>
+            <a href="{{ path('app_user_index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-users me-2"></i>Users list
+            </a>
+        </div>
+    </div>
+
+    <div class="card-custom mb-3">
+        <div class="user-stats-grid">
+            <div class="user-stat-tile">
+                <span class="k">Total transactions</span>
+                <strong>{{ summary.count }}</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Total savings</span>
+                <strong class="text-success">{{ summary.total_savings|number_format(2, '.', ' ') }} TND</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Total expenses</span>
+                <strong class="text-danger">{{ summary.total_expenses|number_format(2, '.', ' ') }} TND</strong>
+            </div>
+            <div class="user-stat-tile user-stat-wide">
+                <span class="k">Net</span>
+                <strong class="{{ summary.net >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ summary.net|number_format(2, '.', ' ') }} TND
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-custom">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                        <tr>
+                            <td>{{ tx.id }}</td>
+                            <td>
+                                {% if tx.type == 'SAVING' %}
+                                    <span class="badge bg-success">SAVING</span>
+                                {% elseif tx.type == 'EXPENSE' %}
+                                    <span class="badge bg-danger">EXPENSE</span>
+                                {% else %}
+                                    <span class="badge bg-primary">{{ tx.type }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold">{{ tx.montant|number_format(2, '.', ' ') }} TND</td>
+                            <td>{{ tx.date ? tx.date|date('d/m/Y') : '-' }}</td>
+                            <td>{{ tx.description ?: '-' }}</td>
+                            <td>{{ tx.moduleSource ?: '-' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No transactions found for this user.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

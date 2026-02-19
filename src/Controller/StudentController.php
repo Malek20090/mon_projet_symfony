@@ -58,19 +58,35 @@ class StudentController extends AbstractController
     // =========================
 
     #[Route('/quiz', name: 'quiz_index', methods: ['GET'])]
-    public function quizIndex(Request $request, QuizRepository $quizRepository): Response
+    public function quizIndex(
+        Request $request,
+        QuizRepository $quizRepository,
+        CoursRepository $coursRepository
+    ): Response
     {
         $search = $request->query->get('q');
         $sortBy = $request->query->get('sort', QuizRepository::SORT_QUESTION);
         $order = $request->query->get('order', 'ASC');
 
         $quizzes = $quizRepository->searchAndSort($search, null, null, null, $sortBy, $order);
+        $recommendedCourses = array_slice($this->mergeUniqueById(
+            $coursRepository->searchAndSort('finance'),
+            $coursRepository->searchAndSort('investissement'),
+            $coursRepository->searchAndSort('epargne')
+        ), 0, 4);
+        $recommendedQuizzes = array_slice($this->mergeUniqueById(
+            $quizRepository->searchAndSort('finance'),
+            $quizRepository->searchAndSort('investissement'),
+            $quizRepository->searchAndSort('epargne')
+        ), 0, 4);
 
         return $this->render('student/quiz/index.html.twig', [
             'quizzes' => $quizzes,
             'search' => $search,
             'sortBy' => $sortBy,
             'order' => $order,
+            'recommendedCourses' => $recommendedCourses,
+            'recommendedQuizzes' => $recommendedQuizzes,
         ]);
     }
 
@@ -107,11 +123,28 @@ class StudentController extends AbstractController
     }
 
     #[Route('/cours/{id}/quiz', name: 'cours_quiz', methods: ['GET'])]
-    public function coursQuiz(Cours $cour): Response
+    public function coursQuiz(
+        Cours $cour,
+        QuizRepository $quizRepository,
+        CoursRepository $coursRepository
+    ): Response
     {
+        $recommendedCourses = array_slice($this->mergeUniqueById(
+            $coursRepository->searchAndSort('finance'),
+            $coursRepository->searchAndSort('investissement'),
+            $coursRepository->searchAndSort('epargne')
+        ), 0, 4);
+        $recommendedQuizzes = array_slice($this->mergeUniqueById(
+            $quizRepository->searchAndSort('finance'),
+            $quizRepository->searchAndSort('investissement'),
+            $quizRepository->searchAndSort('epargne')
+        ), 0, 4);
+
         return $this->render('student/quiz/cours_quiz.html.twig', [
             'cour' => $cour,
             'quizzes' => $cour->getQuizzes(),
+            'recommendedCourses' => $recommendedCourses,
+            'recommendedQuizzes' => $recommendedQuizzes,
         ]);
     }
 
@@ -120,7 +153,9 @@ class StudentController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         SluggerInterface $slugger,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        CoursRepository $coursRepository,
+        QuizRepository $quizRepository
     ): Response {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -160,6 +195,34 @@ class StudentController extends AbstractController
         return $this->render('student/profile.html.twig', [
             'user' => $user,
             'form' => $form->createView(),
+            'coursesCount' => $coursRepository->count([]),
+            'quizzesCount' => $quizRepository->count([]),
+            'latestCourses' => $coursRepository->findBy([], ['id' => 'DESC'], 4),
+            'latestQuizzes' => $quizRepository->findBy([], ['id' => 'DESC'], 4),
         ]);
+    }
+
+    private function mergeUniqueById(array ...$lists): array
+    {
+        $seen = [];
+        $merged = [];
+
+        foreach ($lists as $list) {
+            foreach ($list as $item) {
+                if (!method_exists($item, 'getId')) {
+                    continue;
+                }
+
+                $id = $item->getId();
+                if ($id === null || isset($seen[$id])) {
+                    continue;
+                }
+
+                $seen[$id] = true;
+                $merged[] = $item;
+            }
+        }
+
+        return $merged;
     }
 }

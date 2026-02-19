@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\UserType;
-use App\Repository\ExpenseRepository;
 use App\Repository\TransactionRepository;
 use App\Repository\UserRepository;
 use App\Service\CryptoApiService;
@@ -98,21 +97,60 @@ public function index(UserRepository $userRepository): Response
         ]);
     }
 
+    #[Route('/{id}/transactions', name: 'app_user_transactions_history', methods: ['GET'])]
+    public function transactionsHistory(
+        User $user,
+        TransactionRepository $transactionRepository
+    ): Response {
+        $transactions = $transactionRepository->findBy(['user' => $user], ['date' => 'DESC', 'id' => 'DESC']);
+
+        $totalSavings = array_sum(
+            array_map(
+                static fn($t) => $t->getType() === 'SAVING' ? (float) $t->getMontant() : 0.0,
+                $transactions
+            )
+        );
+        $totalExpenses = array_sum(
+            array_map(
+                static fn($t) => $t->getType() === 'EXPENSE' ? (float) $t->getMontant() : 0.0,
+                $transactions
+            )
+        );
+
+        return $this->render('user/transactions_history.html.twig', [
+            'user' => $user,
+            'transactions' => $transactions,
+            'summary' => [
+                'count' => count($transactions),
+                'total_savings' => $totalSavings,
+                'total_expenses' => $totalExpenses,
+                'net' => $totalSavings - $totalExpenses,
+            ],
+        ]);
+    }
+
     #[Route('/{id}', name: 'app_user_show', methods: ['GET'])]
     public function show(
         User $user,
         TransactionRepository $transactionRepository,
-        ExpenseRepository $expenseRepository,
         CryptoApiService $cryptoApiService
     ): Response
     {
         $transactions = $transactionRepository->findBy(['user' => $user], ['date' => 'DESC']);
-        $revenues = $user->getRevenues()->toArray();
-        $expenses = $expenseRepository->findBy(['user' => $user], ['expenseDate' => 'DESC']);
 
         $totalTransactions = count($transactions);
-        $totalRevenues = array_sum(array_map(static fn($r) => (float) $r->getAmount(), $revenues));
-        $totalExpenses = array_sum(array_map(static fn($e) => (float) $e->getAmount(), $expenses));
+        $totalRevenues = array_sum(
+            array_map(
+                static fn($t) => $t->getType() === 'SAVING' ? (float) $t->getMontant() : 0.0,
+                $transactions
+            )
+        );
+        $totalExpenses = array_sum(
+            array_map(
+                static fn($t) => $t->getType() === 'EXPENSE' ? (float) $t->getMontant() : 0.0,
+                $transactions
+            )
+        );
 
         $savingCount = count(array_filter($transactions, static fn($t) => $t->getType() === 'SAVING'));
         $expenseTxCount = count(array_filter($transactions, static fn($t) => $t->getType() === 'EXPENSE'));
@@ -140,20 +178,18 @@ public function index(UserRepository $userRepository): Response
             $monthCursor = $monthCursor->modify('+1 month');
         }
 
-        foreach ($revenues as $revenue) {
-            $key = $revenue->getReceivedAt()->format('Y-m');
-            if (array_key_exists($key, $monthMap)) {
-                $monthlyRevenue[$monthMap[$key]] += (float) $revenue->getAmount();
-            }
-        }
-
-        foreach ($expenses as $expense) {
-            if ($expense->getExpenseDate() === null) {
+        foreach ($transactions as $transaction) {
+            $date = $transaction->getDate();
+            if ($date === null) {
                 continue;
             }
-            $key = $expense->getExpenseDate()->format('Y-m');
+            $key = $date->format('Y-m');
             if (array_key_exists($key, $monthMap)) {
-                $monthlyExpense[$monthMap[$key]] += (float) $expense->getAmount();
+                if ($transaction->getType() === 'SAVING') {
+                    $monthlyRevenue[$monthMap[$key]] += (float) $transaction->getMontant();
+                } elseif ($transaction->getType() === 'EXPENSE') {
+                    $monthlyExpense[$monthMap[$key]] += (float) $transaction->getMontant();
+                }
             }
         }
 
@@ -175,16 +211,14 @@ public function index(UserRepository $userRepository): Response
                 : 'Low/medium activity user profile.',
         ];
 
-        $apiPrices = [];
-        $apiError = null;
-        try {
-            $apiPrices = $cryptoApiService->getPrices(['bitcoin', 'ethereum', 'tether']);
-        } catch (\Throwable $e) {
-            $apiError = 'Live API data is temporarily unavailable.';
-        }
+        $apiResult = $cryptoApiService->getPricesWithSource(['bitcoin', 'ethereum', 'tether']);
+        $apiPrices = $apiResult['prices'];
+        $apiSource = $apiResult['source'];
+        $apiError = empty($apiPrices) ? 'Live API data is temporarily unavailable.' : null;
 
         return $this->render('user/show.html.twig', [
             'user' => $user,
+            'transactions' => $transactions,
             'stats' => [
                 'total_transactions' => $totalTransactions,
                 'total_revenues' => $totalRevenues,
@@ -206,6 +240,7 @@ public function index(UserRepository $userRepository): Response
             ],
             'insights' => $insights,
             'api_prices' => $apiPrices,
+            'api_source' => $apiSource,
             'api_error' => $apiError,
         ]);
     }

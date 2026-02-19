@@ -70,7 +70,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->transactions = new ArrayCollection();
         $this->revenues = new ArrayCollection();
         $this->quizzes = new ArrayCollection();
-        $this->dateInscription = new \DateTime();
+        $this->dateInscription = new \DateTime('today');
     }
 
     /* ================= SECURITY ================= */

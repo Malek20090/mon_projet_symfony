@@ -62,6 +62,62 @@
             {{ form_end(form) }}
         </div>
     </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1"><i class="fas fa-book text-primary me-2"></i>Cours</h5>
+                            <small class="text-muted">{{ coursesCount }} disponible{{ coursesCount > 1 ? 's' : '' }}</small>
+                        </div>
+                        <a href="{{ path('student_cours_index') }}" class="btn btn-sm btn-outline-primary rounded-pill">Voir tout</a>
+                    </div>
+
+                    {% if latestCourses|length > 0 %}
+                        <div class="list-group list-group-flush">
+                            {% for cour in latestCourses %}
+                                <a href="{{ path('student_cours_show', {'id': cour.id}) }}" class="list-group-item list-group-item-action px-0">
+                                    <div class="fw-semibold">{{ cour.titre }}</div>
+                                    <small class="text-muted">{{ cour.typeMedia ?: 'Sans type' }}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">Aucun cours disponible pour le moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1"><i class="fas fa-circle-question text-success me-2"></i>Quiz</h5>
+                            <small class="text-muted">{{ quizzesCount }} disponible{{ quizzesCount > 1 ? 's' : '' }}</small>
+                        </div>
+                        <a href="{{ path('student_quiz_index') }}" class="btn btn-sm btn-outline-success rounded-pill">Voir tout</a>
+                    </div>
+
+                    {% if latestQuizzes|length > 0 %}
+                        <div class="list-group list-group-flush">
+                            {% for quiz in latestQuizzes %}
+                                <a href="{{ path('student_quiz_pass', {'id': quiz.id}) }}" class="list-group-item list-group-item-action px-0">
+                                    <div class="fw-semibold">{{ quiz.question|slice(0, 72) }}{% if quiz.question|length > 72 %}...{% endif %}</div>
+                                    <small class="text-muted">{{ quiz.pointsValeur }} point{{ quiz.pointsValeur > 1 ? 's' : '' }}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">Aucun quiz disponible pour le moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 {% endblock %}
 
