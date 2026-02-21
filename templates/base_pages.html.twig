@@ -195,6 +195,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
 <script>if (typeof WOW !== 'undefined') { new WOW().init(); }</script>
 <script src="{{ asset('js/theme-toggle.js') }}"></script>
+{{ importmap('app') }}
 {% block javascripts %}{% endblock %}
 </body>
 </html>

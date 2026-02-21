@@ -25,3 +25,8 @@ services:
     App\Service\InvestissementCalculatorService:
         autowire: true
         autoconfigure: true
+
+    App\Service\SalaryExpenseAiService:
+        arguments:
+            $openAiApiKey: '%env(string:OPENAI_API_KEY)%'
+            $openAiModel: '%env(string:OPENAI_MODEL)%'

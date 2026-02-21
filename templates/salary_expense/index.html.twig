@@ -31,6 +31,9 @@
     body.night .savings-page .historique-toolbar { border-bottom-color: rgba(255,255,255,.1); }
     .savings-page .historique-table-wrap { flex: 1; min-height: 220px; display: flex; flex-direction: column; }
     .savings-page .historique-table-wrap .table-wrap { flex: 1; display: block; }
+    .savings-page .stats-reco { margin-top: 12px; padding-left: 18px; }
+    .savings-page .stats-reco li { margin-bottom: 6px; }
+    .savings-page .tabs { position: relative; z-index: 3; }
   </style>
 {% endblock %}
 
@@ -59,7 +62,6 @@
       <h2>Income & Expense Management</h2>
       <p>Manage income and expenses with tri and recherche.</p>
     </div>
-
     {# KPIs #}
     <div class="kpi-grid stats-row">
       <div class="stat-card">
@@ -99,12 +101,12 @@
 
     {# Tabs #}
     <div class="tabs">
-      <button type="button" class="js-tab tab-pill {{ tab == 'revenus' ? 'active' : '' }}" data-tab="revenus">
+      <a href="{{ path('app_salary_expense_index', app.request.query.all|merge({'tab': 'revenus'})) }}" class="js-tab tab-pill {{ tab == 'revenus' ? 'active' : '' }}" data-tab="revenus">
         <i class="fa-solid fa-wallet me-2"></i>Revenus
-      </button>
-      <button type="button" class="js-tab tab-pill {{ tab == 'expenses' ? 'active' : '' }}" data-tab="expenses">
+      </a>
+      <a href="{{ path('app_salary_expense_index', app.request.query.all|merge({'tab': 'expenses'})) }}" class="js-tab tab-pill {{ tab == 'expenses' ? 'active' : '' }}" data-tab="expenses">
         <i class="fa-solid fa-credit-card me-2"></i>Expenses
-      </button>
+      </a>
     </div>
 
     {# TAB: REVENUS #}
@@ -113,6 +115,11 @@
         <div class="col-lg-5">
           <div class="stat-card p-4">
             <h4 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Add an income</h4>
+            <div class="mb-3">
+              <a href="{{ path('app_dashboard', { focus: 'revenues' }) }}" class="btn btn-outline-primary w-100">
+                <i class="fa-solid fa-chart-column me-2"></i>Open Revenue Dashboard
+              </a>
+            </div>
             {{ form_start(formRevenue, { 'attr': { 'class': '' } }) }}
               <div class="mb-3">{{ form_row(formRevenue.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Montant (TND)' }) }}</div>
               <div class="mb-3">{{ form_row(formRevenue.type, { 'attr': { 'class': 'form-select' } }) }}</div>
@@ -129,6 +136,7 @@
 
             <form method="get" class="historique-toolbar">
               <input type="hidden" name="tab" value="revenus">
+              <input type="hidden" name="month" value="{{ selectedMonth }}">
               <div class="row g-2 align-items-end mb-2">
                 <div class="col-auto">
                   <label class="form-label small mb-0">Sort (criterion 1)</label>
@@ -216,10 +224,77 @@
 
     {# TAB: EXPENSES #}
     <div id="tab-expenses" class="tab-panel {{ tab == 'expenses' ? 'show' : '' }}">
+      <div class="stat-card p-4 mb-4">
+        <h4 class="mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i>Advanced Expense Statistics</h4>
+        <form method="get" class="row g-2 align-items-end mb-3">
+          <input type="hidden" name="tab" value="expenses">
+          <input type="hidden" name="expense_sort1" value="{{ app.request.query.get('expense_sort1', 'expenseDate') }}">
+          <input type="hidden" name="expense_dir1" value="{{ app.request.query.get('expense_dir1', 'DESC') }}">
+          <input type="hidden" name="expense_sort2" value="{{ app.request.query.get('expense_sort2', 'amount') }}">
+          <input type="hidden" name="expense_dir2" value="{{ app.request.query.get('expense_dir2', 'DESC') }}">
+          <input type="hidden" name="expense_search" value="{{ app.request.query.get('expense_search', '') }}">
+          <input type="hidden" name="revenue_sort1" value="{{ app.request.query.get('revenue_sort1', 'receivedAt') }}">
+          <input type="hidden" name="revenue_dir1" value="{{ app.request.query.get('revenue_dir1', 'DESC') }}">
+          <input type="hidden" name="revenue_sort2" value="{{ app.request.query.get('revenue_sort2', 'amount') }}">
+          <input type="hidden" name="revenue_dir2" value="{{ app.request.query.get('revenue_dir2', 'DESC') }}">
+          <input type="hidden" name="revenue_search" value="{{ app.request.query.get('revenue_search', '') }}">
+          <div class="col-md-4">
+            <label class="form-label small mb-0">Choose month</label>
+            <select name="month" class="form-select form-select-sm">
+              {% if selectedMonth not in expenseStats.available_months %}
+                <option value="{{ selectedMonth }}" selected>{{ selectedMonth }}</option>
+              {% endif %}
+              {% for monthOption in expenseStats.available_months %}
+                <option value="{{ monthOption }}" {{ selectedMonth == monthOption ? 'selected' : '' }}>{{ monthOption }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-sm btn-primary w-100">Apply</button>
+          </div>
+        </form>
+        <div class="row g-3 mb-3">
+          <div class="col-md-3">
+            <div class="small text-muted">Selected month total ({{ expenseStats.selected_month }})</div>
+            <div class="fw-bold">{{ expenseStats.current_month_total|number_format(2, '.', ' ') }} TND</div>
+          </div>
+          <div class="col-md-3">
+            <div class="small text-muted">Previous month total</div>
+            <div class="fw-bold">{{ expenseStats.previous_month_total|number_format(2, '.', ' ') }} TND</div>
+          </div>
+          <div class="col-md-3">
+            <div class="small text-muted">Monthly evolution</div>
+            <div class="fw-bold {{ expenseStats.evolution_percent > 0 ? 'text-danger' : 'text-success' }}">
+              {{ expenseStats.evolution_percent|number_format(2, '.', ' ') }}%
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="small text-muted">Average monthly spend</div>
+            <div class="fw-bold">{{ expenseStats.average_monthly_spend|number_format(2, '.', ' ') }} TND</div>
+          </div>
+        </div>
+
+        <div>
+          <h5 class="mb-2"><i class="fa-solid fa-lightbulb text-primary me-2"></i>Conseils to improve expenses</h5>
+          <ul class="stats-reco">
+            {% for reco in expenseStats.recommendations %}
+              <li>{{ reco }}</li>
+            {% else %}
+              <li>No recommendation yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
       <div class="row g-4">
         <div class="col-lg-5">
           <div class="stat-card p-4">
             <h4 class="mb-3"><i class="fas fa-minus-circle text-primary me-2"></i>Add an expense</h4>
+            <div class="mb-3">
+              <a href="{{ path('app_dashboard', { focus: 'expenses' }) }}" class="btn btn-outline-primary w-100">
+                <i class="fa-solid fa-chart-pie me-2"></i>Open Expense Dashboard
+              </a>
+            </div>
             {{ form_start(formExpense, { 'attr': { 'class': '' } }) }}
               <div class="mb-3">{{ form_row(formExpense.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Montant (TND)' }) }}</div>
               <div class="mb-3">{{ form_row(formExpense.category, { 'attr': { 'class': 'form-select' } }) }}</div>
@@ -236,6 +311,7 @@
 
             <form method="get" class="historique-toolbar">
               <input type="hidden" name="tab" value="expenses">
+              <input type="hidden" name="month" value="{{ selectedMonth }}">
               <div class="row g-2 align-items-end mb-2">
                 <div class="col-auto">
                   <label class="form-label small mb-0">Sort (criterion 1)</label>
@@ -330,22 +406,6 @@
 {{ parent() }}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const btn = document.getElementById('nightBtn');
-  if (btn) {
-    if (localStorage.getItem('decides_night') === '1') document.body.classList.add('night');
-    function sync() {
-      const isNight = document.body.classList.contains('night');
-      btn.querySelector('span').textContent = isNight ? 'Day' : 'Night';
-      btn.querySelector('i').className = isNight ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-    }
-    sync();
-    btn.addEventListener('click', function () {
-      document.body.classList.toggle('night');
-      localStorage.setItem('decides_night', document.body.classList.contains('night') ? '1' : '0');
-      sync();
-    });
-  }
-
   const tabBtns = document.querySelectorAll('.js-tab');
   const panels = { revenus: document.getElementById('tab-revenus'), expenses: document.getElementById('tab-expenses') };
   if (!tabBtns.length || (!panels.revenus && !panels.expenses)) return;
@@ -354,10 +414,18 @@ document.addEventListener('DOMContentLoaded', function () {
     Object.keys(panels).forEach(k => { if (panels[k]) panels[k].classList.toggle('show', k === name); });
     try { const url = new URL(window.location.href); url.searchParams.set('tab', name); window.history.replaceState({}, '', url.toString()); } catch (e) {}
   }
-  tabBtns.forEach(btn => { btn.addEventListener('click', () => { const name = btn.dataset.tab; if (name && panels[name]) showTab(name); }); });
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const name = btn.dataset.tab;
+      if (!name || !panels[name]) return;
+      e.preventDefault();
+      showTab(name);
+    });
+  });
   const urlTab = new URL(window.location.href).searchParams.get('tab');
   if (urlTab && panels[urlTab]) showTab(urlTab);
   else { const activeBtn = document.querySelector('.js-tab.active'); showTab(activeBtn ? activeBtn.dataset.tab : 'revenus'); }
+
 });
 </script>
 {% endblock %}

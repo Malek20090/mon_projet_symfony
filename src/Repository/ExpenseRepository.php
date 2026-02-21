@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Expense;
 use App\Entity\Revenue;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -122,5 +123,36 @@ class ExpenseRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Return expense totals grouped by category.
+     *
+     * @return array<int, array{category: string, total: float}>
+     */
+    public function getTotalsByCategory(?User $user = null): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = <<<SQL
+            SELECT e.category AS category, SUM(e.amount) AS total
+            FROM expense e
+        SQL;
+
+        $params = [];
+        if ($user !== null) {
+            $sql .= ' WHERE e.user_id = :userId';
+            $params['userId'] = $user->getId();
+        }
+
+        $sql .= ' GROUP BY e.category ORDER BY total DESC';
+        $rows = $conn->executeQuery($sql, $params)->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'category' => (string) $row['category'],
+                'total' => (float) $row['total'],
+            ],
+            $rows
+        );
     }
 }

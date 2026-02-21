@@ -74,6 +74,7 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0">
                 <a href="{{ path('app_salary_expense_index') }}" class="nav-item nav-link {{ app.request.attributes.get('_route') == 'app_salary_expense_index' ? 'active' : '' }}">Home</a>
+                <a href="{{ path('app_dashboard') }}" class="nav-item nav-link {{ app.request.attributes.get('_route') == 'app_dashboard' ? 'active' : '' }}">Dashboard</a>
                 <a href="{{ path('app_about') }}" class="nav-item nav-link {{ app.request.attributes.get('_route') == 'app_about' ? 'active' : '' }}">About</a>
                 <a href="{{ path('app_service') }}" class="nav-item nav-link {{ app.request.attributes.get('_route') == 'app_service' ? 'active' : '' }}">Service</a>
                 <a href="{{ path('app_contact') }}" class="nav-item nav-link {{ app.request.attributes.get('_route') == 'app_contact' ? 'active' : '' }}">Contact</a>
@@ -137,6 +138,7 @@
     })();
 </script>
 
+{{ importmap('app') }}
 {% block javascripts %}{% endblock %}
 </body>
 </html>
