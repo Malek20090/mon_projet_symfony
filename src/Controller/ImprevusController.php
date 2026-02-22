@@ -25,7 +25,8 @@ class ImprevusController extends AbstractController
     #[Route('/alea', name: 'app_alea')]
     public function alea(ImprevusRepository $imprevusRepository, SavingAccountRepository $savingRepo, SecurityFundService $securityFundService): Response
     {
-        $epargnes = $savingRepo->findAll();
+        $user = $this->getUser();
+        $epargnes = $user ? $savingRepo->findBy(['user' => $user], ['id' => 'DESC']) : [];
         $securityFund = $securityFundService->getBalance();
         
         return $this->render('alea/index.html.twig', [
@@ -65,14 +66,19 @@ class ImprevusController extends AbstractController
                 $epargneId = $req->request->get('epargne_id');
                 if ($epargneId) {
                     $epargne = $savingRepo->find($epargneId);
-                    if ($epargne) {
-                        $cas->setEpargne($epargne);
-                        if ($type === 'NEGATIF' && $epargne->getSold() < $montant) {
-                            return $this->json([
-                                'success' => false, 
-                                'message' => 'Solde insuffisant! Solde actuel: ' . $epargne->getSold() . ' DT'
-                            ]);
-                        }
+                    if (!$epargne || $epargne->getUser() !== $user) {
+                        return $this->json([
+                            'success' => false,
+                            'message' => 'Compte epargne invalide.',
+                        ], 403);
+                    }
+
+                    $cas->setEpargne($epargne);
+                    if ($type === 'NEGATIF' && $epargne->getSold() < $montant) {
+                        return $this->json([
+                            'success' => false, 
+                            'message' => 'Solde insuffisant! Solde actuel: ' . $epargne->getSold() . ' DT'
+                        ]);
                     }
                 }
             }

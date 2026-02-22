@@ -25,6 +25,56 @@
     </div>
 
     <div class="card-custom mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+            <h5 class="mb-0"><i class="fas fa-filter text-primary me-2"></i>Search & Sort</h5>
+            <a href="{{ path('app_user_index') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-rotate-left me-1"></i>Reset
+            </a>
+        </div>
+
+        <form method="get" class="row g-2">
+            <div class="col-md-4">
+                <input
+                    type="text"
+                    name="q"
+                    class="form-control"
+                    placeholder="Search by name or email"
+                    value="{{ filter_q|default('') }}"
+                >
+            </div>
+            <div class="col-md-3">
+                <select name="role" class="form-select">
+                    <option value="" {{ (filter_role|default('')) == '' ? 'selected' : '' }}>All roles</option>
+                    <option value="ROLE_ADMIN" {{ (filter_role|default('')) == 'ROLE_ADMIN' ? 'selected' : '' }}>Admin</option>
+                    <option value="ROLE_SALARY" {{ (filter_role|default('')) == 'ROLE_SALARY' ? 'selected' : '' }}>Salary</option>
+                    <option value="ROLE_ETUDIANT" {{ (filter_role|default('')) == 'ROLE_ETUDIANT' ? 'selected' : '' }}>Student</option>
+                    <option value="ROLE_USER_ONLY" {{ (filter_role|default('')) == 'ROLE_USER_ONLY' ? 'selected' : '' }}>Standard user</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="sort" class="form-select">
+                    <option value="nom" {{ (filter_sort|default('nom')) == 'nom' ? 'selected' : '' }}>Sort by name</option>
+                    <option value="email" {{ (filter_sort|default('nom')) == 'email' ? 'selected' : '' }}>Sort by email</option>
+                    <option value="solde" {{ (filter_sort|default('nom')) == 'solde' ? 'selected' : '' }}>Sort by balance</option>
+                    <option value="date" {{ (filter_sort|default('nom')) == 'date' ? 'selected' : '' }}>Sort by registration date</option>
+                    <option value="id" {{ (filter_sort|default('nom')) == 'id' ? 'selected' : '' }}>Sort by ID</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="order" class="form-select">
+                    <option value="ASC" {{ (filter_order|default('ASC')) == 'ASC' ? 'selected' : '' }}>ASC</option>
+                    <option value="DESC" {{ (filter_order|default('ASC')) == 'DESC' ? 'selected' : '' }}>DESC</option>
+                </select>
+            </div>
+            <div class="col-12 d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i>Apply
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-custom mb-3">
         <h5 class="mb-3"><i class="fas fa-user-shield text-primary me-2"></i>Administrators</h5>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">

@@ -30,5 +30,9 @@ return [
     ],
     '@kurkle/color' => [
         'version' => '0.3.4',
+        'version' => '3.9.1',
+    ],
+    '@symfony/ux-chartjs' => [
+        'path' => './vendor/symfony/ux-chartjs/assets/dist/controller.js',
     ],
 ];

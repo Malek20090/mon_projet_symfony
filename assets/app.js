@@ -1,5 +1,6 @@
 import './bootstrap.js';
 import './savings/goals-edit.js';
+import './savings/savings-page.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   /* =========================================================

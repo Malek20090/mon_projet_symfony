@@ -19,6 +19,27 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => setTab(btn.dataset.tab));
   });
 
+  const focusForm = (tab, formId) => {
+    setTab(tab);
+    window.setTimeout(() => {
+      const form = document.getElementById(formId);
+      if (!form) return;
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+      const firstInput = form.querySelector("input, select, textarea");
+      if (firstInput) firstInput.focus({ preventScroll: true });
+    }, 60);
+  };
+
+  document.getElementById("heroAddDeposit")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    focusForm("savings", "depositForm");
+  });
+
+  document.getElementById("heroCreateGoal")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    focusForm("goals", "goalAddForm");
+  });
+
   // on load
   const url = new URL(window.location.href);
   setTab(url.searchParams.get("tab") || "savings");
@@ -29,19 +50,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const applyMode = (isNight) => {
     document.body.classList.toggle("night", isNight);
+    document.body.classList.toggle("theme-dark", isNight);
     if (modeLabel) modeLabel.textContent = isNight ? "Day" : "Night";
     const icon = modeToggle?.querySelector("i");
     if (icon) icon.className = isNight ? "fa-solid fa-sun" : "fa-solid fa-moon";
   };
 
-  const savedMode = localStorage.getItem("decides_mode");
-  applyMode(savedMode === "night");
+  // Avoid overriding global theme-toggle unless this page-level toggle exists.
+  if (modeToggle) {
+    const savedMode = localStorage.getItem("decides_mode");
+    applyMode(savedMode === "night");
 
-  modeToggle?.addEventListener("click", () => {
-    const isNight = !document.body.classList.contains("night");
-    localStorage.setItem("decides_mode", isNight ? "night" : "day");
-    applyMode(isNight);
-  });
+    modeToggle.addEventListener("click", () => {
+      const isNight = !document.body.classList.contains("night");
+      localStorage.setItem("decides_mode", isNight ? "night" : "day");
+      localStorage.setItem("decides_theme_dark", isNight ? "1" : "0");
+      localStorage.setItem("decides_night", isNight ? "1" : "0");
+      applyMode(isNight);
+    });
+  }
 
   // Modals
   const openModal = (id) => document.getElementById(id)?.classList.add("show");

@@ -134,6 +134,7 @@
 {% set savingAccount = savingAccount|default({}) %}
 {% set transactions = transactions|default([]) %}
 {% set goals = goals|default([]) %}
+{% set goal_health = goal_health|default({'summary': {}, 'topUrgent': []}) %}
 
 {# small helpers for safe fields #}
 {% set sa_balance = savingAccount.sold|default(savingAccount.solde|default(0)) %}
@@ -216,7 +217,10 @@
 
     {# TAB: GOALS #}
     <div id="tab-goals" class="tab-panel {{ tab == 'goals' ? 'show' : '' }}">
-      {% include 'savings/partials/tabs/_goals_tab.html.twig' with { goals: goals } %}
+      {% include 'savings/partials/tabs/_goals_tab.html.twig' with {
+        goals: goals,
+        goal_health: goal_health
+      } %}
     </div>
 
   </div>
@@ -227,6 +231,7 @@
    ========================= #}
 {% include 'savings/partials/modals/_calendar_modal.html.twig' %}
 {% include 'savings/partials/modals/_sim_modal.html.twig' %}
+{% include 'savings/partials/modals/_assistant_chatbot.html.twig' %}
 {% include 'savings/partials/modals/_goal_edit_modal.html.twig' %}
 
 {# Footer is in base_pages.html.twig (same as Contact, Service, About) #}
@@ -320,7 +325,6 @@
     const isModuleForm = (f) => {
       const action = (f.getAttribute('action') || '').toLowerCase();
       if(!action) return false;
-      if (f.classList.contains('goalContributeForm')) return false;
       return action.includes('/savings') || action.includes('/goal');
     };
 
@@ -451,52 +455,6 @@
     } else {
       const activeBtn = document.querySelector('.js-tab.active');
       showTab(activeBtn ? activeBtn.dataset.tab : 'savings');
-    }
-  });
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-  const statLabels = {{ stat_labels|default([])|json_encode|raw }};
-  const statValues = {{ stat_values|default([])|json_encode|raw }};
-
-  let barChartInstance = null;
-  let pieChartInstance = null;
-
-  function renderCharts() {
-    const barEl = document.getElementById('barChart');
-    const pieEl = document.getElementById('pieChart');
-    if (!barEl || !pieEl) return;
-
-    if (barChartInstance) barChartInstance.destroy();
-    if (pieChartInstance) pieChartInstance.destroy();
-
-    barChartInstance = new Chart(barEl, {
-      type: 'bar',
-      data: {
-        labels: statLabels,
-        datasets: [{ label: 'Total (TND)', data: statValues }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
-      }
-    });
-
-    pieChartInstance = new Chart(pieEl, {
-      type: 'doughnut',
-      data: {
-        labels: statLabels,
-        datasets: [{ data: statValues }]
-      },
-      options: { responsive: true }
-    });
-  }
-
-  document.addEventListener('shown.bs.modal', function(e) {
-    if (e.target && e.target.id === 'statsModal') {
-      renderCharts();
     }
   });
 </script>

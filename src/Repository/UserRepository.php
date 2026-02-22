@@ -16,6 +16,55 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
+    /**
+     
+     *
+     * @return User[]
+     */
+    public function findForAdminIndex(
+        ?string $search = null,
+        ?string $role = null,
+        string $sortBy = 'nom',
+        string $order = 'ASC'
+    ): array {
+        $qb = $this->createQueryBuilder('u');
+
+        if ($search !== null && trim($search) !== '') {
+            $value = '%' . mb_strtolower(trim($search)) . '%';
+            $qb->andWhere('LOWER(u.nom) LIKE :q OR LOWER(u.email) LIKE :q')
+                ->setParameter('q', $value);
+        }
+
+        if ($role !== null && $role !== '') {
+            if ($role === 'ROLE_USER_ONLY') {
+                $qb->andWhere('u.roles NOT LIKE :adminRole')
+                    ->andWhere('u.roles NOT LIKE :salaryRole')
+                    ->andWhere('u.roles NOT LIKE :studentRole')
+                    ->setParameter('adminRole', '%ROLE_ADMIN%')
+                    ->setParameter('salaryRole', '%ROLE_SALARY%')
+                    ->setParameter('studentRole', '%ROLE_ETUDIANT%');
+            } else {
+                $qb->andWhere('u.roles LIKE :rolePattern')
+                    ->setParameter('rolePattern', '%' . $role . '%');
+            }
+        }
+
+        $allowedSort = [
+            'id' => 'u.id',
+            'nom' => 'u.nom',
+            'email' => 'u.email',
+            'solde' => 'u.soldeTotal',
+            'date' => 'u.dateInscription',
+        ];
+        $sortExpr = $allowedSort[$sortBy] ?? $allowedSort['nom'];
+        $direction = strtoupper($order) === 'DESC' ? 'DESC' : 'ASC';
+
+        $qb->orderBy($sortExpr, $direction)
+            ->addOrderBy('u.id', 'DESC');
+
+        return $qb->getQuery()->getResult();
+    }
+
     //    /**
     //     * @return User[] Returns an array of User objects
     //     */
