@@ -10,8 +10,8 @@ class SalaryExpenseAiService
 {
     public function __construct(
         private readonly HttpClientInterface $httpClient,
-        private readonly ?string $openAiApiKey = null,
-        private readonly string $openAiModel = 'gpt-4o-mini'
+        private readonly ?string $googleAiApiKey = null,
+        private readonly string $googleAiModel = 'gemini-2.5-flash'
     ) {
     }
 
@@ -172,46 +172,28 @@ class SalaryExpenseAiService
      */
     private function generateAiSummary(array $insights): ?string
     {
-        $key = trim((string) $this->openAiApiKey);
+        $key = trim((string) $this->googleAiApiKey);
         if ($key === '') {
             return null;
         }
 
         try {
-            $response = $this->httpClient->request('POST', 'https://api.openai.com/v1/chat/completions', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $key,
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => [
-                    'model' => $this->openAiModel,
-                    'temperature' => 0.2,
-                    'messages' => [
-                        [
-                            'role' => 'system',
-                            'content' => 'You are a personal finance assistant. Return concise, actionable advice in plain English with max 100 words.',
-                        ],
-                        [
-                            'role' => 'user',
-                            'content' => json_encode([
-                                'totals' => [
-                                    'income' => $insights['total_income'],
-                                    'expenses' => $insights['total_expenses'],
-                                    'net' => $insights['net_balance'],
-                                    'savings_rate' => $insights['savings_rate'],
-                                    'burn_rate' => $insights['burn_rate'],
-                                ],
-                                'top_categories' => array_slice($insights['category_breakdown'], 0, 3, true),
-                                'anomalies' => $insights['anomalies'],
-                            ], JSON_THROW_ON_ERROR),
-                        ],
+            $prompt = sprintf(
+                "You are a personal finance assistant.\nReturn concise, actionable advice in plain English with max 100 words.\nData:\n%s",
+                json_encode([
+                    'totals' => [
+                        'income' => $insights['total_income'],
+                        'expenses' => $insights['total_expenses'],
+                        'net' => $insights['net_balance'],
+                        'savings_rate' => $insights['savings_rate'],
+                        'burn_rate' => $insights['burn_rate'],
                     ],
-                ],
-                'timeout' => 10,
-            ]);
+                    'top_categories' => array_slice($insights['category_breakdown'], 0, 3, true),
+                    'anomalies' => $insights['anomalies'],
+                ], JSON_THROW_ON_ERROR)
+            );
 
-            $data = $response->toArray(false);
-            $content = trim((string) ($data['choices'][0]['message']['content'] ?? ''));
+            $content = $this->requestGeminiText($prompt, false);
 
             return $content !== '' ? $content : null;
         } catch (\Throwable) {
@@ -248,6 +230,163 @@ class SalaryExpenseAiService
             $topCategory,
             $hasAnomalies
         );
+    }
+
+    /**
+     * Build one concise advice per month from month stats.
+     *
+     * @param array<int, array{month: string, total: float, count: int, average: float, top_category: string}> $months
+     * @return array{by_month: array<string, string>, selected: string, source: string}
+     */
+    public function buildMonthlyExpenseAdvice(array $months, string $selectedMonth): array
+    {
+        if ($months === []) {
+            return [
+                'by_month' => [],
+                'selected' => $selectedMonth,
+                'source' => 'local',
+            ];
+        }
+
+        $byMonth = $this->generateMonthlyAdviceWithAi($months);
+        $source = 'ai';
+
+        if ($byMonth === null || $byMonth === []) {
+            $byMonth = $this->generateMonthlyAdviceLocally($months);
+            $source = 'local';
+        }
+
+        return [
+            'by_month' => $byMonth,
+            'selected' => $selectedMonth,
+            'source' => $source,
+        ];
+    }
+
+    /**
+     * @param array<int, array{month: string, total: float, count: int, average: float, top_category: string}> $months
+     * @return array<string, string>|null
+     */
+    private function generateMonthlyAdviceWithAi(array $months): ?array
+    {
+        $key = trim((string) $this->googleAiApiKey);
+        if ($key === '') {
+            return null;
+        }
+
+        try {
+            $prompt = json_encode([
+                'task' => 'For each month, provide one concise expense optimization advice.',
+                'rules' => [
+                    'One short sentence per month, max 18 words.',
+                    'Be actionable and specific to month total and top category.',
+                    'Output strict JSON object exactly: {"advice_by_month":{"YYYY-MM":"advice"}}',
+                ],
+                'months' => $months,
+            ], JSON_THROW_ON_ERROR);
+
+            $content = $this->requestGeminiText($prompt, true);
+            if ($content === '') {
+                return null;
+            }
+
+            /** @var array{advice_by_month?: array<string, string>} $decoded */
+            $decoded = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+            $map = $decoded['advice_by_month'] ?? null;
+            if (!is_array($map)) {
+                return null;
+            }
+
+            $clean = [];
+            foreach ($map as $month => $advice) {
+                if (!is_string($month) || !preg_match('/^\d{4}\-(0[1-9]|1[0-2])$/', $month)) {
+                    continue;
+                }
+                if (!is_string($advice) || trim($advice) === '') {
+                    continue;
+                }
+                $clean[$month] = trim($advice);
+            }
+
+            return $clean !== [] ? $clean : null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * @param array<int, array{month: string, total: float, count: int, average: float, top_category: string}> $months
+     * @return array<string, string>
+     */
+    private function generateMonthlyAdviceLocally(array $months): array
+    {
+        $adviceByMonth = [];
+
+        foreach ($months as $stat) {
+            $month = (string) ($stat['month'] ?? '');
+            if ($month === '') {
+                continue;
+            }
+
+            $topCategory = (string) ($stat['top_category'] ?? 'Other');
+            $total = (float) ($stat['total'] ?? 0.0);
+            $average = (float) ($stat['average'] ?? 0.0);
+            $count = (int) ($stat['count'] ?? 0);
+
+            if ($count <= 0) {
+                $adviceByMonth[$month] = 'No expenses recorded. Track essentials first to establish a realistic baseline.';
+                continue;
+            }
+
+            if ($average > 0 && $total > ($average * $count * 1.10)) {
+                $adviceByMonth[$month] = sprintf('Reduce %s spending by 10%% and schedule non-essential purchases next month.', $topCategory);
+            } else {
+                $adviceByMonth[$month] = sprintf('Keep your %s budget cap and trim one optional purchase this month.', $topCategory);
+            }
+        }
+
+        return $adviceByMonth;
+    }
+
+    private function requestGeminiText(string $prompt, bool $jsonExpected): string
+    {
+        $key = trim((string) $this->googleAiApiKey);
+        if ($key === '') {
+            return '';
+        }
+
+        $url = sprintf(
+            'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s',
+            rawurlencode($this->googleAiModel),
+            rawurlencode($key)
+        );
+
+        $payload = [
+            'contents' => [[
+                'parts' => [[
+                    'text' => $prompt,
+                ]],
+            ]],
+            'generationConfig' => [
+                'temperature' => 0.2,
+            ],
+        ];
+
+        if ($jsonExpected) {
+            $payload['generationConfig']['responseMimeType'] = 'application/json';
+        }
+
+        $response = $this->httpClient->request('POST', $url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+            'json' => $payload,
+            'timeout' => 15,
+        ]);
+
+        $data = $response->toArray(false);
+
+        return trim((string) ($data['candidates'][0]['content']['parts'][0]['text'] ?? ''));
     }
 
 }

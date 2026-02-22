@@ -275,12 +275,12 @@
         </div>
 
         <div>
-          <h5 class="mb-2"><i class="fa-solid fa-lightbulb text-primary me-2"></i>Conseils to improve expenses</h5>
+          <h5 class="mb-2"><i class="fa-solid fa-robot text-primary me-2"></i>AI Monthly Advice</h5>
           <ul class="stats-reco">
-            {% for reco in expenseStats.recommendations %}
-              <li>{{ reco }}</li>
+            {% for month, advice in monthlyAdvice.by_month %}
+              <li><strong>{{ month }}:</strong> {{ advice }}</li>
             {% else %}
-              <li>No recommendation yet.</li>
+              <li>No AI advice available yet.</li>
             {% endfor %}
           </ul>
         </div>
@@ -296,10 +296,13 @@
               </a>
             </div>
             {{ form_start(formExpense, { 'attr': { 'class': '' } }) }}
-              <div class="mb-3">{{ form_row(formExpense.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Montant (TND)' }) }}</div>
-              <div class="mb-3">{{ form_row(formExpense.category, { 'attr': { 'class': 'form-select' } }) }}</div>
+              <div class="mb-3">{{ form_row(formExpense.amount, { 'attr': { 'class': 'form-control', 'data-suggest-amount': '1' }, 'label': 'Montant (TND)' }) }}</div>
+              <div class="mb-3">{{ form_row(formExpense.category, { 'attr': { 'class': 'form-select', 'data-suggest-category': '1' } }) }}</div>
               <div class="mb-3">{{ form_row(formExpense.expenseDate, { 'attr': { 'class': 'form-control' }, 'label': 'Date' }) }}</div>
-              <div class="mb-3">{{ form_row(formExpense.description, { 'attr': { 'class': 'form-control' }, 'required': false }) }}</div>
+              <div class="mb-3">
+                {{ form_row(formExpense.description, { 'attr': { 'class': 'form-control', 'data-suggest-description': '1' }, 'required': false }) }}
+                <div id="expense-category-suggestion" class="small mt-2 text-muted" style="display:none;"></div>
+              </div>
               <div class="mb-3">{{ form_row(formExpense.revenue, { 'attr': { 'class': 'form-select' } }) }}</div>
               <button type="submit" class="btn-primary2 w-100"><i class="fas fa-minus-circle me-2"></i>Add</button>
             {{ form_end(formExpense) }}
@@ -426,6 +429,68 @@ document.addEventListener('DOMContentLoaded', function () {
   if (urlTab && panels[urlTab]) showTab(urlTab);
   else { const activeBtn = document.querySelector('.js-tab.active'); showTab(activeBtn ? activeBtn.dataset.tab : 'revenus'); }
 
+  const descEl = document.querySelector('[data-suggest-description="1"]');
+  const amountEl = document.querySelector('[data-suggest-amount="1"]');
+  const categoryEl = document.querySelector('[data-suggest-category="1"]');
+  const hintEl = document.getElementById('expense-category-suggestion');
+
+  if (descEl && amountEl && categoryEl && hintEl) {
+    let timer = null;
+
+    const renderSuggestion = (payload) => {
+      if (!payload || !payload.category) {
+        hintEl.style.display = 'none';
+        hintEl.textContent = '';
+        return;
+      }
+
+      const confidencePct = Math.round((Number(payload.confidence || 0) * 100));
+      const alt = Array.isArray(payload.alternatives) && payload.alternatives.length
+        ? ` | Alternatives: ${payload.alternatives.map(a => `${a.category} (${Math.round((a.score || 0) * 100)}%)`).join(', ')}`
+        : '';
+
+      hintEl.innerHTML = `Suggested category: <strong>${payload.category}</strong> (confidence: <strong>${confidencePct}%</strong>) <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="apply-category-suggestion">Apply</button>${alt}`;
+      hintEl.style.display = '';
+
+      const applyBtn = document.getElementById('apply-category-suggestion');
+      if (applyBtn) {
+        applyBtn.addEventListener('click', function () {
+          categoryEl.value = payload.category;
+          categoryEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }, { once: true });
+      }
+    };
+
+    const requestSuggestion = async () => {
+      const description = (descEl.value || '').trim();
+      const amount = (amountEl.value || '').trim();
+      if (!description && !amount) {
+        renderSuggestion(null);
+        return;
+      }
+      try {
+        const url = new URL('{{ path('app_salary_expense_expense_suggest_category') }}', window.location.origin);
+        if (description) url.searchParams.set('description', description);
+        if (amount) url.searchParams.set('amount', amount);
+        const res = await fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!res.ok) return;
+        const payload = await res.json();
+        renderSuggestion(payload);
+      } catch (e) {
+        // fail silently for UX
+      }
+    };
+
+    const schedule = () => {
+      clearTimeout(timer);
+      timer = setTimeout(requestSuggestion, 350);
+    };
+
+    descEl.addEventListener('input', schedule);
+    amountEl.addEventListener('input', schedule);
+    descEl.addEventListener('blur', schedule);
+    amountEl.addEventListener('blur', schedule);
+  }
 });
 </script>
 {% endblock %}

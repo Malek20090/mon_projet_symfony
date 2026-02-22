@@ -10,8 +10,11 @@ use App\Form\RevenueType;
 use App\Repository\ExpenseRepository;
 use App\Repository\RevenueRepository;
 use App\Service\ExpenseStatisticsService;
+use App\Service\ExpenseCategorySuggestionService;
+use App\Service\SalaryExpenseAiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -25,7 +28,8 @@ class SalaryExpenseController extends AbstractController
         RevenueRepository $revenueRepository,
         ExpenseRepository $expenseRepository,
         EntityManagerInterface $entityManager,
-        ExpenseStatisticsService $expenseStatisticsService
+        ExpenseStatisticsService $expenseStatisticsService,
+        SalaryExpenseAiService $salaryExpenseAiService
     ): Response {
         $user = $this->getUser();
         if (!$user) {
@@ -48,6 +52,10 @@ class SalaryExpenseController extends AbstractController
             static fn (Expense $expense): bool => $expense->getUser()?->getId() === $user->getId()
         ));
         $expenseStats = $expenseStatisticsService->build($expenses, $selectedMonth);
+        $monthlyAdvice = $salaryExpenseAiService->buildMonthlyExpenseAdvice(
+            $expenseStats['months'],
+            $expenseStats['selected_month']
+        );
         $revenueSearch = trim((string) $request->query->get('revenue_search', ''));
         $revenueSort1 = (string) $request->query->get('revenue_sort1', 'receivedAt');
         $revenueDir1 = strtoupper((string) $request->query->get('revenue_dir1', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
@@ -302,6 +310,7 @@ class SalaryExpenseController extends AbstractController
             'formExpense' => $formExpense,
             'selectedMonth' => $selectedMonth,
             'expenseStats' => $expenseStats,
+            'monthlyAdvice' => $monthlyAdvice,
         ]);
     }
 
@@ -390,5 +399,24 @@ class SalaryExpenseController extends AbstractController
         }
 
         return $this->redirectToRoute('app_salary_expense_index');
+    }
+
+    #[Route('/expense/suggest-category', name: 'expense_suggest_category', methods: ['GET'])]
+    public function suggestExpenseCategory(
+        Request $request,
+        ExpenseCategorySuggestionService $suggestionService
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $description = (string) $request->query->get('description', '');
+        $amountRaw = (string) $request->query->get('amount', '');
+        $amount = is_numeric($amountRaw) ? (float) $amountRaw : null;
+
+        $suggestion = $suggestionService->suggest($user, $description, $amount);
+
+        return $this->json($suggestion);
     }
 }

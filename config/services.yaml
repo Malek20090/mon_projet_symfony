@@ -5,6 +5,8 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     user_images_directory: '%kernel.project_dir%/public/uploads/users'
+    google_ai_api_key_default: ''
+    google_ai_model_default: 'gemini-2.5-flash'
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -28,5 +30,5 @@ services:
 
     App\Service\SalaryExpenseAiService:
         arguments:
-            $openAiApiKey: '%env(string:OPENAI_API_KEY)%'
-            $openAiModel: '%env(string:OPENAI_MODEL)%'
+            $googleAiApiKey: '%env(default:google_ai_api_key_default:GOOGLE_AI_API_KEY)%'
+            $googleAiModel: '%env(default:google_ai_model_default:GOOGLE_AI_MODEL)%'
