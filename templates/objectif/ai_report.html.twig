@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}AI Objective Analysis{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+
+    <h2>🤖 AI Objective Analysis</h2>
+
+    <div class="card mt-3">
+        <div class="card-body">
+
+            {% if report.riskScore %}
+                <h4>
+                    Risk Score:
+                    <span class="badge 
+                        {% if report.riskScore < 40 %} bg-success
+                        {% elseif report.riskScore < 70 %} bg-warning
+                        {% else %} bg-danger
+                        {% endif %}
+                    ">
+                        {{ report.riskScore }}/100
+                    </span>
+                </h4>
+            {% endif %}
+
+            <hr>
+
+            <pre style="white-space: pre-wrap;">
+{{ report.content }}
+            </pre>
+            <div class="actions-row" style="margin-top: 16px;">
+        <a href="{{ path('objectif_index') }}" class="ghost-btn">← Retour aux Objectifs</a>
+      </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
