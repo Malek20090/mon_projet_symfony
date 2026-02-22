@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Expense;
 use App\Entity\Revenue;
+use App\Entity\Transaction;
 use App\Form\ExpenseType;
 use App\Form\RevenueType;
 use App\Repository\ExpenseRepository;
@@ -81,9 +82,28 @@ class SalaryExpenseController extends AbstractController
         $formExpense = $this->createForm(ExpenseType::class, $expense);
         $formExpense->handleRequest($request);
         if ($formExpense->isSubmitted() && $formExpense->isValid()) {
+            // 1️⃣ Sauvegarder la dépense
             $entityManager->persist($expense);
+
+            // 2️⃣ Créer la transaction associée
+            $user = $this->getUser();
+            if ($user) {
+                $transaction = new Transaction();
+                $transaction->setType('EXPENSE');
+                $transaction->setMontant($expense->getAmount());
+                $transaction->setDate($expense->getExpenseDate() ?? new \DateTime());
+                $transaction->setDescription($expense->getDescription());
+                $transaction->setModuleSource('SALARY_EXPENSE_MODULE');
+                $transaction->setUser($user);
+                $transaction->setExpense($expense);
+
+                $entityManager->persist($transaction);
+            }
+
+            // 3️⃣ Flush global
             $entityManager->flush();
-            $this->addFlash('success', 'Dépense ajoutée.');
+
+            $this->addFlash('success', 'Dépense ajoutée (transaction créée).');
             return $this->redirectToRoute('app_salary_expense_index');
         }
 

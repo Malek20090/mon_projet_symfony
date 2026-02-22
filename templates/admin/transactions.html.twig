@@ -49,7 +49,7 @@
             {{ form_widget(form.date, { attr: { class: 'input' } }) }}
             {{ form_widget(form.description, { attr: { class: 'input' } }) }}
             {{ form_widget(form.moduleSource, { attr: { class: 'input' } }) }}
-            {{ form_widget(form.user, { attr: { class: 'input' } }) }}
+            {# user n'est plus dans le formulaire : il est pris depuis l'utilisateur connecté #}
             <button class="btn-primary full">Add Transaction</button>
         </div>
         {{ form_end(form) }}
