@@ -133,7 +133,7 @@
 {% set stats = stats|default({}) %}
 {% set savingAccount = savingAccount|default({}) %}
 {% set transactions = transactions|default([]) %}
-{% set goals = goals|default([]) %}
+{% set goals = goals is defined ? goals : [] %}
 {% set goal_health = goal_health|default({'summary': {}, 'topUrgent': []}) %}
 
 {# small helpers for safe fields #}
@@ -673,5 +673,4 @@
 </script>
 
 {% endblock %}
-
 

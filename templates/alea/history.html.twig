@@ -3,6 +3,38 @@
 {% block title %}My Real Cases History | Decide${% endblock %}
 
 {% block body_class %}alea-page{% endblock %}
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .history-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+        }
+        .risk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px;
+            margin: 12px 0;
+        }
+        .risk-pill {
+            border: 1px solid #dbeafe;
+            background: #f8fbff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .history-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f8fafc;
+            white-space: nowrap;
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
 <section class="hero">
@@ -50,7 +82,7 @@
 
     <div class="row g-4 mb-4">
         <div class="col-lg-12">
-            <div class="bg-white rounded p-4 shadow-sm border-start border-4 border-warning">
+            <div class="history-card p-4 border-start border-4 border-warning">
                 <h5 class="mb-3"><i class="fas fa-car-crash text-warning me-2"></i>Typologie des Risques Personnels</h5>
                 <p class="mb-2">
                     Risque futur (30 jours):
@@ -62,12 +94,14 @@
                         <span class="badge bg-success">Faible ({{ riskInsights.riskScore }}/100)</span>
                     {% endif %}
                 </p>
-                <ul class="list-unstyled mb-2">
-                    <li>🚗 Voiture: <strong>{{ riskTypology.percentages.VOITURE|number_format(0) }}%</strong></li>
-                    <li>🩺 Santé: <strong>{{ riskTypology.percentages.SANTE|number_format(0) }}%</strong></li>
-                    <li>🔧 Pannes maison: <strong>{{ riskTypology.percentages.PANNE_MAISON|number_format(0) }}%</strong></li>
-                    <li>📦 Autres: <strong>{{ riskTypology.percentages.AUTRE|number_format(0) }}%</strong></li>
-                </ul>
+                <div class="risk-grid">
+                    <div class="risk-pill">Voiture: <strong>{{ riskTypology.percentages.VOITURE|default(0)|number_format(0) }}%</strong></div>
+                    <div class="risk-pill">Sante: <strong>{{ riskTypology.percentages.SANTE|default(0)|number_format(0) }}%</strong></div>
+                    <div class="risk-pill">Maison: <strong>{{ riskTypology.percentages.PANNE_MAISON|default(0)|number_format(0) }}%</strong></div>
+                    <div class="risk-pill">Education: <strong>{{ riskTypology.percentages.EDUCATION|default(0)|number_format(0) }}%</strong></div>
+                    <div class="risk-pill">Factures: <strong>{{ riskTypology.percentages.FACTURES|default(0)|number_format(0) }}%</strong></div>
+                    <div class="risk-pill">Autres: <strong>{{ riskTypology.percentages.AUTRE|default(0)|number_format(0) }}%</strong></div>
+                </div>
                 <div class="alert alert-warning mb-2 py-2">{{ riskTypology.exposureMessage }}</div>
                 <div class="mb-2">
                     <strong>Conseils hebdomadaires:</strong>
@@ -77,17 +111,36 @@
                         {% endfor %}
                     </ul>
                 </div>
+                <div class="mt-3">
+                    <strong>Rendez-vous suggere:</strong>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        {% if riskTypology.counts.VOITURE|default(0) >= 2 %}
+                            <button type="button"
+                                    class="btn btn-outline-primary btn-sm"
+                                    onclick="openGoogleCalendarSuggestion('Entretien voiture mensuel', 'VOITURE', 30)">
+                                <i class="fas fa-calendar-plus me-1"></i>Entretien voiture mensuel
+                            </button>
+                        {% endif %}
+                        {% if riskTypology.counts.SANTE|default(0) >= 2 %}
+                            <button type="button"
+                                    class="btn btn-outline-primary btn-sm"
+                                    onclick="openGoogleCalendarSuggestion('Bilan sante mensuel', 'SANTE', 30)">
+                                <i class="fas fa-calendar-plus me-1"></i>Bilan sante mensuel
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="bg-white rounded shadow-sm p-3 p-md-4">
+    <div class="history-card p-3 p-md-4">
         <h5 class="mb-3"><i class="fas fa-history text-primary me-2"></i>History</h5>
 
         {% if cas is empty %}
             <div class="alert alert-info mb-0">No real case found yet.</div>
         {% else %}
-            <div class="table-responsive">
+            <div class="table-responsive history-table">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                     <tr>
@@ -138,7 +191,7 @@
         {% endif %}
     </div>
 
-    <div class="bg-white rounded shadow-sm p-3 p-md-4 mt-4">
+    <div class="history-card p-3 p-md-4 mt-4">
         <h5 class="mb-3"><i class="fas fa-bell text-danger me-2"></i>Refusal Notifications</h5>
         {% set hasRefusalNotification = false %}
         {% for n in notifications %}
@@ -166,4 +219,23 @@
         {% endif %}
     </div>
 </section>
+<script>
+function openGoogleCalendarSuggestion(title, category, days) {
+    const url = '/alea/google/calendar-link?title='
+        + encodeURIComponent(title)
+        + '&category=' + encodeURIComponent(category)
+        + '&days=' + encodeURIComponent(days || 30);
+
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.json())
+        .then(d => {
+            if (d && d.success && d.url) {
+                window.open(d.url, '_blank');
+                return;
+            }
+            alert((d && d.message) ? d.message : 'Impossible de generer le rendez-vous.');
+        })
+        .catch(() => alert('Erreur lors de la creation du rendez-vous.'));
+}
+</script>
 {% endblock %}

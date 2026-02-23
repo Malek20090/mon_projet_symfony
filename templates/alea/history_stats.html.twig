@@ -3,6 +3,17 @@
 {% block title %}Real Cases Statistics | Decide${% endblock %}
 
 {% block body_class %}alea-page{% endblock %}
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .stats-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
 <section class="hero">
@@ -51,7 +62,7 @@
 
     <div class="row g-4 mb-4">
         <div class="col-lg-12">
-            <div class="bg-white rounded shadow-sm p-4 h-100 border-start border-4 border-warning">
+            <div class="stats-card p-4 h-100 border-start border-4 border-warning">
                 <h5 class="mb-3">Typologie des Risques Personnels</h5>
                 <p class="mb-2">{{ riskTypology.exposureMessage }}</p>
                 <p class="mb-2">
@@ -72,6 +83,23 @@
                         <li>{{ tip }}</li>
                     {% endfor %}
                 </ul>
+                <h6 class="mb-2">Rendez-vous suggere</h6>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    {% if riskTypology.counts.VOITURE|default(0) >= 2 %}
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                onclick="openGoogleCalendarSuggestion('Entretien voiture mensuel', 'VOITURE', 30)">
+                            <i class="fas fa-calendar-plus me-1"></i>Entretien voiture mensuel
+                        </button>
+                    {% endif %}
+                    {% if riskTypology.counts.SANTE|default(0) >= 2 %}
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                onclick="openGoogleCalendarSuggestion('Bilan sante mensuel', 'SANTE', 30)">
+                            <i class="fas fa-calendar-plus me-1"></i>Bilan sante mensuel
+                        </button>
+                    {% endif %}
+                </div>
                 <h6 class="mb-2">Imprévus suggérés</h6>
                 <div>
                     {% for item in riskInsights.suggestedIncidents %}
@@ -84,19 +112,19 @@
 
     <div class="row g-4">
         <div class="col-lg-4">
-            <div class="bg-white rounded shadow-sm p-4 h-100">
+            <div class="stats-card p-4 h-100">
                 <h5 class="mb-3">By Status</h5>
                 <canvas id="statusChart" height="220"></canvas>
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="bg-white rounded shadow-sm p-4 h-100">
+            <div class="stats-card p-4 h-100">
                 <h5 class="mb-3">By Type</h5>
                 <canvas id="typeChart" height="220"></canvas>
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="bg-white rounded shadow-sm p-4 h-100">
+            <div class="stats-card p-4 h-100">
                 <h5 class="mb-3">Average Amount</h5>
                 <p class="display-6 mb-0">{{ stats.averageAmount|number_format(2, ',', ' ') }} DT</p>
                 <hr>
@@ -106,7 +134,7 @@
         </div>
     </div>
 
-    <div class="bg-white rounded shadow-sm p-4 mt-4">
+    <div class="stats-card p-4 mt-4">
         <h5 class="mb-3">Top Solutions Used</h5>
         {% if stats.solutionCounts is empty %}
             <div class="alert alert-info mb-0">No data available.</div>
@@ -174,11 +202,13 @@
         const solutionLabels = {{ solutionLabels|json_encode|raw }};
         const solutionValues = {{ solutionValues|json_encode|raw }};
         const riskTypologyData = {
-            labels: ['Voiture', 'Sante', 'Pannes maison', 'Autres'],
+            labels: ['Voiture', 'Sante', 'Pannes maison', 'Education', 'Factures', 'Autres'],
             values: [
                 {{ riskTypology.percentages.VOITURE|default(0) }},
                 {{ riskTypology.percentages.SANTE|default(0) }},
                 {{ riskTypology.percentages.PANNE_MAISON|default(0) }},
+                {{ riskTypology.percentages.EDUCATION|default(0) }},
+                {{ riskTypology.percentages.FACTURES|default(0) }},
                 {{ riskTypology.percentages.AUTRE|default(0) }}
             ]
         };
@@ -249,10 +279,27 @@
                 labels: riskTypologyData.labels,
                 datasets: [{
                     data: riskTypologyData.values,
-                    backgroundColor: ['#0d6efd', '#20c997', '#f59f00', '#6c757d']
+                    backgroundColor: ['#0d6efd', '#20c997', '#f59f00', '#8b5cf6', '#0ea5e9', '#6c757d']
                 }]
             },
             options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
         });
+        window.openGoogleCalendarSuggestion = function (title, category, days) {
+            const url = '/alea/google/calendar-link?title='
+                + encodeURIComponent(title)
+                + '&category=' + encodeURIComponent(category)
+                + '&days=' + encodeURIComponent(days || 30);
+
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.json())
+                .then(d => {
+                    if (d && d.success && d.url) {
+                        window.open(d.url, '_blank');
+                        return;
+                    }
+                    alert((d && d.message) ? d.message : 'Impossible de generer le rendez-vous.');
+                })
+                .catch(() => alert('Erreur lors de la creation du rendez-vous.'));
+        };
     </script>
 {% endblock %}

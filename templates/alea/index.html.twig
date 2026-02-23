@@ -8,6 +8,50 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
+        .alea-panel {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        }
+        .section-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .06em;
+            color: #1d4ed8;
+            text-transform: uppercase;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 999px;
+            padding: 5px 12px;
+            margin-bottom: 10px;
+        }
+        .event-list-shell .list-group-item.bg-light {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .decision-shell .event-headline {
+            font-size: 11px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 700;
+        }
+        .decision-shell .event-title {
+            font-size: clamp(1.2rem, 2vw, 1.7rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin: 0;
+        }
+        .helper-note {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 8px;
+        }
         /* Custom styles for +/- logic */
         .clickable-item {
             cursor: pointer;
@@ -124,7 +168,7 @@
             <div class="hero-actions">
                 <a class="btn-soft" href="#customEventForm">Add a case</a>
                 <a class="btn-soft" href="{{ path('imprevu_history') }}">
-        ðŸ“œ My History
+        📜 My History
     </a>
 
             </div>
@@ -161,8 +205,9 @@
                 <!-- Left Panel -->
                 <div class="col-lg-5">
                     <!-- Add un Real Case -->
-                    <div class="bg-white rounded p-4 shadow-sm mb-4">
-                        <h5 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Add un Real Case</h5>
+                    <div class="alea-panel p-4 mb-4">
+                        <div class="section-kicker"><i class="fas fa-plus-circle"></i>New Case</div>
+                        <h5 class="mb-3">Add a Real Case</h5>
                         <form id="customEventForm">
                             <div class="mb-2">
                                 <input type="text" id="customTitle" class="form-control" placeholder="Titre">
@@ -183,12 +228,14 @@
                             </button>
                             <div id="voiceCaseStatus" class="small text-muted mb-2 d-none"></div>
                             <button type="button" onclick="addCustomEvent()" class="btn btn-primary w-100 btn-sm">Choisir ce cas</button>
+                            <div class="helper-note">Tip: ex. "fuite salle de bain moins 180" ou "prime plus 350".</div>
                         </form>
                     </div>
 
                     <!-- Unexpected Events Possibles -->
-                    <h5 class="mb-3">Possible unexpected events (database)</h5>
-                    <div class="list-group shadow-sm">
+                    <div class="alea-panel event-list-shell p-3">
+                    <h5 class="mb-3 mt-1">Possible unexpected events (database)</h5>
+                    <div class="list-group shadow-sm rounded-3 overflow-hidden">
                         <!-- Risques -->
                         <div class="list-group-item bg-light fw-bold text-danger">
                             <i class="fas fa-arrow-down me-2"></i>Risques (-)
@@ -205,6 +252,7 @@
                             {% endif %}
                         {% endfor %}
 
+
                         <!-- Opportunities -->
                         <div class="list-group-item bg-light fw-bold text-success mt-2">
                             <i class="fas fa-arrow-up me-2"></i>Opportunities (+)
@@ -220,6 +268,7 @@
                                 </div>
                             {% endif %}
                         {% endfor %}
+
 
                         {% if aiRiskInsights.suggestedIncidents is not empty or aiRiskInsights.suggestedOpportunities is not empty %}
                             <div class="list-group-item fw-bold ai-section-header mt-2">
@@ -247,19 +296,20 @@
                             {% endfor %}
                         {% endif %}
                     </div>
+                    </div>
 
                 </div>
 
                 <!-- Right Panel / Decision -->
                 <div class="col-lg-7">
-                    <div id="decisionPanel" class="bg-white rounded p-5 shadow-sm theme-negative">
+                    <div id="decisionPanel" class="alea-panel decision-shell p-5 theme-negative">
                         <div class="d-flex align-items-center mb-4">
                             <div class="btn-lg-square rounded-circle me-3 card-header-icon d-flex align-items-center justify-content-center" style="width:60px;height:60px;">
                                 <i id="eventIcon" class="fas fa-exclamation-triangle fa-2x"></i>
                             </div>
                             <div>
-                                <h6 class="text-uppercase text-muted mb-1">Real Case En Course</h6>
-                                <h2 id="eventTitle" class="mb-0">Select a case...</h2>
+                                <div class="event-headline">Selected Case</div>
+                                <h2 id="eventTitle" class="event-title">Select a case...</h2>
                             </div>
                         </div>
                         <div class="p-4 border rounded bg-light mb-4">
@@ -618,7 +668,7 @@ function fallbackManualCaseInput(reason) {
     const sign = (parts[2] || '').trim().toLowerCase();
 
     const amount = parseFloat(amountText);
-    const type = /plus|positif|gain/.test(sign) ? 'POSITIF' : 'NEGATIF';
+    const type = /plus|positif|gain|prime|bonus|remboursement|vente|bourse|aide/.test(sign) ? 'POSITIF' : 'NEGATIF';
 
     if (title) document.getElementById('customTitle').value = title;
     if (!Number.isNaN(amount)) document.getElementById('customAmount').value = amount;
@@ -631,14 +681,14 @@ function parseVoiceCaseText(text) {
     const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : null;
 
     let type = null;
-    if (/\b(moins|negatif|nÃ©gatif|depense|dÃ©pense|expense)\b/.test(raw)) {
+    if (/\b(moins|negatif|nÃ©gatif|depense|dÃ©pense|expense|panne|fuite|facture|reparation|loyer|urgence)\b/.test(raw)) {
         type = 'NEGATIF';
-    } else if (/\b(plus|positif|gain)\b/.test(raw)) {
+    } else if (/\b(plus|positif|gain|prime|bonus|remboursement|vente|bourse|aide)\b/.test(raw)) {
         type = 'POSITIF';
     }
 
     let title = raw
-        .replace(/\b(moins|negatif|nÃ©gatif|depense|dÃ©pense|expense|plus|positif|gain)\b/g, ' ')
+        .replace(/\b(moins|negatif|nÃ©gatif|depense|dÃ©pense|expense|panne|fuite|facture|reparation|plus|positif|gain|prime|bonus|remboursement|vente|bourse|aide)\b/g, ' ')
         .replace(/(\d+(?:[.,]\d+)?)/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
@@ -809,8 +859,5 @@ function confirmSubmit() {
 }
 </script>
 {% endblock %}
-
-
-
 
 

@@ -424,9 +424,11 @@
           {% endif %}
         </div>
 
-        <div class="savings-pagination">
-          {{ knp_pagination_render(goals, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
-        </div>
+        {% if goals.paginationData is defined %}
+          <div class="savings-pagination">
+            {{ knp_pagination_render(goals, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
+          </div>
+        {% endif %}
 
         <div class="tiny-note">Next: add stats charts + calendar events per goal ✓</div>
 
@@ -544,5 +546,4 @@
 
 })();
 </script>
-
 
