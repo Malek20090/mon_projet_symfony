@@ -31,15 +31,134 @@
     body.night .savings-page .historique-toolbar { border-bottom-color: rgba(255,255,255,.1); }
     .savings-page .historique-table-wrap { flex: 1; min-height: 220px; display: flex; flex-direction: column; }
     .savings-page .historique-table-wrap .table-wrap { flex: 1; display: block; }
-    .savings-page .stats-reco { margin-top: 12px; padding-left: 18px; }
-    .savings-page .stats-reco li { margin-bottom: 6px; }
+    .savings-page .advice-highlight {
+      margin-top: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(13, 110, 253, .22);
+      background: linear-gradient(135deg, rgba(13, 110, 253, .08), rgba(0, 191, 229, .12));
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      box-shadow: 0 6px 18px rgba(13, 110, 253, .12);
+    }
+    .savings-page .advice-highlight i {
+      color: #0d6efd;
+      font-size: 1rem;
+      margin-top: 2px;
+    }
+    .savings-page .advice-highlight .advice-month {
+      font-weight: 800;
+      color: #0f2a52;
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+    .savings-page .advice-highlight .advice-text {
+      color: #17324f;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+    body.night .savings-page .advice-highlight {
+      border-color: rgba(56, 189, 248, .35);
+      background: linear-gradient(135deg, rgba(14, 38, 82, .8), rgba(8, 26, 58, .8));
+      box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+    }
+    body.night .savings-page .advice-highlight .advice-month,
+    body.night .savings-page .advice-highlight .advice-text {
+      color: rgba(236, 252, 255, .92);
+    }
+    body.night .savings-page .advice-highlight i {
+      color: #38bdf8;
+    }
     .savings-page .tabs { position: relative; z-index: 3; }
+    .savings-page .month-filter-form .form-label { font-weight: 700; color: #5e6f7f; }
+    .savings-page .month-filter-form .month-apply-btn {
+      min-height: 40px;
+      font-weight: 800;
+      border-radius: 10px;
+      padding-left: 16px;
+      padding-right: 16px;
+      white-space: nowrap;
+    }
+    .savings-page .recurring-engine-card {
+      border-radius: 16px;
+      border: 1px solid rgba(13, 110, 253, .18);
+      background: linear-gradient(135deg, rgba(13, 110, 253, .06), rgba(0, 191, 229, .1));
+      box-shadow: 0 10px 24px rgba(13, 110, 253, .1);
+    }
+    .savings-page .recurring-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .savings-page .recurring-item {
+      border-radius: 12px;
+      background: rgba(255,255,255,.9);
+      border: 1px solid rgba(13, 110, 253, .12);
+      padding: 12px;
+    }
+    .savings-page .recurring-item .title {
+      font-weight: 800;
+      color: #0f2a52;
+      margin-bottom: 4px;
+      line-height: 1.2;
+    }
+    .savings-page .recurring-item .meta {
+      font-size: .85rem;
+      color: #50657b;
+      margin-bottom: 8px;
+    }
+    .savings-page .recurring-item .kind-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: .72rem;
+      font-weight: 800;
+      margin-right: 6px;
+      background: rgba(13,110,253,.1);
+      color: #0d6efd;
+    }
+    .savings-page .recurring-item .confidence {
+      font-size: .8rem;
+      font-weight: 700;
+      color: #0f2a52;
+    }
+    .savings-page .recurring-rules-list {
+      margin-top: 10px;
+      font-size: .9rem;
+      color: #39506a;
+    }
+    .savings-page .recurring-rules-list li { margin-bottom: 4px; }
+    body.night .savings-page .recurring-engine-card {
+      border-color: rgba(56, 189, 248, .3);
+      background: linear-gradient(135deg, rgba(14, 38, 82, .8), rgba(8, 26, 58, .8));
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+    }
+    body.night .savings-page .recurring-item {
+      background: rgba(255,255,255,.05);
+      border-color: rgba(56, 189, 248, .28);
+    }
+    body.night .savings-page .recurring-item .title,
+    body.night .savings-page .recurring-item .confidence {
+      color: rgba(236, 252, 255, .92);
+    }
+    body.night .savings-page .recurring-item .meta,
+    body.night .savings-page .recurring-rules-list {
+      color: rgba(210, 234, 255, .75);
+    }
+    body.night .savings-page .recurring-item .kind-pill {
+      background: rgba(56,189,248,.18);
+      color: #9cecff;
+    }
   </style>
 {% endblock %}
 
 {% block body %}
 
-{% set tab = app.request.query.get('tab', 'revenus') %}
+{% set tabRaw = app.request.query.get('tab', 'revenus') %}
+{% set tab = tabRaw in ['revenus', 'expenses'] ? tabRaw : 'revenus' %}
 
 <section class="hero">
   <div class="wrap container text-center">
@@ -226,7 +345,7 @@
     <div id="tab-expenses" class="tab-panel {{ tab == 'expenses' ? 'show' : '' }}">
       <div class="stat-card p-4 mb-4">
         <h4 class="mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i>Advanced Expense Statistics</h4>
-        <form method="get" class="row g-2 align-items-end mb-3">
+        <form method="get" class="row g-2 align-items-end mb-3 month-filter-form">
           <input type="hidden" name="tab" value="expenses">
           <input type="hidden" name="expense_sort1" value="{{ app.request.query.get('expense_sort1', 'expenseDate') }}">
           <input type="hidden" name="expense_dir1" value="{{ app.request.query.get('expense_dir1', 'DESC') }}">
@@ -238,7 +357,7 @@
           <input type="hidden" name="revenue_sort2" value="{{ app.request.query.get('revenue_sort2', 'amount') }}">
           <input type="hidden" name="revenue_dir2" value="{{ app.request.query.get('revenue_dir2', 'DESC') }}">
           <input type="hidden" name="revenue_search" value="{{ app.request.query.get('revenue_search', '') }}">
-          <div class="col-md-4">
+          <div class="col-md-5 col-lg-4">
             <label class="form-label small mb-0">Choose month</label>
             <select name="month" class="form-select form-select-sm">
               {% if selectedMonth not in expenseStats.available_months %}
@@ -249,8 +368,10 @@
               {% endfor %}
             </select>
           </div>
-          <div class="col-md-2">
-            <button type="submit" class="btn btn-sm btn-primary w-100">Apply</button>
+          <div class="col-md-4 col-lg-3">
+            <button type="submit" class="btn btn-primary w-100 month-apply-btn">
+              <i class="fa-solid fa-check me-1"></i>Apply Month
+            </button>
           </div>
         </form>
         <div class="row g-3 mb-3">
@@ -276,14 +397,68 @@
 
         <div>
           <h5 class="mb-2"><i class="fa-solid fa-robot text-primary me-2"></i>AI Monthly Advice</h5>
-          <ul class="stats-reco">
-            {% for month, advice in monthlyAdvice.by_month %}
-              <li><strong>{{ month }}:</strong> {{ advice }}</li>
-            {% else %}
-              <li>No AI advice available yet.</li>
-            {% endfor %}
-          </ul>
+          {% set selectedAdvice = monthlyAdvice.by_month[expenseStats.selected_month]|default('No AI advice available for the selected month yet.') %}
+          <div class="advice-highlight" role="note" aria-live="polite">
+            <i class="fa-solid fa-sparkles"></i>
+            <div class="advice-text">
+              <span class="advice-month">{{ expenseStats.selected_month }}:</span>{{ selectedAdvice }}
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div class="stat-card p-4 mb-4 recurring-engine-card">
+        <h4 class="mb-2"><i class="fa-solid fa-repeat text-primary me-2"></i>Recurring Transaction Engine</h4>
+        <p class="small mb-2">Detected repeated patterns from your history. Convert one click into automated recurring entries.</p>
+
+        {% if recurringSuggestions is not empty %}
+          <div class="recurring-grid">
+            {% for suggestion in recurringSuggestions %}
+              <div class="recurring-item">
+                <div class="title">{{ suggestion.label }}</div>
+                <div class="meta">
+                  <span class="kind-pill">{{ suggestion.kind }}</span>
+                  {{ suggestion.amount|number_format(2, '.', ' ') }} TND • {{ suggestion.frequency }} • next {{ suggestion.next_run_at }}
+                </div>
+                <div class="meta">Detected from {{ suggestion.occurrences }} similar entries (last: {{ suggestion.last_date }})</div>
+                <div class="confidence mb-2">Confidence: {{ (suggestion.confidence * 100)|number_format(0, '.', ' ') }}%</div>
+                <form method="post" action="{{ path('app_salary_expense_recurring_accept') }}" class="d-grid">
+                  <input type="hidden" name="_token" value="{{ csrf_token('recurring_accept') }}">
+                  <input type="hidden" name="kind" value="{{ suggestion.kind }}">
+                  <input type="hidden" name="label" value="{{ suggestion.label }}">
+                  <input type="hidden" name="amount" value="{{ suggestion.amount }}">
+                  <input type="hidden" name="frequency" value="{{ suggestion.frequency }}">
+                  <input type="hidden" name="next_run_at" value="{{ suggestion.next_run_at }}">
+                  <input type="hidden" name="confidence" value="{{ suggestion.confidence }}">
+                  <input type="hidden" name="signature" value="{{ suggestion.signature }}">
+                  <input type="hidden" name="description" value="{{ suggestion.description|default('') }}">
+                  <input type="hidden" name="revenue_type" value="{{ suggestion.revenue_type|default('FIXE') }}">
+                  <input type="hidden" name="expense_category" value="{{ suggestion.expense_category|default('Other') }}">
+                  <input type="hidden" name="expense_revenue_id" value="{{ suggestion.expense_revenue_id|default('') }}">
+                  <input type="hidden" name="month" value="{{ selectedMonth }}">
+                  <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="fa-solid fa-check me-1"></i>Convert To Recurring Rule
+                  </button>
+                </form>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="alert alert-light mb-2">
+            No strong recurring pattern detected yet. Add more repeated entries to unlock suggestions.
+          </div>
+        {% endif %}
+
+        {% if recurringRules is not empty %}
+          <div class="recurring-rules-list">
+            <strong>Active rules:</strong>
+            <ul class="mb-0 mt-1">
+              {% for rule in recurringRules|slice(0, 6) %}
+                <li>{{ rule.kind }} • {{ rule.amount|number_format(2, '.', ' ') }} TND • {{ rule.frequency }} • next {{ rule.nextRunAt ? rule.nextRunAt|date('Y-m-d') : 'n/a' }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
       </div>
 
       <div class="row g-4">
@@ -411,23 +586,24 @@
 document.addEventListener('DOMContentLoaded', function () {
   const tabBtns = document.querySelectorAll('.js-tab');
   const panels = { revenus: document.getElementById('tab-revenus'), expenses: document.getElementById('tab-expenses') };
-  if (!tabBtns.length || (!panels.revenus && !panels.expenses)) return;
-  function showTab(name) {
-    tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-    Object.keys(panels).forEach(k => { if (panels[k]) panels[k].classList.toggle('show', k === name); });
-    try { const url = new URL(window.location.href); url.searchParams.set('tab', name); window.history.replaceState({}, '', url.toString()); } catch (e) {}
-  }
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const name = btn.dataset.tab;
-      if (!name || !panels[name]) return;
-      e.preventDefault();
-      showTab(name);
+  if (tabBtns.length && (panels.revenus || panels.expenses)) {
+    function showTab(name) {
+      tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+      Object.keys(panels).forEach(k => { if (panels[k]) panels[k].classList.toggle('show', k === name); });
+      try { const url = new URL(window.location.href); url.searchParams.set('tab', name); window.history.replaceState({}, '', url.toString()); } catch (e) {}
+    }
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const name = btn.dataset.tab;
+        if (!name || !panels[name]) return;
+        e.preventDefault();
+        showTab(name);
+      });
     });
-  });
-  const urlTab = new URL(window.location.href).searchParams.get('tab');
-  if (urlTab && panels[urlTab]) showTab(urlTab);
-  else { const activeBtn = document.querySelector('.js-tab.active'); showTab(activeBtn ? activeBtn.dataset.tab : 'revenus'); }
+    const urlTab = new URL(window.location.href).searchParams.get('tab');
+    if (urlTab && panels[urlTab]) showTab(urlTab);
+    else { const activeBtn = document.querySelector('.js-tab.active'); showTab(activeBtn ? activeBtn.dataset.tab : 'revenus'); }
+  }
 
   const descEl = document.querySelector('[data-suggest-description="1"]');
   const amountEl = document.querySelector('[data-suggest-amount="1"]');
@@ -473,11 +649,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (description) url.searchParams.set('description', description);
         if (amount) url.searchParams.set('amount', amount);
         const res = await fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-        if (!res.ok) return;
+        if (!res.ok) {
+          hintEl.style.display = '';
+          hintEl.textContent = 'Category suggestion unavailable right now.';
+          return;
+        }
         const payload = await res.json();
         renderSuggestion(payload);
       } catch (e) {
-        // fail silently for UX
+        hintEl.style.display = '';
+        hintEl.textContent = 'Category suggestion unavailable right now.';
       }
     };
 
@@ -488,8 +669,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     descEl.addEventListener('input', schedule);
     amountEl.addEventListener('input', schedule);
+    descEl.addEventListener('change', schedule);
+    amountEl.addEventListener('change', schedule);
     descEl.addEventListener('blur', schedule);
     amountEl.addEventListener('blur', schedule);
+    schedule();
   }
 });
 </script>

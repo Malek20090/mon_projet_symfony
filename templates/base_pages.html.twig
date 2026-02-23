@@ -197,32 +197,6 @@
                 <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_contact' ? 'text-info fw-bold' : '' }}" href="{{ path('app_contact') }}">Contact</a>
             </li>
         </ul>
-        {% if not isStudentSpace %}
-            <ul class="navbar-nav header-links mx-auto gap-4">
-                <li class="nav-item">
-                    <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_home' ? 'text-info fw-bold' : '' }}" href="{{ path('app_home') }}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_about' ? 'text-info fw-bold' : '' }}" href="{{ path('app_about') }}">About</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_service' ? 'text-info fw-bold' : '' }}" href="{{ path('app_service') }}">Service</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white {{ (app.request.attributes.get('_route') ?? '') starts with 'app_salary_expense' ? 'text-info fw-bold' : '' }}" href="{{ path('app_salary_expense_index') }}">Income & Expenses</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white {{ app.request.attributes.get('_route') starts with 'app_savings' ? 'text-info fw-bold' : '' }}" href="{{ path('app_savings') }}">Savings</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_alea' ? 'text-info fw-bold' : '' }}" href="{{ path('app_alea') }}">Unexpected Events & Real Cases</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_contact' ? 'text-info fw-bold' : '' }}" href="{{ path('app_contact') }}">Contact</a>
-                </li>
-            </ul>
-        {% endif %}
-
         <div class="d-flex align-items-center header-actions">
             {% if app.user and (('ROLE_SALARY' in app.user.roles) or ('ROLE_ETUDIANT' in app.user.roles)) %}
                 {% set userProfileRoute = ('ROLE_SALARY' in app.user.roles) ? 'salary_profile' : 'student_profile' %}

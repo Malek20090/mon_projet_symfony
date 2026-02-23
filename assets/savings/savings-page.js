@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const hasSavingsPanels = !!document.getElementById("tab-savings") || !!document.getElementById("tab-goals");
+
   // Tabs + URL sync (?tab=savings|goals)
   const setTab = (tab) => {
     document.querySelectorAll(".tab-pill").forEach(b => b.classList.remove("active"));
@@ -15,9 +17,11 @@ document.addEventListener("DOMContentLoaded", () => {
     window.history.replaceState({}, "", url);
   };
 
-  document.querySelectorAll(".js-tab").forEach(btn => {
-    btn.addEventListener("click", () => setTab(btn.dataset.tab));
-  });
+  if (hasSavingsPanels) {
+    document.querySelectorAll(".js-tab").forEach(btn => {
+      btn.addEventListener("click", () => setTab(btn.dataset.tab));
+    });
+  }
 
   const focusForm = (tab, formId) => {
     setTab(tab);
@@ -30,19 +34,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 60);
   };
 
-  document.getElementById("heroAddDeposit")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    focusForm("savings", "depositForm");
-  });
+  if (hasSavingsPanels) {
+    document.getElementById("heroAddDeposit")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      focusForm("savings", "depositForm");
+    });
 
-  document.getElementById("heroCreateGoal")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    focusForm("goals", "goalAddForm");
-  });
+    document.getElementById("heroCreateGoal")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      focusForm("goals", "goalAddForm");
+    });
 
-  // on load
-  const url = new URL(window.location.href);
-  setTab(url.searchParams.get("tab") || "savings");
+    // on load
+    const url = new URL(window.location.href);
+    setTab(url.searchParams.get("tab") || "savings");
+  }
 
   // Day/Night mode
   const modeToggle = document.getElementById("modeToggle");

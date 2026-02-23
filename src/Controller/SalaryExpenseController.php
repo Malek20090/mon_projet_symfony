@@ -3,14 +3,17 @@
 namespace App\Controller;
 
 use App\Entity\Expense;
+use App\Entity\RecurringTransactionRule;
 use App\Entity\Revenue;
 use App\Entity\Transaction;
 use App\Form\ExpenseType;
 use App\Form\RevenueType;
 use App\Repository\ExpenseRepository;
+use App\Repository\RecurringTransactionRuleRepository;
 use App\Repository\RevenueRepository;
 use App\Service\ExpenseStatisticsService;
 use App\Service\ExpenseCategorySuggestionService;
+use App\Service\RecurringPatternService;
 use App\Service\SalaryExpenseAiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,9 +30,11 @@ class SalaryExpenseController extends AbstractController
         Request $request,
         RevenueRepository $revenueRepository,
         ExpenseRepository $expenseRepository,
+        RecurringTransactionRuleRepository $recurringTransactionRuleRepository,
         EntityManagerInterface $entityManager,
         ExpenseStatisticsService $expenseStatisticsService,
-        SalaryExpenseAiService $salaryExpenseAiService
+        SalaryExpenseAiService $salaryExpenseAiService,
+        RecurringPatternService $recurringPatternService
     ): Response {
         $user = $this->getUser();
         if (!$user) {
@@ -55,6 +60,11 @@ class SalaryExpenseController extends AbstractController
         $monthlyAdvice = $salaryExpenseAiService->buildMonthlyExpenseAdvice(
             $expenseStats['months'],
             $expenseStats['selected_month']
+        );
+        $recurringSuggestions = $recurringPatternService->buildSuggestions($user, $revenues, $expenses);
+        $recurringRules = $recurringTransactionRuleRepository->findBy(
+            ['user' => $user, 'isActive' => true],
+            ['nextRunAt' => 'ASC', 'id' => 'ASC']
         );
         $revenueSearch = trim((string) $request->query->get('revenue_search', ''));
         $revenueSort1 = (string) $request->query->get('revenue_sort1', 'receivedAt');
@@ -311,6 +321,101 @@ class SalaryExpenseController extends AbstractController
             'selectedMonth' => $selectedMonth,
             'expenseStats' => $expenseStats,
             'monthlyAdvice' => $monthlyAdvice,
+            'recurringSuggestions' => $recurringSuggestions,
+            'recurringRules' => $recurringRules,
+        ]);
+    }
+
+    #[Route('/recurring/accept', name: 'recurring_accept', methods: ['POST'])]
+    public function acceptRecurringSuggestion(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        RevenueRepository $revenueRepository,
+        RecurringTransactionRuleRepository $recurringTransactionRuleRepository
+    ): Response {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        if (!$this->isCsrfTokenValid('recurring_accept', $request->request->get('_token', ''))) {
+            $this->addFlash('error', 'Invalid recurring suggestion token.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+
+        $kind = strtoupper(trim((string) $request->request->get('kind', '')));
+        $frequency = strtoupper(trim((string) $request->request->get('frequency', '')));
+        $signature = trim((string) $request->request->get('signature', ''));
+        $label = trim((string) $request->request->get('label', ''));
+        $description = trim((string) $request->request->get('description', ''));
+        $nextRunRaw = trim((string) $request->request->get('next_run_at', ''));
+        $amountRaw = (string) $request->request->get('amount', '0');
+        $confidenceRaw = (string) $request->request->get('confidence', '');
+
+        if (!in_array($kind, [RecurringTransactionRule::KIND_REVENUE, RecurringTransactionRule::KIND_EXPENSE], true)) {
+            $this->addFlash('error', 'Unsupported recurring kind.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+        if (!in_array($frequency, [RecurringTransactionRule::FREQ_WEEKLY, RecurringTransactionRule::FREQ_MONTHLY], true)) {
+            $this->addFlash('error', 'Unsupported recurring frequency.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+
+        $amount = is_numeric($amountRaw) ? (float) $amountRaw : 0.0;
+        if ($amount <= 0) {
+            $this->addFlash('error', 'Recurring amount must be greater than zero.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+
+        $nextRunAt = \DateTimeImmutable::createFromFormat('Y-m-d', $nextRunRaw) ?: null;
+        if (!$nextRunAt) {
+            $this->addFlash('error', 'Invalid next run date.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+
+        if ($signature === '') {
+            $signature = hash('sha1', implode('|', [$kind, $label, number_format($amount, 2, '.', ''), $frequency, $nextRunAt->format('Y-m-d')]));
+        }
+
+        if ($recurringTransactionRuleRepository->existsForUserSignature($user, $signature)) {
+            $this->addFlash('info', 'A recurring rule for this pattern already exists.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+
+        $rule = new RecurringTransactionRule();
+        $rule->setUser($user);
+        $rule->setKind($kind);
+        $rule->setFrequency($frequency);
+        $rule->setSignature($signature);
+        $rule->setLabel($label !== '' ? $label : 'Recurring transaction');
+        $rule->setAmount($amount);
+        $rule->setNextRunAt(\DateTime::createFromInterface($nextRunAt));
+        $rule->setDescription($description !== '' ? $description : null);
+        $rule->setIsActive(true);
+        $rule->setConfidence(is_numeric($confidenceRaw) ? (float) $confidenceRaw : null);
+
+        if ($kind === RecurringTransactionRule::KIND_REVENUE) {
+            $rule->setRevenueType(trim((string) $request->request->get('revenue_type', 'FIXE')) ?: 'FIXE');
+        } else {
+            $rule->setExpenseCategory(trim((string) $request->request->get('expense_category', 'Other')) ?: 'Other');
+
+            $expenseRevenueId = (int) $request->request->get('expense_revenue_id', 0);
+            if ($expenseRevenueId > 0) {
+                $linkedRevenue = $revenueRepository->find($expenseRevenueId);
+                if ($linkedRevenue && $linkedRevenue->getUser()->getId() === $user->getId()) {
+                    $rule->setExpenseRevenue($linkedRevenue);
+                }
+            }
+        }
+
+        $entityManager->persist($rule);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Recurring rule created from suggestion.');
+
+        return $this->redirectToRoute('app_salary_expense_index', [
+            'tab' => 'expenses',
+            'month' => (string) $request->request->get('month', (new \DateTimeImmutable())->format('Y-m')),
         ]);
     }
 

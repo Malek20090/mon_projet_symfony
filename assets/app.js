@@ -105,9 +105,10 @@ document.addEventListener("DOMContentLoaded", () => {
   /* =========================================================
      TAB SWITCH (same page)
      ========================================================= */
-  const tabs = document.querySelectorAll(".js-tab");
+  const tabs = Array.from(document.querySelectorAll(".js-tab"));
   const panelSavings = document.getElementById("tab-savings");
   const panelGoals = document.getElementById("tab-goals");
+  const savingsTabs = tabs.filter((tab) => tab.dataset.tab === "savings" || tab.dataset.tab === "goals");
 
   const setTab = (name) => {
     const tabName = (name === "goals") ? "goals" : "savings";
@@ -125,8 +126,8 @@ document.addEventListener("DOMContentLoaded", () => {
     window.history.replaceState({}, "", url.toString());
   };
 
-  if (tabs.length) {
-    tabs.forEach(b => {
+  if (savingsTabs.length && (panelSavings || panelGoals)) {
+    savingsTabs.forEach(b => {
       b.addEventListener("click", () => setTab(b.dataset.tab));
     });
 
