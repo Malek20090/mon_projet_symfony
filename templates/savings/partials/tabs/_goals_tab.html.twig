@@ -159,7 +159,7 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
             <div>
               <label class="form-label">Target (TND)</label>
-              <input class="form-control" name="montant_cible" type="number" step="0.01" min="0.01" required>
+              <input class="form-control" name="montant_cible" type="number" step="0.01" min="10" required>
               <div class="field-error" data-err="montant_cible"></div>
             </div>
             <div>
@@ -207,7 +207,71 @@
 
       <div class="card-body">
 
-<form class="table-toolbar" method="get" action="" id="goalToolbarForm">
+                {% set health = goal_health|default({'summary': {}, 'topUrgent': [], 'alerts': [], 'recommendations': []}) %}
+        {% set summary = health.summary|default({}) %}
+        {% set urgent = health.topUrgent|default([]) %}
+        {% set alerts = health.alerts|default([]) %}
+        {% set recommendations = health.recommendations|default([]) %}
+        {% set feasibility = summary.feasibilityStatus|default('stable') %}
+        {% set feasibilityLabel = feasibility == 'at_risk' ? 'At Risk' : (feasibility == 'tight' ? 'Tight' : (feasibility == 'on_track' ? 'On Track' : 'Stable')) %}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div class="info-row"><span>Status</span><b>{{ feasibilityLabel }}</b></div>
+          <div class="info-row"><span>Coverage</span><b>{{ summary.coveragePct|default(100)|round }}%</b></div>
+          <div class="info-row"><span>Monthly target</span><b>{{ summary.monthlyNeeded|default(0)|number_format(2, '.', ' ') }} TND</b></div>
+          <div class="info-row"><span>Pressure</span><b>{{ summary.goalPressureIndex|default(0)|number_format(2, '.', ' ') }}</b></div>
+        </div>
+
+        <div class="info-row" style="margin-bottom:12px;">
+          <span>Overdue / Critical / Warning</span>
+          <b>{{ summary.overdueCount|default(0) }} / {{ summary.criticalCount|default(0) }} / {{ summary.warningCount|default(0) }}</b>
+        </div>
+
+        {% if urgent is not empty %}
+          {% set u = urgent[0] %}
+          <div class="tiny-note" style="margin-bottom:8px;">Most urgent goal</div>
+          <div class="alert-item {{ u.status == 'critical' or u.status == 'overdue' ? 'danger' : (u.status == 'warning' ? 'warn' : '') }}">
+            <div class="alert-dot"></div>
+            <div>
+              <p class="alert-title">{{ u.nom|default('Goal') }}</p>
+              <p class="alert-desc">
+                {{ u.progressPct|default(0)|round }}% · {{ u.daysLeft is null ? 'No deadline' : (u.daysLeft ~ ' days') }}
+                · {{ u.monthlyNeeded|default(0)|number_format(2, '.', ' ') }} TND/month
+              </p>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if summary.recommendedMonthlyContribution|default(0) > 0 %}
+          <div class="info-row" style="margin:10px 0;">
+            <span>Target contribution</span>
+            <b>{{ summary.recommendedMonthlyContribution|number_format(2, '.', ' ') }} / month</b>
+          </div>
+        {% endif %}
+
+        {% if alerts is not empty or recommendations is not empty %}
+          <details style="margin:8px 0 12px;">
+            <summary class="tiny-note" style="cursor:pointer;">Show detailed insights</summary>
+            <div style="margin-top:8px;">
+              {% for a in alerts %}
+                {% if a.level != 'ok' %}
+                  <div class="alert-item {{ a.level == 'danger' ? 'danger' : 'warn' }}">
+                    <div class="alert-dot"></div>
+                    <div><p class="alert-desc">{{ a.message }}</p></div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+              {% for rec in recommendations %}
+                <div class="info-row" style="margin-bottom:8px;"><span>- {{ rec }}</span></div>
+              {% endfor %}
+            </div>
+          </details>
+        {% endif %}
+<form class="table-toolbar" method="get" action="{{ path('app_savings') }}" id="goalToolbarForm">
+  <input type="hidden" name="tab" value="goals">
+  <input type="hidden" name="tx_q" value="{{ tx_q|default('') }}">
+  <input type="hidden" name="tx_sort" value="{{ tx_sort|default('date_desc') }}">
+  <input type="hidden" name="tx_range" value="{{ tx_range|default('all') }}">
 
   <div class="toolbar-row">
     <div class="tool-field full">
@@ -248,7 +312,7 @@
         All
       </button>
 
-      <a class="chip" href="{{ app.request.pathinfo }}">Reset</a>
+      <a class="chip" href="{{ path('app_savings', {'tab':'goals'}) }}">Reset</a>
     </div>
   </div>
 
@@ -256,7 +320,7 @@
 
         <div id="goals-list">
 
-          {% if goals is empty %}
+          {% if goals|length == 0 %}
             <div class="info-row" style="justify-content:center;">
               <b>✨ No goals yet. Create one on the left.</b>
             </div>
@@ -360,6 +424,12 @@
           {% endif %}
         </div>
 
+        {% if goals.paginationData is defined %}
+          <div class="savings-pagination">
+            {{ knp_pagination_render(goals, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
+          </div>
+        {% endif %}
+
         <div class="tiny-note">Next: add stats charts + calendar events per goal ✓</div>
 
       </div>
@@ -389,7 +459,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
         <div>
           <label class="form-label">Target (TND)</label>
-          <input class="form-control" name="montant_cible" id="edit_cible" type="number" step="0.01" min="0.01" required>
+          <input class="form-control" name="montant_cible" id="edit_cible" type="number" step="0.01" min="10" required>
           <div class="field-error" data-err="edit_cible"></div>
         </div>
         <div>
@@ -417,113 +487,6 @@
 
 <script>
 (function(){
-
-  // ===============================
-  // ✅ INLINE ERROR HELPERS
-  // ===============================
-  function showErr(form, name, msg){
-    const input = form.querySelector(`[name="${name}"], #${name}`);
-    const box   = form.querySelector(`[data-err="${name}"]`);
-    if(input) input.classList.add('is-bad');
-    if(box){
-      box.textContent = msg || '';
-      box.style.display = msg ? 'block' : 'none';
-    }
-  }
-  function clearErr(form, name){
-    const input = form.querySelector(`[name="${name}"], #${name}`);
-    const box   = form.querySelector(`[data-err="${name}"]`);
-    if(input) input.classList.remove('is-bad');
-    if(box){
-      box.textContent = '';
-      box.style.display = 'none';
-    }
-  }
-  function isPastDate(ymd){
-    if(!ymd) return false;
-    const d = new Date(ymd + "T00:00:00");
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    return d < today;
-  }
-
-  // ===============================
-  // ✅ CREATE GOAL VALIDATION
-  // ===============================
-  const addForm = document.getElementById('goalAddForm');
-  if(addForm){
-
-    addForm.addEventListener('input', (e) => {
-      if(!e.target.name) return;
-      clearErr(addForm, e.target.name);
-    });
-
-    addForm.addEventListener('submit', (e) => {
-      ['nom','montant_cible','montant_actuel','date_limite','priorite'].forEach(n => clearErr(addForm,n));
-
-      const nom    = (addForm.querySelector('[name="nom"]')?.value || '').trim();
-      const cible  = parseFloat(addForm.querySelector('[name="montant_cible"]')?.value || '0');
-      const actuel = parseFloat(addForm.querySelector('[name="montant_actuel"]')?.value || '0');
-      const date   = (addForm.querySelector('[name="date_limite"]')?.value || '').trim();
-      const prio   = parseInt(addForm.querySelector('[name="priorite"]')?.value || '0', 10);
-
-      let ok = true;
-
-      if(nom.length < 3){
-        showErr(addForm,'nom',"The name must contain at least 3 characters.");
-        ok = false;
-      }
-      if(!(cible > 0)){
-        showErr(addForm,'montant_cible',"The target amount must be > 0.");
-        ok = false;
-      }
-      if(actuel < 0){
-        showErr(addForm,'montant_actuel',"The current amount cannot be negative.");
-        ok = false;
-      }
-      if(cible > 0 && actuel > cible){
-        showErr(addForm,'montant_actuel',"The current amount cannot exceed the target amount.");
-        ok = false;
-      }
-      if(prio < 1 || prio > 5){
-        showErr(addForm,'priorite',"Priority must be between 1 and 5.");
-        ok = false;
-      }
-      if(date && isPastDate(date)){
-        showErr(addForm,'date_limite',"The deadline must be today or in the future.");
-        ok = false;
-      }
-
-      if(!ok){
-        e.preventDefault();
-        const firstBad = addForm.querySelector('.is-bad');
-        if(firstBad) firstBad.focus();
-      }
-    });
-  }
-
-  // ===============================
-  // ✅ CONTRIBUTE VALIDATION
-  // ===============================
-  document.querySelectorAll('.goalContributeForm').forEach((f) => {
-    f.addEventListener('input', (e) => {
-      if(e.target && e.target.name === 'add_amount'){
-        clearErr(f,'add_amount');
-      }
-    });
-
-    f.addEventListener('submit', (e) => {
-      clearErr(f,'add_amount');
-      const v = parseFloat(f.querySelector('[name="add_amount"]')?.value || '0');
-
-      if(!(v > 0)){
-        e.preventDefault();
-        showErr(f,'add_amount',"The contribution must be > 0.");
-        const inp = f.querySelector('[name="add_amount"]');
-        if(inp) inp.focus();
-      }
-    });
-  });
 
   // ---------- OPTIONAL button
   const autoBtn = document.getElementById('btn-autoplan');
@@ -562,37 +525,9 @@
       const urlTemplate = "{{ path('app_goal_edit', {id: 'GOAL_ID'}) }}";
       form.action = urlTemplate.replace('GOAL_ID', id);
 
-      // clear previous errors
-      ['edit_nom','edit_cible','edit_prio','edit_date'].forEach(n => clearErr(form,n));
-
       openModal();
     });
   });
-
-  // ✅ Edit modal validation (optional but clean)
-  if(form){
-    form.addEventListener('submit', (e) => {
-      ['edit_nom','edit_cible','edit_prio','edit_date'].forEach(n => clearErr(form,n));
-
-      const nom   = (document.getElementById('edit_nom')?.value || '').trim();
-      const cible = parseFloat(document.getElementById('edit_cible')?.value || '0');
-      const prio  = parseInt(document.getElementById('edit_prio')?.value || '0', 10);
-      const date  = (document.getElementById('edit_date')?.value || '').trim();
-
-      let ok = true;
-
-      if(nom.length < 3){ showErr(form,'edit_nom',"The name must contain at least 3 characters."); ok=false; }
-      if(!(cible > 0)){ showErr(form,'edit_cible',"The target amount must be > 0."); ok=false; }
-      if(prio < 1 || prio > 5){ showErr(form,'edit_prio',"Priority must be between 1 and 5."); ok=false; }
-      if(date && isPastDate(date)){ showErr(form,'edit_date',"The deadline must be today or in the future."); ok=false; }
-
-      if(!ok){
-        e.preventDefault();
-        const firstBad = form.querySelector('.is-bad');
-        if(firstBad) firstBad.focus();
-      }
-    });
-  }
 
   // ---------- SORT LOOP EMOJI (🔁)
   const toolbarForm = document.getElementById('goalToolbarForm');
@@ -611,3 +546,4 @@
 
 })();
 </script>
+

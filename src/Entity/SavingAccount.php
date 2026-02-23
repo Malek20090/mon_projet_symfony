@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SavingAccountRepository::class)]
 #[ORM\Table(name: 'saving_account')]
@@ -18,17 +19,28 @@ class SavingAccount
     private ?int $id = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\NotNull(message: 'Balance is required.')]
+    #[Assert\PositiveOrZero(message: 'Balance must be positive or zero.')]
+    #[Assert\LessThanOrEqual(value: 1000000, message: 'Balance cannot exceed 1,000,000.')]
     private ?float $sold = 0;
 
     #[ORM\Column(name: 'date_creation', type: Types::DATE_MUTABLE, nullable: true)]
+    #[Assert\LessThanOrEqual(value: 'today', message: 'Creation date cannot be in the future.')]
     private ?\DateTime $dateCreation = null;
 
     #[ORM\Column(name: 'taux_interet', nullable: true)]
+    #[Assert\NotNull(message: 'Interest rate is required.')]
+    #[Assert\Range(
+        min: 0,
+        max: 100,
+        notInRangeMessage: 'Interest rate must be between {{ min }} and {{ max }}.'
+    )]
     private ?float $tauxInteret = 0;
 
     // NOTE: we reference your existing User entity
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false)]
+    #[Assert\NotNull(message: 'User is required.')]
     private ?User $user = null;
 
     /** @var Collection<int, FinancialGoal> */

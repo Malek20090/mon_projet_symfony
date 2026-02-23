@@ -1,30 +1,501 @@
 <div class="modal" id="simModal" aria-hidden="true">
-  <div class="modal-card">
+  <div class="modal-card sim-modal-card">
     <div class="modal-head">
-      <div class="modal-title">📈 “What if?” Simulation</div>
+      <div class="modal-title">What-if AI Planner</div>
       <button class="close-x" type="button" data-close-modal>&times;</button>
     </div>
 
-    <div class="sub">Simulate monthly savings to see how fast you hit a goal.</div>
+    <div class="sub sim-sub">Run a scenario with your real savings and goals data, then get strategy-grade AI guidance.</div>
 
-    <div class="mt-16">
-      <label class="form-label">Monthly deposit (TND)</label>
-      <input class="range" id="simRange" type="range" min="0" max="1000" value="200">
-    </div>
-
-    <div class="sim-box mt-16">
-      <div class="sim-kpi">
-        <div class="lbl">Monthly deposit</div>
-        <div class="val"><span id="simVal">200</span> TND</div>
+    <div class="mt-16 sim-grid-2">
+      <div>
+        <label class="form-label">Monthly deposit (TND)</label>
+        <input class="range" id="simRange" type="range" min="0" max="5000" step="50" value="200">
+        <div class="tiny-note" style="margin-top:6px;">Value: <b><span id="simVal">200</span> TND</b></div>
       </div>
-      <div class="sim-kpi">
-        <div class="lbl">Estimated months to reach target</div>
-        <div class="val"><span id="simMonths">—</span></div>
+      <div>
+        <label class="form-label">One-time deposit (TND)</label>
+        <input class="form-control" id="simOneTime" type="number" min="0" step="10" value="0" placeholder="Optional one-time amount">
       </div>
     </div>
 
-    <div class="mt-16">
-      <button class="primary-btn" type="button">💾 Apply This Plan (later)</button>
+    <div class="mt-16 sim-grid-2">
+      <div>
+        <label class="form-label">Strategic persona</label>
+        <select id="simPersona" class="form-control">
+          <option value="conservative">Conservative</option>
+          <option value="balanced" selected>Balanced</option>
+          <option value="aggressive">Aggressive Growth</option>
+        </select>
+      </div>
+      <div style="display:flex; align-items:end; gap:8px;">
+        <button type="button" id="simBrutalBtn" class="chip" style="border:1px solid #f2b0b0;">⚡ Brutal Financial Truth</button>
+        <button type="button" id="simLazyBtn" class="chip" style="border:1px solid #d7d7d7;">💤 Stay Lazy Mode</button>
+      </div>
+    </div>
+
+    <div class="sim-box mt-16 sim-kpi-grid">
+      <div class="sim-kpi sim-kpi-card">
+        <div class="lbl">Months to finish</div>
+        <div class="val"><span id="simMonths">-</span></div>
+      </div>
+      <div class="sim-kpi sim-kpi-card">
+        <div class="lbl">Remaining after now</div>
+        <div class="val"><span id="simRemaining">-</span></div>
+      </div>
+      <div class="sim-kpi sim-kpi-card">
+        <div class="lbl">Projected finish date</div>
+        <div class="val"><span id="simDate">-</span></div>
+      </div>
+    </div>
+
+    <div id="simInsights" class="tiny-note mt-16 sim-insights">
+      Insights will appear after running the simulation.
+    </div>
+
+    <div id="simConflict" class="tiny-note mt-16 sim-insights" style="display:none;"></div>
+
+    <div class="mt-16 sim-ai-shell">
+      <div class="sim-ai-head">
+        <div class="sim-ai-title-wrap">
+          <div class="sim-ai-badge">📈</div>
+          <div>
+            <div class="form-label sim-ai-title">Future Timeline Projection</div>
+            <div class="sim-ai-meta">Risk zone in red, safe zone in green.</div>
+          </div>
+        </div>
+      </div>
+      <canvas id="simTimeline" height="140"></canvas>
+    </div>
+
+    <div class="mt-16 sim-ai-shell">
+      <div class="sim-ai-head">
+        <div class="sim-ai-title-wrap">
+          <div class="sim-ai-badge">AI</div>
+          <div>
+            <div class="form-label sim-ai-title">AI Financial Strategy</div>
+            <div id="simAiMeta" class="sim-ai-meta">Waiting for simulation run.</div>
+          </div>
+        </div>
+      </div>
+      <div id="simAiAdvice" class="tiny-note sim-ai-content">Run simulation to generate advice.</div>
+    </div>
+
+    <div class="mt-16" style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="primary-btn" type="button" id="simRunBtn">Run simulation</button>
+      <button class="chip" type="button" data-close-modal style="border:1px solid #d8e4ef;">Close</button>
     </div>
   </div>
 </div>
+
+<style>
+  #simModal .sim-modal-card {
+    width: min(860px, calc(100vw - 72px));
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+    margin: 28px auto;
+    border: 1px solid #d8e5f1;
+    border-radius: 18px;
+    box-shadow: 0 20px 45px rgba(11, 30, 53, 0.12);
+    background: linear-gradient(180deg, #fbfdff 0%, #f5f9ff 100%);
+  }
+  #simModal {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+  #simModal .sim-sub {
+    color: #445c74;
+    font-size: 1.05rem;
+  }
+  #simModal .sim-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  #simModal .sim-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  #simModal .sim-kpi-card {
+    border: 1px solid #d8e5f1;
+    border-radius: 12px;
+    padding: 12px;
+    background: #ffffff;
+  }
+  #simModal .sim-kpi-card .lbl {
+    font-size: 0.9rem;
+    color: #607991;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+  #simModal .sim-kpi-card .val {
+    font-size: 1.9rem;
+    line-height: 1.1;
+    font-weight: 800;
+    color: #142c44;
+  }
+  #simModal .sim-insights {
+    border: 1px dashed #b8d3ec;
+    border-radius: 12px;
+    padding: 12px;
+    background: rgba(237, 246, 255, 0.55);
+    color: #2e4a63;
+    line-height: 1.5;
+    text-align: left !important;
+  }
+  #simModal .sim-ai-shell {
+    border: 1px solid #c8d9ee;
+    border-radius: 14px;
+    padding: 14px;
+    background: radial-gradient(circle at top right, rgba(0, 197, 255, 0.12), transparent 45%), #ffffff;
+  }
+  #simModal .sim-ai-head {
+    margin-bottom: 8px;
+  }
+  #simModal .sim-ai-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #simModal .sim-ai-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #0ea5e9, #22c55e);
+    box-shadow: 0 6px 18px rgba(14, 165, 233, 0.3);
+  }
+  #simModal .sim-ai-title {
+    margin-bottom: 0;
+    color: #183753;
+    font-size: 1.02rem;
+    letter-spacing: 0.2px;
+  }
+  #simModal .sim-ai-meta {
+    font-size: 0.86rem;
+    color: #6683a0;
+    margin-top: 2px;
+  }
+  #simModal .sim-ai-content {
+    color: #29455f;
+    line-height: 1.6;
+    font-size: 0.97rem;
+    white-space: normal;
+    text-align: left !important;
+  }
+  #simModal .sim-ai-content .sim-h {
+    font-weight: 800;
+    color: #153a5d;
+    margin-top: 10px;
+    margin-bottom: 6px;
+    text-align: left;
+  }
+  #simModal .sim-ai-content .sim-p {
+    margin: 0 0 6px 0;
+    text-align: left;
+  }
+  #simModal .sim-ai-content .sim-ul {
+    margin: 0 0 8px 0;
+    padding-left: 20px;
+  }
+  #simModal .sim-ai-content .sim-li {
+    margin: 0 0 4px 0;
+    padding-left: 2px;
+    text-align: left;
+  }
+  #simModal #simConflict {
+    text-align: left !important;
+  }
+  @media (max-width: 840px) {
+    #simModal .sim-modal-card {
+      width: min(96vw, 96vw);
+      max-height: calc(100vh - 20px);
+      margin: 10px auto;
+      padding: 14px;
+    }
+    #simModal .sim-grid-2 {
+      grid-template-columns: 1fr;
+    }
+    #simModal .sim-kpi-grid {
+      grid-template-columns: 1fr;
+    }
+    #simModal .sim-kpi-card .val {
+      font-size: 1.55rem;
+    }
+  }
+</style>
+
+<script>
+(() => {
+  const modal = document.getElementById('simModal');
+  const openBtn = document.getElementById('openSimulation');
+  const closeBtns = modal ? modal.querySelectorAll('[data-close-modal]') : [];
+  const range = document.getElementById('simRange');
+  const val = document.getElementById('simVal');
+  const oneTime = document.getElementById('simOneTime');
+  const runBtn = document.getElementById('simRunBtn');
+  const months = document.getElementById('simMonths');
+  const remaining = document.getElementById('simRemaining');
+  const date = document.getElementById('simDate');
+  const insights = document.getElementById('simInsights');
+  const conflict = document.getElementById('simConflict');
+  const persona = document.getElementById('simPersona');
+  const brutalBtn = document.getElementById('simBrutalBtn');
+  const lazyBtn = document.getElementById('simLazyBtn');
+  const timelineCanvas = document.getElementById('simTimeline');
+  const aiMeta = document.getElementById('simAiMeta');
+  const aiAdvice = document.getElementById('simAiAdvice');
+  let brutalTruth = false;
+  let stayLazyMode = false;
+
+  if (!modal || !openBtn || !range || !val || !oneTime || !runBtn || !months || !remaining || !date || !insights || !conflict || !persona || !brutalBtn || !lazyBtn || !timelineCanvas || !aiMeta || !aiAdvice) return;
+
+  function openModal() {
+    modal.style.display = 'flex';
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeModal() {
+    modal.style.display = 'none';
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  function syncRangeValue() {
+    val.textContent = String(range.value || '0');
+  }
+
+  function setLoadingState(loading) {
+    runBtn.disabled = loading;
+    runBtn.textContent = loading ? 'Calculating...' : 'Run simulation';
+  }
+
+  function syncModeButtons() {
+    brutalBtn.style.background = brutalTruth ? 'rgba(239,68,68,0.12)' : '';
+    brutalBtn.style.borderColor = brutalTruth ? '#ef4444' : '#f2b0b0';
+    brutalBtn.textContent = brutalTruth ? '⚡ Brutal Financial Truth ON' : '⚡ Brutal Financial Truth';
+
+    lazyBtn.style.background = stayLazyMode ? 'rgba(59,130,246,0.12)' : '';
+    lazyBtn.style.borderColor = stayLazyMode ? '#3b82f6' : '#d7d7d7';
+    lazyBtn.textContent = stayLazyMode ? '💤 Stay Lazy Mode ON' : '💤 Stay Lazy Mode';
+  }
+
+  function escHtml(s) {
+    return String(s || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
+  function renderAdvice(raw) {
+    const lines = String(raw || '').split('\n').map((x) => x.trim()).filter(Boolean);
+    if (!lines.length) return 'No advice generated.';
+
+    const html = [];
+    let inList = false;
+
+    function closeList() {
+      if (inList) {
+        html.push('</ul>');
+        inList = false;
+      }
+    }
+
+    for (const line of lines) {
+      const isHeader = /summary|risks|best plan|next 30 days|assessment|action plan|critical/i.test(line) && line.endsWith(':');
+      if (isHeader) {
+        closeList();
+        html.push(`<div class="sim-h">${escHtml(line)}</div>`);
+        continue;
+      }
+
+      if (line.startsWith('-') || line.startsWith('â€¢') || line.startsWith('•')) {
+        if (!inList) {
+          html.push('<ul class="sim-ul">');
+          inList = true;
+        }
+        html.push(`<li class="sim-li">${escHtml(line.replace(/^[-â€¢•]\s*/, ''))}</li>`);
+      } else {
+        closeList();
+        html.push(`<p class="sim-p">${escHtml(line)}</p>`);
+      }
+    }
+    closeList();
+
+    return html.join('');
+  }
+
+  function drawTimeline(data) {
+    const ctx = timelineCanvas.getContext('2d');
+    const series = Array.isArray(data.timelineSeries) ? data.timelineSeries : [];
+    if (!ctx || !series.length) return;
+
+    const w = timelineCanvas.width = timelineCanvas.clientWidth;
+    const h = timelineCanvas.height = 140;
+    ctx.clearRect(0, 0, w, h);
+
+    const pad = 26;
+    const maxY = Math.max(...series.map((p) => Number(p.remaining || 0)), 1);
+    const maxX = Math.max(...series.map((p) => Number(p.month || 0)), 1);
+
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.10)';
+    ctx.fillRect(pad, pad, w - pad * 2, (h - pad * 2) * 0.45);
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.10)';
+    ctx.fillRect(pad, pad + (h - pad * 2) * 0.45, w - pad * 2, (h - pad * 2) * 0.55);
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#9cb4ca';
+    ctx.lineWidth = 1;
+    ctx.moveTo(pad, h - pad);
+    ctx.lineTo(w - pad, h - pad);
+    ctx.moveTo(pad, pad);
+    ctx.lineTo(pad, h - pad);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#0ea5e9';
+    ctx.lineWidth = 2.2;
+    series.forEach((p, i) => {
+      const x = pad + ((Number(p.month || 0) / maxX) * (w - pad * 2));
+      const y = h - pad - ((Number(p.remaining || 0) / maxY) * (h - pad * 2));
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    ctx.fillStyle = '#355472';
+    ctx.font = '12px Segoe UI, Arial, sans-serif';
+    ctx.fillText('Month 0', pad, h - 8);
+    ctx.fillText(`Month ${maxX}`, w - pad - 64, h - 8);
+    ctx.fillText(`Remaining ${maxY.toFixed(0)} TND`, pad + 8, pad - 8);
+  }
+
+  function renderResult(data) {
+    const r = data.result || {};
+    months.textContent = r.monthsToFinish !== null && r.monthsToFinish !== undefined ? String(r.monthsToFinish) : '-';
+    remaining.textContent = r.remainingAfterNow !== undefined ? `${Number(r.remainingAfterNow).toFixed(2)} TND` : '-';
+    date.textContent = r.projectedFinishDate || '-';
+    const alt = Array.isArray(data.alternatives) ? data.alternatives : [];
+    const altText = alt.map((a) => {
+      const m = a.monthsToFinish === null || a.monthsToFinish === undefined ? 'n/a' : `${a.monthsToFinish}m`;
+      return `${Number(a.monthlyDeposit).toFixed(0)} TND/mo -> ${m}, risk ${a.goalsAtRisk}`;
+    }).join(' | ');
+    const riskText = (r.goalsAtRisk || 0) > 0
+      ? `<span style="color:#a94442;"><b>${r.goalsAtRisk}</b> goal(s) at deadline risk</span>`
+      : '<span style="color:#2f7d32;"><b>No deadline risk</b></span>';
+    let recText = 'No safe monthly plan found yet';
+    if (r.recommendedMonthly) {
+      const base = `${Number(r.recommendedMonthly).toFixed(0)} TND/month`;
+      if (r.recommendedMonthlyType === 'safe') {
+        recText = `${base} (safe)`;
+      } else if (r.recommendedMonthlyType === 'best_effort') {
+        const rr = Number(r.recommendedRiskAtMonthly || 0);
+        const mm = r.recommendedMonthsAtMonthly !== null && r.recommendedMonthsAtMonthly !== undefined
+          ? `${Number(r.recommendedMonthsAtMonthly)}m`
+          : 'n/a';
+        recText = `${base} (best effort: risk ${rr}, ${mm})`;
+      } else {
+        recText = base;
+      }
+    }
+    const modeLine = `<b>Modes:</b> ${brutalTruth ? 'Brutal ON' : 'Brutal OFF'} | ${stayLazyMode ? 'Lazy ON' : 'Lazy OFF'}`;
+    insights.innerHTML = `${modeLine}<br><b>Risk:</b> ${riskText}<br><b>Recommended monthly:</b> ${recText}<br><b>Plan options:</b> ${altText || 'n/a'}`;
+    drawTimeline(data);
+
+    const conflictPack = data.conflictAnalysis || {};
+    const cRows = Array.isArray(conflictPack.scenarios) ? conflictPack.scenarios : [];
+    if (cRows.length) {
+      const rowsHtml = cRows.map((s) => {
+        const m = s.months === null || s.months === undefined ? 'n/a' : `${s.months}m`;
+        return `<div style="margin-top:6px;"><b>${escHtml(s.code)}.</b> ${escHtml(s.title)} | <b>Drop:</b> ${escHtml(s.drop)} | <b>Result:</b> ${escHtml(m)}, risk ${escHtml(s.riskGoals)}</div>`;
+      }).join('');
+      conflict.style.display = 'block';
+      conflict.innerHTML = `<div><b>🔥 Conflict Analysis:</b> ${escHtml(conflictPack.summary || '')}</div>${rowsHtml}`;
+    } else {
+      conflict.style.display = 'none';
+      conflict.innerHTML = '';
+    }
+
+    const source = data.aiSource === 'openai'
+      ? `OpenAI${data.aiModel ? ` (${data.aiModel})` : ''}`
+      : 'Planner fallback';
+    aiMeta.textContent = `Source: ${source}`;
+    aiAdvice.innerHTML = renderAdvice(data.aiAdvice || '');
+  }
+
+  async function runSimulation() {
+    setLoadingState(true);
+    aiMeta.textContent = 'Source: running analysis...';
+    aiAdvice.textContent = 'Running strategy simulation...';
+    insights.textContent = 'Computing goal timeline and plan options...';
+    conflict.style.display = 'none';
+    conflict.innerHTML = '';
+
+    const body = {
+      monthlyDeposit: Number(range.value || 0),
+      oneTimeDeposit: Number(oneTime.value || 0),
+      persona: String(persona.value || 'balanced'),
+      brutalTruth,
+      stayLazyMode,
+      runId: String(Date.now()),
+    };
+
+    try {
+      const res = await fetch(`{{ path('app_savings_what_if') }}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data || data.ok === false) {
+        throw new Error((data && data.message) ? data.message : 'Simulation failed');
+      }
+
+      renderResult(data);
+    } catch (e) {
+      months.textContent = '-';
+      remaining.textContent = '-';
+      date.textContent = '-';
+      aiMeta.textContent = 'Source: unavailable';
+      aiAdvice.textContent = e && e.message ? e.message : 'Could not run simulation.';
+    } finally {
+      setLoadingState(false);
+    }
+  }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtns.forEach((b) => b.addEventListener('click', closeModal));
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  range.addEventListener('input', syncRangeValue);
+  oneTime.addEventListener('blur', () => {
+    const n = Number(oneTime.value || 0);
+    oneTime.value = Number.isFinite(n) && n > 0 ? String(Math.round(n)) : '0';
+  });
+  brutalBtn.addEventListener('click', () => {
+    brutalTruth = !brutalTruth;
+    syncModeButtons();
+  });
+  lazyBtn.addEventListener('click', () => {
+    stayLazyMode = !stayLazyMode;
+    syncModeButtons();
+  });
+  runBtn.addEventListener('click', () => runSimulation());
+  syncModeButtons();
+  syncRangeValue();
+})();
+</script>

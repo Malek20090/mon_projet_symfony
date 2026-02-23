@@ -231,9 +231,46 @@ body.savings-page{
   pointer-events:none;
 }
 .savings-page .hero .wrap{ position:relative; z-index:3; }
+.savings-page .hero h1{
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  margin: 0 0 10px;
+  letter-spacing: .2px;
+  color:#fff;
+}
+.savings-page .hero p{
+  margin: 0 auto 14px;
+  max-width: 900px;
+  font-size: 1.05rem;
+  color: rgba(255,255,255,.92);
+}
+.savings-page .hero .breadcrumbs{
+  margin-bottom: 16px;
+  color: rgba(255,255,255,.8);
+  font-size: .95rem;
+}
+.savings-page .hero .breadcrumbs a{
+  color: rgba(255,255,255,.95);
+  text-decoration:none;
+}
+.savings-page .hero .breadcrumbs .active{
+  color:#fff;
+  font-weight:800;
+}
+.savings-page .hero-actions{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+}
 
 /* Hero buttons */
 .savings-page .btn-soft{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:160px;
+  cursor:pointer;
   padding:10px 18px;
   border-radius:999px;
   font-weight:900;
@@ -245,6 +282,11 @@ body.savings-page{
 .savings-page .btn-soft:hover{ transform: translateY(-1px); background:rgba(255,255,255,.22); }
 
 .savings-page .btn-primary2{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:160px;
+  cursor:pointer;
   padding:10px 18px;
   border-radius:999px;
   font-weight:900;
@@ -255,6 +297,13 @@ body.savings-page{
   box-shadow:0 14px 28px rgba(0,191,229,.28);
 }
 .savings-page .btn-primary2:hover{ transform: translateY(-1px); box-shadow:0 18px 34px rgba(0,191,229,.34); }
+
+@media (max-width: 640px){
+  .savings-page .hero-actions .btn-soft,
+  .savings-page .hero-actions .btn-primary2{
+    min-width: 46%;
+  }
+}
 
 /* =========================
    ALEA PAGE — same hero style as Savings
@@ -2166,4 +2215,75 @@ header.topbar .topbar-row.topbar-grid .topbar-text{
 .module-icon i {
     font-size: 26px;      /* même taille visuelle */
     line-height: 1;
+}
+
+/* =========================
+   Savings Pagination Bundle
+   ========================= */
+.savings-page .savings-pagination{
+  margin: 14px 0 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.savings-page .savings-pagination nav{
+  width: 100%;
+}
+
+.savings-page .savings-pagination .pagination{
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.savings-page .savings-pagination .page-item .page-link{
+  border: 1px solid rgba(14, 165, 233, 0.28);
+  border-radius: 999px;
+  min-width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #0e2a52;
+  background: #f4fbff;
+  box-shadow: 0 5px 14px rgba(2, 132, 199, 0.1);
+}
+
+.savings-page .savings-pagination .page-item .page-link:hover{
+  color: #082240;
+  background: #e3f6ff;
+  border-color: rgba(14, 165, 233, 0.45);
+}
+
+.savings-page .savings-pagination .page-item.active .page-link{
+  color: #fff;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  border-color: transparent;
+  box-shadow: 0 10px 22px rgba(2, 132, 199, 0.34);
+}
+
+.savings-page .savings-pagination .page-item.disabled .page-link{
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+body.night.savings-page .savings-pagination .page-item .page-link{
+  color: #d8f4ff;
+  background: rgba(9, 25, 54, 0.95);
+  border-color: rgba(56, 189, 248, 0.34);
+  box-shadow: 0 6px 16px rgba(1, 8, 22, 0.55);
+}
+
+body.night.savings-page .savings-pagination .page-item .page-link:hover{
+  background: rgba(14, 38, 82, 0.98);
+  border-color: rgba(56, 189, 248, 0.55);
+}
+
+body.night.savings-page .savings-pagination .page-item.active .page-link{
+  color: #041223;
+  background: linear-gradient(135deg, #38bdf8, #22d3ee);
+  box-shadow: 0 10px 24px rgba(34, 211, 238, 0.32);
 }

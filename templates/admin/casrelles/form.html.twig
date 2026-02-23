@@ -68,9 +68,8 @@
                         <select class="form-select {% if errors.solution is defined %}is-invalid{% endif %}" id="solution" name="solution" required>
                             <option value="">Select...</option>
                             <option value="FONDS_SECURITE" {% if cas.solution == 'FONDS_SECURITE' %}selected{% endif %}>Emergency Fund</option>
-                            <option value="EPARGNE" {% if cas.solution == 'EPARGNE' %}selected{% endif %}>Savings</option>
+                            <option value="OBJECTIF" {% if cas.solution == 'OBJECTIF' or cas.solution == 'EPARGNE' %}selected{% endif %}>Objectif</option>
                             <option value="FAMILLE" {% if cas.solution == 'FAMILLE' %}selected{% endif %}>Famille</option>
-                            <option value="COMPTE" {% if cas.solution == 'COMPTE' %}selected{% endif %}>Compte</option>
                         </select>
                         {% if errors.solution is defined %}
                             <div class="invalid-feedback">{{ errors.solution }}</div>
@@ -78,17 +77,17 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="epargne_id" class="form-label">Savings account</label>
-                        <select class="form-select {% if errors.epargne_id is defined %}is-invalid{% endif %}" id="epargne_id" name="epargne_id">
-                            <option value="">Select un compte (optionnel)</option>
-                            {% for epargne in epargnes %}
-                                <option value="{{ epargne.id }}" {% if cas.epargne and cas.epargne.id == epargne.id %}selected{% endif %}>
-                                    Compte #{{ epargne.id }} – Solde: {{ epargne.sold|default(0) }} DT
+                        <label for="financial_goal_id" class="form-label">Financial goal</label>
+                        <select class="form-select {% if errors.financial_goal_id is defined %}is-invalid{% endif %}" id="financial_goal_id" name="financial_goal_id">
+                            <option value="">Select un financial goal (optionnel)</option>
+                            {% for goal in financialGoals|default([]) %}
+                                <option value="{{ goal.id }}" {% if cas.financialGoal and cas.financialGoal.id == goal.id %}selected{% endif %}>
+                                    {{ goal.nom }} - Cible: {{ goal.montantCible|default(0)|number_format(2, ',', ' ') }} DT
                                 </option>
                             {% endfor %}
                         </select>
-                        {% if errors.epargne_id is defined %}
-                            <div class="invalid-feedback">{{ errors.epargne_id }}</div>
+                        {% if errors.financial_goal_id is defined %}
+                            <div class="invalid-feedback">{{ errors.financial_goal_id }}</div>
                         {% endif %}
                     </div>
 
@@ -123,5 +122,3 @@
     </div>
 </div>
 {% endblock %}
-
-

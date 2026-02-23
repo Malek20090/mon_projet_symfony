@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\CasRellesRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use App\Entity\FinancialGoal;
 
 #[ORM\Entity(repositoryClass: CasRellesRepository::class)]
 class CasRelles
@@ -13,10 +14,8 @@ class CasRelles
     public const TYPE_NEGATIF = 'NEGATIF';
 
     public const SOLUTION_FONDS_SECURITE = 'FONDS_SECURITE';
-    public const SOLUTION_EPARGNE = 'EPARGNE';
     public const SOLUTION_FAMILLE = 'FAMILLE';
-    public const SOLUTION_COMPTE = 'COMPTE';
-
+public const SOLUTION_OBJECTIF = 'OBJECTIF';
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -30,10 +29,7 @@ class CasRelles
     #[ORM\JoinColumn(nullable: true)]
     private ?Imprevus $imprevus = null;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?SavingAccount $epargne = null;
-
+    
     #[ORM\Column(length: 150)]
     private ?string $titre = null;
 
@@ -58,6 +54,15 @@ class CasRelles
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $raisonRefus = null;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $confirmedBy = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $confirmedAt = null;
+#[ORM\ManyToOne]
+#[ORM\JoinColumn(nullable: true)]
+private ?FinancialGoal $financialGoal = null;
     public function getId(): ?int
     {
         return $this->id;
@@ -73,7 +78,16 @@ class CasRelles
         $this->user = $user;
         return $this;
     }
+public function getFinancialGoal(): ?FinancialGoal
+{
+    return $this->financialGoal;
+}
 
+public function setFinancialGoal(?FinancialGoal $financialGoal): static
+{
+    $this->financialGoal = $financialGoal;
+    return $this;
+}
     public function getImprevus(): ?Imprevus
     {
         return $this->imprevus;
@@ -85,16 +99,7 @@ class CasRelles
         return $this;
     }
 
-    public function getEpargne(): ?SavingAccount
-    {
-        return $this->epargne;
-    }
-
-    public function setEpargne(?SavingAccount $epargne): static
-    {
-        $this->epargne = $epargne;
-        return $this;
-    }
+   
 
     public function getTitre(): ?string
     {
@@ -181,6 +186,28 @@ class CasRelles
     public function setRaisonRefus(?string $raisonRefus): static
     {
         $this->raisonRefus = $raisonRefus;
+        return $this;
+    }
+
+    public function getConfirmedBy(): ?User
+    {
+        return $this->confirmedBy;
+    }
+
+    public function setConfirmedBy(?User $confirmedBy): static
+    {
+        $this->confirmedBy = $confirmedBy;
+        return $this;
+    }
+
+    public function getConfirmedAt(): ?\DateTimeImmutable
+    {
+        return $this->confirmedAt;
+    }
+
+    public function setConfirmedAt(?\DateTimeImmutable $confirmedAt): static
+    {
+        $this->confirmedAt = $confirmedAt;
         return $this;
     }
 }

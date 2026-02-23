@@ -7,7 +7,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType; // ✅ IMPORTANT
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -49,7 +49,7 @@ class UserType extends AbstractType
                     'Étudiant' => 'ROLE_ETUDIANT',
                 ],
                 'expanded' => false,
-                'multiple' => true, // ⚠️ roles est un tableau
+                'multiple' => true, // 
             ])
             ->add('soldeTotal', NumberType::class);
     }

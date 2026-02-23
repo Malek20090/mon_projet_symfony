@@ -3,14 +3,21 @@
 namespace App\Controller;
 
 use App\Entity\Expense;
+use App\Entity\RecurringTransactionRule;
 use App\Entity\Revenue;
 use App\Entity\Transaction;
 use App\Form\ExpenseType;
 use App\Form\RevenueType;
 use App\Repository\ExpenseRepository;
+use App\Repository\RecurringTransactionRuleRepository;
 use App\Repository\RevenueRepository;
+use App\Service\ExpenseStatisticsService;
+use App\Service\ExpenseCategorySuggestionService;
+use App\Service\RecurringPatternService;
+use App\Service\SalaryExpenseAiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -23,16 +30,42 @@ class SalaryExpenseController extends AbstractController
         Request $request,
         RevenueRepository $revenueRepository,
         ExpenseRepository $expenseRepository,
-        EntityManagerInterface $entityManager
+        RecurringTransactionRuleRepository $recurringTransactionRuleRepository,
+        EntityManagerInterface $entityManager,
+        ExpenseStatisticsService $expenseStatisticsService,
+        SalaryExpenseAiService $salaryExpenseAiService,
+        RecurringPatternService $recurringPatternService
     ): Response {
         $user = $this->getUser();
         if (!$user) {
             return $this->redirectToRoute('app_login');
         }
 
+        $selectedMonth = (string) $request->query->get('month', (new \DateTime())->format('Y-m'));
+        if (!preg_match('/^\d{4}\-(0[1-9]|1[0-2])$/', $selectedMonth)) {
+            $selectedMonth = (new \DateTime())->format('Y-m');
+        }
+
         $revenues = $revenueRepository->findBy(['user' => $user], ['receivedAt' => 'DESC']);
         $expenses = $expenseRepository->findBy(['user' => $user], ['expenseDate' => 'DESC']);
-
+        $revenues = array_values(array_filter(
+            $revenues,
+            static fn (Revenue $revenue): bool => $revenue->getUser()->getId() === $user->getId()
+        ));
+        $expenses = array_values(array_filter(
+            $expenses,
+            static fn (Expense $expense): bool => $expense->getUser()?->getId() === $user->getId()
+        ));
+        $expenseStats = $expenseStatisticsService->build($expenses, $selectedMonth);
+        $monthlyAdvice = $salaryExpenseAiService->buildMonthlyExpenseAdvice(
+            $expenseStats['months'],
+            $expenseStats['selected_month']
+        );
+        $recurringSuggestions = $recurringPatternService->buildSuggestions($user, $revenues, $expenses);
+        $recurringRules = $recurringTransactionRuleRepository->findBy(
+            ['user' => $user, 'isActive' => true],
+            ['nextRunAt' => 'ASC', 'id' => 'ASC']
+        );
         $revenueSearch = trim((string) $request->query->get('revenue_search', ''));
         $revenueSort1 = (string) $request->query->get('revenue_sort1', 'receivedAt');
         $revenueDir1 = strtoupper((string) $request->query->get('revenue_dir1', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
@@ -49,17 +82,27 @@ class SalaryExpenseController extends AbstractController
         $totalExpenses = array_sum(array_map(fn(Expense $e) => $e->getAmount(), $expenses));
         $netBalance = $totalIncome - $totalExpenses;
 
+        $lastRevenueDate = null;
+        foreach ($revenues as $revenueItem) {
+            $date = $revenueItem->getReceivedAt();
+            if ($date !== null && ($lastRevenueDate === null || $date > $lastRevenueDate)) {
+                $lastRevenueDate = $date;
+            }
+        }
+        $lastExpenseDate = null;
+        foreach ($expenses as $expenseItem) {
+            $date = $expenseItem->getExpenseDate();
+            if ($date !== null && ($lastExpenseDate === null || $date > $lastExpenseDate)) {
+                $lastExpenseDate = $date;
+            }
+        }
         $lastTransactionDate = null;
-        $lastRevenue = $revenueRepository->findOneBy(['user' => $user], ['receivedAt' => 'DESC']);
-        $lastExpense = $expenseRepository->findOneBy(['user' => $user], ['expenseDate' => 'DESC']);
-        if ($lastRevenue && $lastExpense) {
-            $lastTransactionDate = $lastRevenue->getReceivedAt() > $lastExpense->getExpenseDate()
-                ? $lastRevenue->getReceivedAt()
-                : $lastExpense->getExpenseDate();
-        } elseif ($lastRevenue) {
-            $lastTransactionDate = $lastRevenue->getReceivedAt();
-        } elseif ($lastExpense) {
-            $lastTransactionDate = $lastExpense->getExpenseDate();
+        if ($lastRevenueDate && $lastExpenseDate) {
+            $lastTransactionDate = $lastRevenueDate > $lastExpenseDate ? $lastRevenueDate : $lastExpenseDate;
+        } elseif ($lastRevenueDate) {
+            $lastTransactionDate = $lastRevenueDate;
+        } elseif ($lastExpenseDate) {
+            $lastTransactionDate = $lastExpenseDate;
         }
 
         if ($revenueSearch !== '') {
@@ -218,11 +261,16 @@ class SalaryExpenseController extends AbstractController
 
             $this->addFlash('success', 'Revenu ajoute et solde mis a jour.');
 
-            return $this->redirectToRoute('app_salary_expense_index');
+            return $this->redirectToRoute('app_salary_expense_index', [
+                'tab' => 'revenus',
+                'month' => $revenue->getReceivedAt()->format('Y-m'),
+            ]);
         }
 
         $expense = new Expense();
-        $formExpense = $this->createForm(ExpenseType::class, $expense);
+        $formExpense = $this->createForm(ExpenseType::class, $expense, [
+            'user' => $user,
+        ]);
         $formExpense->handleRequest($request);
 
         if ($formExpense->isSubmitted() && $formExpense->isValid()) {
@@ -255,7 +303,10 @@ class SalaryExpenseController extends AbstractController
 
             $this->addFlash('success', 'Depense ajoutee et solde mis a jour.');
 
-            return $this->redirectToRoute('app_salary_expense_index');
+            return $this->redirectToRoute('app_salary_expense_index', [
+                'tab' => 'expenses',
+                'month' => ($expense->getExpenseDate() ?? new \DateTimeImmutable())->format('Y-m'),
+            ]);
         }
 
         return $this->render('salary_expense/index.html.twig', [
@@ -267,12 +318,115 @@ class SalaryExpenseController extends AbstractController
             'lastTransactionDate' => $lastTransactionDate,
             'formRevenue' => $formRevenue,
             'formExpense' => $formExpense,
+            'selectedMonth' => $selectedMonth,
+            'expenseStats' => $expenseStats,
+            'monthlyAdvice' => $monthlyAdvice,
+            'recurringSuggestions' => $recurringSuggestions,
+            'recurringRules' => $recurringRules,
+        ]);
+    }
+
+    #[Route('/recurring/accept', name: 'recurring_accept', methods: ['POST'])]
+    public function acceptRecurringSuggestion(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        RevenueRepository $revenueRepository,
+        RecurringTransactionRuleRepository $recurringTransactionRuleRepository
+    ): Response {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        if (!$this->isCsrfTokenValid('recurring_accept', $request->request->get('_token', ''))) {
+            $this->addFlash('error', 'Invalid recurring suggestion token.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+
+        $kind = strtoupper(trim((string) $request->request->get('kind', '')));
+        $frequency = strtoupper(trim((string) $request->request->get('frequency', '')));
+        $signature = trim((string) $request->request->get('signature', ''));
+        $label = trim((string) $request->request->get('label', ''));
+        $description = trim((string) $request->request->get('description', ''));
+        $nextRunRaw = trim((string) $request->request->get('next_run_at', ''));
+        $amountRaw = (string) $request->request->get('amount', '0');
+        $confidenceRaw = (string) $request->request->get('confidence', '');
+
+        if (!in_array($kind, [RecurringTransactionRule::KIND_REVENUE, RecurringTransactionRule::KIND_EXPENSE], true)) {
+            $this->addFlash('error', 'Unsupported recurring kind.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+        if (!in_array($frequency, [RecurringTransactionRule::FREQ_WEEKLY, RecurringTransactionRule::FREQ_MONTHLY], true)) {
+            $this->addFlash('error', 'Unsupported recurring frequency.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+
+        $amount = is_numeric($amountRaw) ? (float) $amountRaw : 0.0;
+        if ($amount <= 0) {
+            $this->addFlash('error', 'Recurring amount must be greater than zero.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+
+        $nextRunAt = \DateTimeImmutable::createFromFormat('Y-m-d', $nextRunRaw) ?: null;
+        if (!$nextRunAt) {
+            $this->addFlash('error', 'Invalid next run date.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+
+        if ($signature === '') {
+            $signature = hash('sha1', implode('|', [$kind, $label, number_format($amount, 2, '.', ''), $frequency, $nextRunAt->format('Y-m-d')]));
+        }
+
+        if ($recurringTransactionRuleRepository->existsForUserSignature($user, $signature)) {
+            $this->addFlash('info', 'A recurring rule for this pattern already exists.');
+            return $this->redirectToRoute('app_salary_expense_index', ['tab' => 'expenses']);
+        }
+
+        $rule = new RecurringTransactionRule();
+        $rule->setUser($user);
+        $rule->setKind($kind);
+        $rule->setFrequency($frequency);
+        $rule->setSignature($signature);
+        $rule->setLabel($label !== '' ? $label : 'Recurring transaction');
+        $rule->setAmount($amount);
+        $rule->setNextRunAt(\DateTime::createFromInterface($nextRunAt));
+        $rule->setDescription($description !== '' ? $description : null);
+        $rule->setIsActive(true);
+        $rule->setConfidence(is_numeric($confidenceRaw) ? (float) $confidenceRaw : null);
+
+        if ($kind === RecurringTransactionRule::KIND_REVENUE) {
+            $rule->setRevenueType(trim((string) $request->request->get('revenue_type', 'FIXE')) ?: 'FIXE');
+        } else {
+            $rule->setExpenseCategory(trim((string) $request->request->get('expense_category', 'Other')) ?: 'Other');
+
+            $expenseRevenueId = (int) $request->request->get('expense_revenue_id', 0);
+            if ($expenseRevenueId > 0) {
+                $linkedRevenue = $revenueRepository->find($expenseRevenueId);
+                if ($linkedRevenue && $linkedRevenue->getUser()->getId() === $user->getId()) {
+                    $rule->setExpenseRevenue($linkedRevenue);
+                }
+            }
+        }
+
+        $entityManager->persist($rule);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Recurring rule created from suggestion.');
+
+        return $this->redirectToRoute('app_salary_expense_index', [
+            'tab' => 'expenses',
+            'month' => (string) $request->request->get('month', (new \DateTimeImmutable())->format('Y-m')),
         ]);
     }
 
     #[Route('/revenue/{id}/edit', name: 'revenue_edit', methods: ['GET', 'POST'])]
     public function editRevenue(Request $request, Revenue $revenue, EntityManagerInterface $entityManager): Response
     {
+        $user = $this->getUser();
+        if (!$user || $revenue->getUser()->getId() !== $user->getId()) {
+            throw $this->createAccessDeniedException('Access denied.');
+        }
+
         $form = $this->createForm(RevenueType::class, $revenue);
         $form->handleRequest($request);
 
@@ -291,13 +445,16 @@ class SalaryExpenseController extends AbstractController
     #[Route('/revenue/{id}/delete', name: 'revenue_delete', methods: ['POST'])]
     public function deleteRevenue(Request $request, Revenue $revenue, EntityManagerInterface $entityManager): Response
     {
+        $user = $this->getUser();
+        if (!$user || $revenue->getUser()->getId() !== $user->getId()) {
+            throw $this->createAccessDeniedException('Access denied.');
+        }
+
         if ($this->isCsrfTokenValid('delete' . $revenue->getId(), $request->request->get('_token', ''))) {
-            $user = $revenue->getUser();
-            if ($user) {
-                $user->setSoldeTotal(
-                    $user->getSoldeTotal() - $revenue->getAmount()
-                );
-            }
+            $owner = $revenue->getUser();
+            $owner->setSoldeTotal(
+                $owner->getSoldeTotal() - $revenue->getAmount()
+            );
 
             $entityManager->remove($revenue);
             $entityManager->flush();
@@ -310,7 +467,14 @@ class SalaryExpenseController extends AbstractController
     #[Route('/expense/{id}/edit', name: 'expense_edit', methods: ['GET', 'POST'])]
     public function editExpense(Request $request, Expense $expense, EntityManagerInterface $entityManager): Response
     {
-        $form = $this->createForm(ExpenseType::class, $expense);
+        $user = $this->getUser();
+        if (!$user || $expense->getUser()?->getId() !== $user->getId()) {
+            throw $this->createAccessDeniedException('Access denied.');
+        }
+
+        $form = $this->createForm(ExpenseType::class, $expense, [
+            'user' => $user,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -328,6 +492,11 @@ class SalaryExpenseController extends AbstractController
     #[Route('/expense/{id}/delete', name: 'expense_delete', methods: ['POST'])]
     public function deleteExpense(Request $request, Expense $expense, EntityManagerInterface $entityManager): Response
     {
+        $user = $this->getUser();
+        if (!$user || $expense->getUser()?->getId() !== $user->getId()) {
+            throw $this->createAccessDeniedException('Access denied.');
+        }
+
         if ($this->isCsrfTokenValid('delete' . $expense->getId(), $request->request->get('_token', ''))) {
             $entityManager->remove($expense);
             $entityManager->flush();
@@ -335,5 +504,24 @@ class SalaryExpenseController extends AbstractController
         }
 
         return $this->redirectToRoute('app_salary_expense_index');
+    }
+
+    #[Route('/expense/suggest-category', name: 'expense_suggest_category', methods: ['GET'])]
+    public function suggestExpenseCategory(
+        Request $request,
+        ExpenseCategorySuggestionService $suggestionService
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $description = (string) $request->query->get('description', '');
+        $amountRaw = (string) $request->query->get('amount', '');
+        $amount = is_numeric($amountRaw) ? (float) $amountRaw : null;
+
+        $suggestion = $suggestionService->suggest($user, $description, $amount);
+
+        return $this->json($suggestion);
     }
 }

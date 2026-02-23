@@ -3,7 +3,19 @@
 
     function safeGetTheme() {
         try {
-            return localStorage.getItem(KEY);
+            var primary = localStorage.getItem(KEY);
+            if (primary === '1' || primary === '0') {
+                return primary;
+            }
+            // Backward compatibility with previous toggles used across the project.
+            var legacyNight = localStorage.getItem('decides_night');
+            if (legacyNight === '1' || legacyNight === '0') {
+                return legacyNight;
+            }
+            var legacyMode = localStorage.getItem('decides_mode');
+            if (legacyMode === 'night') return '1';
+            if (legacyMode === 'day') return '0';
+            return primary;
         } catch (e) {
             return null;
         }
@@ -28,7 +40,14 @@
     }
 
     function applyTheme(isDark) {
+        // Keep both classes in sync because parts of the project still rely on `.night`
+        // while newer pages use `.theme-dark`.
         document.body.classList.toggle('theme-dark', isDark);
+        document.body.classList.toggle('night', isDark);
+        try {
+            localStorage.setItem('decides_night', isDark ? '1' : '0');
+            localStorage.setItem('decides_mode', isDark ? 'night' : 'day');
+        } catch (e) {}
     }
 
     function ensureToggleButton() {

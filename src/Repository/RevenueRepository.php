@@ -123,4 +123,43 @@ class RevenueRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    /**
+     * Return monthly revenue totals grouped by "YYYY-MM".
+     *
+     * @return array<int, array{month: string, total: float}>
+     */
+    public function getMonthlyTotalsByMonth(?User $user = null, int $months = 12): array
+    {
+        $months = max(1, $months);
+        $fromDate = (new \DateTimeImmutable('first day of this month'))
+            ->modify(sprintf('-%d months', $months - 1))
+            ->setTime(0, 0, 0)
+            ->format('Y-m-d');
+
+        $conn = $this->getEntityManager()->getConnection();
+        $sql = <<<SQL
+            SELECT DATE_FORMAT(r.received_at, '%Y-%m') AS month, SUM(r.amount) AS total
+            FROM revenue r
+            WHERE r.received_at >= :fromDate
+        SQL;
+
+        $params = ['fromDate' => $fromDate];
+
+        if ($user !== null) {
+            $sql .= ' AND r.user_id = :userId';
+            $params['userId'] = $user->getId();
+        }
+
+        $sql .= ' GROUP BY month ORDER BY month ASC';
+        $rows = $conn->executeQuery($sql, $params)->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => [
+                'month' => (string) $row['month'],
+                'total' => (float) $row['total'],
+            ],
+            $rows
+        );
+    }
 }

@@ -1,0 +1,22 @@
+framework:
+  workflows:
+    cas_reelles:
+      type: 'state_machine'
+      marking_store:
+        type: 'method'
+        property: 'resultat'
+      supports:
+        - App\Entity\CasRelles
+      initial_marking: EN_ATTENTE
+      places:
+        - EN_ATTENTE
+        - VALIDE
+        - REFUSE
+      transitions:
+        validate:
+          from: EN_ATTENTE
+          to: VALIDE
+        reject:
+          from: EN_ATTENTE
+          to: REFUSE
+

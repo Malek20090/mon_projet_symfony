@@ -315,3 +315,146 @@ body.theme-dark .theme-toggle-global {
     color: #f8fafc;
     border-color: #324263;
 }
+
+/* =========================
+   Savings Page - Real Dark Theme
+   ========================= */
+body.theme-dark.savings-page {
+    background: radial-gradient(circle at 12% 10%, #162542 0%, #0b1220 48%, #070d18 100%) !important;
+    color: #e5e7eb !important;
+}
+body.night.savings-page {
+    background: radial-gradient(circle at 12% 10%, #162542 0%, #0b1220 48%, #070d18 100%) !important;
+    color: #e5e7eb !important;
+}
+
+body.theme-dark.savings-page .savings-zone {
+    background: linear-gradient(180deg, rgba(11, 18, 32, 0.96) 0%, rgba(7, 13, 24, 0.98) 100%) !important;
+}
+body.night.savings-page .savings-zone {
+    background: linear-gradient(180deg, rgba(11, 18, 32, 0.96) 0%, rgba(7, 13, 24, 0.98) 100%) !important;
+}
+
+body.theme-dark.savings-page .section-title .kicker {
+    color: #22d3ee !important;
+}
+body.night.savings-page .section-title .kicker {
+    color: #22d3ee !important;
+}
+
+body.theme-dark.savings-page .section-title h2 {
+    color: #eaf2ff !important;
+}
+body.night.savings-page .section-title h2 {
+    color: #eaf2ff !important;
+}
+
+body.theme-dark.savings-page .section-title p {
+    color: #9fb0c8 !important;
+}
+body.night.savings-page .section-title p {
+    color: #9fb0c8 !important;
+}
+
+body.theme-dark.savings-page .hero::before {
+    background: linear-gradient(120deg, rgba(4, 10, 20, 0.84), rgba(5, 25, 40, 0.66)) !important;
+}
+
+body.theme-dark.savings-page .hero::after {
+    background: radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.16), transparent 55%) !important;
+}
+
+body.theme-dark.savings-page .big-card,
+body.theme-dark.savings-page .stat-card,
+body.theme-dark.savings-page .goal-card,
+body.theme-dark.savings-page .sim-modal-card {
+    background: linear-gradient(165deg, #111a2f 0%, #0b1426 100%) !important;
+    border: 1px solid rgba(124, 149, 189, 0.22) !important;
+    box-shadow: 0 16px 34px rgba(2, 8, 20, 0.45) !important;
+}
+
+body.theme-dark.savings-page .big-card h3,
+body.theme-dark.savings-page .stat-card h4,
+body.theme-dark.savings-page .goal-name,
+body.theme-dark.savings-page .mini-title,
+body.theme-dark.savings-page .info-row b {
+    color: #f1f6ff !important;
+}
+
+body.theme-dark.savings-page .big-card .sub,
+body.theme-dark.savings-page .stat-card .small,
+body.theme-dark.savings-page .goal-meta,
+body.theme-dark.savings-page .tiny-note,
+body.theme-dark.savings-page .help-text {
+    color: #9db0ca !important;
+}
+
+body.theme-dark.savings-page .table-wrap {
+    background: #0e172b !important;
+    border-color: rgba(124, 149, 189, 0.25) !important;
+}
+
+body.theme-dark.savings-page thead th {
+    background: #14213a !important;
+    color: #c9dbf7 !important;
+}
+
+body.theme-dark.savings-page tbody td {
+    background: #0f1a31 !important;
+    color: #dbe8fb !important;
+    border-color: rgba(124, 149, 189, 0.2) !important;
+}
+
+body.theme-dark.savings-page tbody tr:hover td {
+    background: #182746 !important;
+}
+
+body.theme-dark.savings-page .tab-pill {
+    background: #121e35 !important;
+    border-color: rgba(124, 149, 189, 0.3) !important;
+    color: #d0def3 !important;
+}
+
+body.theme-dark.savings-page .tab-pill.active {
+    background: linear-gradient(135deg, #0ea5e9, #06b6d4) !important;
+    color: #041426 !important;
+    border-color: transparent !important;
+}
+
+body.theme-dark.savings-page .form-control,
+body.theme-dark.savings-page .form-select,
+body.theme-dark.savings-page input,
+body.theme-dark.savings-page select,
+body.theme-dark.savings-page textarea {
+    background: #0b1326 !important;
+    color: #e5edf9 !important;
+    border-color: rgba(124, 149, 189, 0.34) !important;
+}
+
+body.theme-dark.savings-page .form-control::placeholder,
+body.theme-dark.savings-page input::placeholder,
+body.theme-dark.savings-page textarea::placeholder {
+    color: #8da2bf !important;
+}
+
+body.theme-dark.savings-page .ghost-btn {
+    background: #101b33 !important;
+    border-color: rgba(124, 149, 189, 0.34) !important;
+    color: #d6e5fb !important;
+}
+
+body.theme-dark.savings-page .ghost-btn:hover {
+    background: #1b2b4a !important;
+}
+
+body.theme-dark.savings-page .chip {
+    background: #101b33 !important;
+    border-color: rgba(124, 149, 189, 0.28) !important;
+    color: #d3e3f8 !important;
+}
+
+body.theme-dark.savings-page .chip.active {
+    background: rgba(14, 165, 233, 0.2) !important;
+    border-color: #0ea5e9 !important;
+    color: #9be7ff !important;
+}

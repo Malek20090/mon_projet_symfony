@@ -1,0 +1,9 @@
+dh_auditor:
+  providers:
+    doctrine:
+      table_prefix: ''
+      table_suffix: '_audit'
+      ignored_columns: []
+      entities:
+        App\Entity\CasRelles: ~
+        App\Entity\Imprevus: ~

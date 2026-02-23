@@ -92,4 +92,53 @@ class FinancialGoalRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    /**
+     * Advanced goal scoring used by Savings & Goals dashboard.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findGoalHealthByAccount(SavingAccount $account): array
+    {
+        $today = new \DateTimeImmutable('today');
+
+        return $this->createQueryBuilder('g')
+            ->select([
+                'g.id',
+                'g.nom',
+                'g.montantCible',
+                'g.montantActuel',
+                'g.priorite',
+                'g.dateLimite',
+                '(CASE WHEN g.montantCible > 0 THEN (g.montantActuel / g.montantCible) ELSE 0 END) AS progressRatio',
+                '(CASE WHEN g.montantCible > g.montantActuel THEN (g.montantCible - g.montantActuel) ELSE 0 END) AS remainingAmount',
+                '(CASE WHEN g.dateLimite IS NULL THEN 999999 ELSE DATE_DIFF(g.dateLimite, :today) END) AS daysLeft',
+                '(CASE
+                    WHEN g.dateLimite IS NULL OR DATE_DIFF(g.dateLimite, :today) <= 0 THEN 0
+                    ELSE (g.montantCible - g.montantActuel) / DATE_DIFF(g.dateLimite, :today)
+                END) AS dailyNeeded',
+                '(CASE
+                    WHEN g.dateLimite IS NULL OR DATE_DIFF(g.dateLimite, :today) <= 0 THEN 0
+                    ELSE ((g.montantCible - g.montantActuel) / DATE_DIFF(g.dateLimite, :today)) * 30
+                END) AS monthlyNeeded',
+                '(
+                    (COALESCE(g.priorite, 3) * 8)
+                    + ((1 - (CASE WHEN g.montantCible > 0 THEN (g.montantActuel / g.montantCible) ELSE 0 END)) * 60)
+                    + (CASE
+                        WHEN g.dateLimite IS NULL THEN 0
+                        WHEN DATE_DIFF(g.dateLimite, :today) <= 0 THEN 40
+                        WHEN DATE_DIFF(g.dateLimite, :today) <= 7 THEN 30
+                        WHEN DATE_DIFF(g.dateLimite, :today) <= 30 THEN 15
+                        ELSE 5
+                    END)
+                ) AS urgencyScore',
+            ])
+            ->andWhere('g.savingAccount = :acc')
+            ->setParameter('acc', $account)
+            ->setParameter('today', $today)
+            ->orderBy('urgencyScore', 'DESC')
+            ->addOrderBy('dailyNeeded', 'DESC')
+            ->getQuery()
+            ->getArrayResult();
+    }
 }

@@ -1,22 +1,524 @@
-<div class="modal" id="calendarModal" aria-hidden="true">
-  <div class="modal-card">
-    <div class="modal-head">
-      <div class="modal-title">📅 Calendar View</div>
-      <button class="close-x" type="button" data-close-modal>&times;</button>
-    </div>
+<div class="modal fade" id="calendarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <style>
+        #calendarModal .calendar {
+          display: grid;
+          grid-template-columns: repeat(7, minmax(0, 1fr));
+          gap: 8px;
+          margin-top: 10px;
+        }
+        #calendarModal .cal-dow {
+          font-weight: 800;
+          color: #2b3f59;
+          text-align: center;
+          padding: 6px 4px;
+          font-size: 14px;
+        }
+        #calendarModal .cal-day {
+          min-height: 52px;
+          border: 1px solid #d9e5f1;
+          border-radius: 12px;
+          background: #fff;
+          color: #1a2b44;
+          font-weight: 700;
+          display: flex;
+          align-items: flex-start;
+          justify-content: flex-start;
+          padding: 8px;
+          transition: all .15s ease;
+          position: relative;
+          flex-direction: column;
+          gap: 6px;
+        }
+        #calendarModal .cal-day.has-event {
+          border-color: #89dff0;
+          box-shadow: inset 0 0 0 1px rgba(0, 191, 229, .2);
+          background: linear-gradient(180deg, #f5fcff 0%, #ffffff 100%);
+        }
+        #calendarModal .cal-day.today {
+          border-color: #00bfe5;
+          box-shadow: 0 0 0 2px rgba(0, 191, 229, .18);
+        }
+        #calendarModal .cal-day.selected {
+          border-color: #00bfe5;
+          box-shadow: 0 8px 20px rgba(0, 191, 229, .18);
+          background: linear-gradient(180deg, #eefbff 0%, #ffffff 100%);
+        }
+        #calendarModal .cal-day-num {
+          font-size: 30px;
+          line-height: 1;
+        }
+        #calendarModal .cal-indicators {
+          display: flex;
+          gap: 5px;
+          margin-top: auto;
+        }
+        #calendarModal .cal-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          display: inline-block;
+          border: 1px solid rgba(0,0,0,.06);
+        }
+        #calendarModal .cal-dot-deposit { background: #00bfe5; }
+        #calendarModal .cal-dot-goal { background: #f59e0b; }
+        #calendarModal .cal-dot-deadline { background: #ef4444; }
+        #calendarModal .cal-dot-holiday { background: #8b5cf6; }
+        #calendarModal .cal-dot-plan { background: #10b981; }
+        #calendarModal .cal-dot-refund { background: #ec4899; }
+        #calendarModal .cal-day:hover {
+          transform: translateY(-1px);
+          border-color: #00bfe5;
+        }
+        #calendarModal .cal-day:focus-visible {
+          outline: 2px solid rgba(0, 191, 229, .45);
+          outline-offset: 1px;
+        }
+        #calendarModal .cal-toolbar {
+          display:flex;
+          gap:10px;
+          align-items:center;
+          justify-content:space-between;
+          flex-wrap:wrap;
+          padding: 10px 12px;
+          border: 1px solid #e6edf4;
+          border-radius: 14px;
+          background: linear-gradient(180deg, #f8fcff 0%, #ffffff 100%);
+        }
+        #calendarModal .cal-controls {
+          display:flex;
+          gap:8px;
+          align-items:center;
+        }
+        #calendarModal .day-panel {
+          border:1px solid #e7edf4;
+          border-radius:14px;
+          padding:12px;
+          background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%);
+        }
+        #calendarModal .legend-row {
+          margin-top: 10px;
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        #calendarModal .legend-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          border: 1px solid #d9e6f2;
+          border-radius: 999px;
+          padding: 6px 10px;
+          font-size: 12px;
+          color: #284564;
+          background: #fff;
+          font-weight: 700;
+        }
+        #calendarModal .day-panel-title {
+          font-weight: 800;
+          color: #102542;
+          margin-bottom: 8px;
+        }
+        #calendarModal .day-selected-label {
+          font-size: 13px;
+          color: #5c738d;
+          margin-bottom: 8px;
+        }
+        #calendarModal .day-insights {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          margin: 10px 0 12px;
+        }
+        #calendarModal .day-insight-card {
+          border: 1px solid #d9e8f5;
+          border-radius: 12px;
+          background: linear-gradient(180deg, #f8fdff 0%, #ffffff 100%);
+          padding: 10px;
+        }
+        #calendarModal .day-insight-label {
+          font-size: 12px;
+          color: #5f7791;
+          margin-bottom: 2px;
+        }
+        #calendarModal .day-insight-value {
+          font-size: 16px;
+          font-weight: 800;
+          color: #163250;
+          line-height: 1.2;
+        }
+        #calendarModal .event-item {
+          padding: 10px 0;
+          border-bottom: 1px dashed #e6edf3;
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          gap: 8px;
+          align-items: center;
+        }
+        #calendarModal .event-item:last-child {
+          border-bottom: none;
+        }
+        #calendarModal .event-kind {
+          width: 28px;
+          height: 28px;
+          border-radius: 999px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: #ecf7ff;
+          border: 1px solid #cde7f8;
+          font-size: 14px;
+        }
+        #calendarModal .event-title {
+          color: #1b3654;
+          font-weight: 600;
+        }
+        #calendarModal .event-amount {
+          color: #0f2c4a;
+          font-weight: 800;
+          white-space: nowrap;
+        }
+        #calendarModal .event-empty {
+          color: #607890;
+          padding: 8px 4px;
+        }
+        #calendarModal #calSummary .chip {
+          border-radius: 999px;
+          border: 1px solid #d7e4ef;
+          background: #fff;
+          color: #173453;
+          font-weight: 700;
+          padding: 8px 12px;
+        }
+        #calendarModal #calSummary {
+          display: none !important;
+        }
+        @media (max-width: 992px) {
+          #calendarModal .cal-layout {
+            grid-template-columns: 1fr !important;
+          }
+          #calendarModal .day-insights {
+            grid-template-columns: 1fr;
+          }
+        }
+      </style>
+      <div class="modal-header">
+        <h5 class="modal-title">Calendar Planner</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
 
-    <div class="badge-pill">Events: deposits • goal deadlines • reminders</div>
+      <div class="modal-body">
+        <div class="cal-toolbar">
+          <div class="cal-controls">
+            <button type="button" class="chip" id="calPrevBtn">&larr; Prev</button>
+            <div class="badge-pill" id="calMonthLabel">Loading...</div>
+            <button type="button" class="chip" id="calNextBtn">Next &rarr;</button>
+          </div>
+          <div class="cal-controls">
+            <label for="calCurrencySelect" class="tiny-note" style="margin:0;">Currency</label>
+            <select id="calCurrencySelect" class="chip" style="padding:8px 12px; min-width:90px;">
+              <option value="EUR" selected>EUR</option>
+              <option value="USD">USD</option>
+              <option value="GBP">GBP</option>
+              <option value="TND">TND</option>
+            </select>
+          </div>
+          <div class="tiny-note">API data: goal deadlines + savings transactions + public holidays</div>
+        </div>
+        <div class="legend-row">
+          <span class="legend-item"><span class="cal-dot cal-dot-deposit"></span>Deposit</span>
+          <span class="legend-item"><span class="cal-dot cal-dot-goal"></span>Contribution</span>
+          <span class="legend-item"><span class="cal-dot cal-dot-refund"></span>Refund</span>
+          <span class="legend-item"><span class="cal-dot cal-dot-deadline"></span>Deadline</span>
+          <span class="legend-item"><span class="cal-dot cal-dot-holiday"></span>Holiday</span>
+        </div>
 
-    <div class="calendar">
-      {% set dows = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
-      {% for d in dows %}<div class="cal-dow">{{ d }}</div>{% endfor %}
-      {% for i in 1..30 %}
-        <div class="cal-day {{ i == 7 ? 'today' : '' }} {{ i in [3,9,14,22,28] ? 'has-event' : '' }}">{{ i }}</div>
-      {% endfor %}
-    </div>
+        <div class="cal-layout" style="display:grid; grid-template-columns: 2fr 1fr; gap:14px; margin-top:12px;">
+          <div>
+            <div class="calendar" id="calendarGrid"></div>
+          </div>
+          <div class="day-panel">
+            <div class="day-panel-title">Selected day events</div>
+            <div id="calSelectedDateLabel" class="day-selected-label">Pick a day from the calendar.</div>
+            <div class="day-insights" id="calDayInsights"></div>
+            <div id="calEventsList" class="tiny-note">Click a day to show events.</div>
+          </div>
+        </div>
 
-    <div class="mt-16">
-      <button class="ghost-btn" type="button">➕ Add Reminder (later)</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;" id="calSummary"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+(() => {
+  const modalEl = document.getElementById('calendarModal');
+  const openBtn = document.getElementById('openCalendar');
+  const prevBtn = document.getElementById('calPrevBtn');
+  const nextBtn = document.getElementById('calNextBtn');
+  const monthLabel = document.getElementById('calMonthLabel');
+  const grid = document.getElementById('calendarGrid');
+  const eventsList = document.getElementById('calEventsList');
+  const summary = document.getElementById('calSummary');
+  const selectedDateLabel = document.getElementById('calSelectedDateLabel');
+  const dayInsights = document.getElementById('calDayInsights');
+  const currencySelect = document.getElementById('calCurrencySelect');
+  if (!modalEl || !openBtn || !grid || !eventsList || !summary || !monthLabel || !prevBtn || !nextBtn || !selectedDateLabel || !dayInsights || !currencySelect) return;
+
+  const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  let cursor = new Date();
+  cursor = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  let currentPayload = null;
+  let selectedCurrency = 'EUR';
+  let selectedDay = null;
+
+  function fmtMonth(dateObj) {
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function renderSummary(stats) {
+    summary.innerHTML = '';
+    const chips = [
+      ['Deadlines', stats.deadlines || 0],
+      ['Deposits', stats.deposits || 0],
+      ['Contributions', stats.contributions || 0],
+      ['Holidays', stats.holidays || 0],
+      ['Plan days', stats.plans || 0],
+    ];
+    chips.forEach(([label, value]) => {
+      const el = document.createElement('span');
+      el.className = 'chip';
+      el.textContent = `${label}: ${value}`;
+      summary.appendChild(el);
+    });
+  }
+
+  function weatherViewByRisk(risk) {
+    if (risk >= 0.7) return { emoji: '\u26c8\ufe0f', label: 'High risk' };
+    if (risk >= 0.45) return { emoji: '\ud83c\udf26\ufe0f', label: 'Medium risk' };
+    return { emoji: '\u2600\ufe0f', label: 'Low risk' };
+  }
+
+  function kindMeta(kind) {
+    switch (kind) {
+      case 'deposit': return { icon: '\ud83d\udcb0', dot: 'cal-dot-deposit' };
+      case 'goal_contribution': return { icon: '\ud83c\udfaf', dot: 'cal-dot-goal' };
+      case 'goal_refund': return { icon: '\ud83d\udccc', dot: 'cal-dot-refund' };
+      case 'goal_deadline': return { icon: '\u23f0', dot: 'cal-dot-deadline' };
+      case 'holiday': return { icon: '\ud83c\udf89', dot: 'cal-dot-holiday' };
+      default: return { icon: '\ud83d\udccc', dot: 'cal-dot-goal' };
+    }
+  }
+
+  function renderDayInsights(day, rows) {
+    if (!currentPayload) return;
+    const month = currentPayload.month || '';
+    const dayKey = `${month}-${String(day).padStart(2, '0')}`;
+    const riskMap = currentPayload.weatherRiskByDate || {};
+    const fxMap = currentPayload.fxByDate || {};
+    const plan = currentPayload.adaptivePlan || {};
+    const risk = Number(riskMap[dayKey] ?? plan.weatherRiskAvg ?? 0);
+    const weather = weatherViewByRisk(risk);
+    const fx = Number(fxMap[dayKey] ?? plan.fxRateToTnd ?? 0);
+    const currency = String(plan.currency || 'TND');
+    const fxText = fx > 0 ? `1 ${currency} = ${fx.toFixed(4)} TND` : 'FX unavailable for this date';
+
+    const deposits = rows.filter((r) => r.kind === 'deposit').length;
+    const contributions = rows.filter((r) => r.kind === 'goal_contribution').length;
+
+    dayInsights.innerHTML = `
+      <div class="day-insight-card">
+        <div class="day-insight-label">Weather</div>
+        <div class="day-insight-value">${weather.emoji} ${weather.label}</div>
+        <div class="tiny-note">Risk ${(risk * 100).toFixed(0)}%</div>
+      </div>
+      <div class="day-insight-card">
+        <div class="day-insight-label">Currency</div>
+        <div class="day-insight-value">${currency}</div>
+        <div class="tiny-note">${fxText}</div>
+      </div>
+      <div class="day-insight-card">
+        <div class="day-insight-label">Day activity</div>
+        <div class="day-insight-value">${rows.length} event(s)</div>
+        <div class="tiny-note">Deposits: ${deposits} | Contributions: ${contributions}</div>
+      </div>
+      <div class="day-insight-card">
+        <div class="day-insight-label">Status</div>
+        <div class="day-insight-value">Calendar ready</div>
+        <div class="tiny-note">Feasibility: ${String(plan.feasibility || 'on_track')}</div>
+      </div>
+    `;
+  }
+
+  function renderEvents(day) {
+    if (!currentPayload) return;
+    const month = currentPayload.month || '';
+    selectedDateLabel.textContent = `Selected date: ${month}-${String(day).padStart(2, '0')}`;
+    const rows = (currentPayload.dayEvents && currentPayload.dayEvents[String(day)]) || [];
+    const cleanRows = rows.filter((r) => r.kind !== 'plan_suggestion');
+    renderDayInsights(day, cleanRows);
+    if (!cleanRows.length) {
+      eventsList.innerHTML = '<div class="event-empty">No events on this day.</div>';
+      return;
+    }
+
+    eventsList.innerHTML = cleanRows.map((e) => {
+      const meta = kindMeta(String(e.kind || 'event'));
+      const amountPart = typeof e.amount === 'number' ? `${e.amount.toFixed(2)} TND` : '';
+      const progress = typeof e.progressPct === 'number' ? ` <span class="tiny-note">(${e.progressPct}% done)</span>` : '';
+      return `<div class="event-item">
+        <span class="event-kind">${meta.icon}</span>
+        <div class="event-title">${escapeHtml(e.title || 'Event')}${progress}</div>
+        <div class="event-amount">${amountPart}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderGrid(payload) {
+    grid.innerHTML = '';
+    dows.forEach((d) => {
+      const el = document.createElement('div');
+      el.className = 'cal-dow';
+      el.textContent = d;
+      grid.appendChild(el);
+    });
+
+    const leadEmpty = Math.max(0, (payload.firstDayIso || 1) - 1);
+    for (let i = 0; i < leadEmpty; i++) {
+      const e = document.createElement('div');
+      e.className = 'cal-day';
+      e.style.opacity = '0.25';
+      e.textContent = '';
+      grid.appendChild(e);
+    }
+
+    const today = new Date();
+    const isCurrentMonth = fmtMonth(today) === payload.month;
+
+    for (let day = 1; day <= (payload.daysInMonth || 30); day++) {
+      const events = (payload.dayEvents && payload.dayEvents[String(day)]) || [];
+      const cleanEvents = events.filter((e) => e.kind !== 'plan_suggestion');
+      const hasEvents = cleanEvents.length > 0;
+      const kinds = Array.from(new Set(cleanEvents.map((e) => String(e.kind || '')))).slice(0, 3);
+      const dots = kinds.map((k) => {
+        const meta = kindMeta(k);
+        return `<span class="cal-dot ${meta.dot}" title="${escapeHtml(k)}"></span>`;
+      }).join('');
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.className = 'cal-day'
+        + (hasEvents ? ' has-event' : '')
+        + (isCurrentMonth && today.getDate() === day ? ' today' : '')
+        + (selectedDay === day ? ' selected' : '');
+      cell.style.cursor = 'pointer';
+      cell.innerHTML = `<span class="cal-day-num">${day}</span><span class="cal-indicators">${dots}</span>`;
+      cell.addEventListener('click', () => {
+        selectedDay = day;
+        renderGrid(currentPayload || payload);
+        renderEvents(day);
+      });
+      grid.appendChild(cell);
+    }
+  }
+
+  async function loadCalendarMonth() {
+    const month = fmtMonth(cursor);
+    monthLabel.textContent = 'Loading...';
+    eventsList.innerHTML = '<div class="tiny-note">Loading events...</div>';
+
+    try {
+      const res = await fetch(`{{ path('app_savings_calendar_data') }}?month=${encodeURIComponent(month)}&country=TN&currency=${encodeURIComponent(selectedCurrency)}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await res.json();
+      if (!res.ok || !data || data.ok === false) {
+        throw new Error('Calendar API failed');
+      }
+      currentPayload = data;
+      monthLabel.textContent = data.monthLabel || month;
+      renderSummary(data.summary || {});
+      if (data.adaptivePlan) {
+        const p = data.adaptivePlan;
+        const extra = [
+          `Mode: ${p.weatherMode || 'balanced'}`,
+          `Weather risk: ${((p.weatherRiskAvg || 0) * 100).toFixed(0)}%`,
+          `Currency: ${p.currency || 'TND'}`,
+          `FX -> TND: ${p.fxRateToTnd > 0 ? Number(p.fxRateToTnd).toFixed(4) : 'N/A'}`,
+          `Weekly: ${(p.weeklyRecommendedTnd || 0).toFixed(2)} TND`,
+          `Monthly: ${(p.monthlyRecommendedTnd || 0).toFixed(2)} TND`,
+          `Feasibility: ${p.feasibility || 'on_track'}`,
+        ];
+        extra.forEach((txt) => {
+          const el = document.createElement('span');
+          el.className = 'chip';
+          el.textContent = txt;
+          summary.appendChild(el);
+        });
+      }
+      const eventDays = Object.keys(data.dayEvents || {})
+        .map((k) => Number(k))
+        .filter((n) => (data.dayEvents[String(n)] || []).some((e) => e.kind !== 'plan_suggestion'));
+      selectedDay = eventDays.length > 0 ? eventDays[0] : 1;
+      renderGrid(data);
+      renderEvents(selectedDay);
+    } catch (e) {
+      monthLabel.textContent = month;
+      grid.innerHTML = '<div class="tiny-note">Could not load calendar data.</div>';
+      eventsList.innerHTML = '<div class="tiny-note">Try again in a few seconds.</div>';
+      summary.innerHTML = '';
+    }
+  }
+
+  function getBootstrapModal() {
+    if (!window.bootstrap || !window.bootstrap.Modal) {
+      return null;
+    }
+    return window.bootstrap.Modal.getOrCreateInstance(modalEl);
+  }
+
+  openBtn.addEventListener('click', () => {
+    const bsModal = getBootstrapModal();
+    if (bsModal) {
+      bsModal.show();
+    } else {
+      modalEl.classList.add('show');
+      modalEl.style.display = 'block';
+      loadCalendarMonth();
+    }
+  });
+
+  modalEl.addEventListener('shown.bs.modal', loadCalendarMonth);
+
+  prevBtn.addEventListener('click', () => {
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1);
+    loadCalendarMonth();
+  });
+
+  nextBtn.addEventListener('click', () => {
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+    loadCalendarMonth();
+  });
+
+  currencySelect.addEventListener('change', () => {
+    selectedCurrency = String(currencySelect.value || 'EUR').toUpperCase();
+    loadCalendarMonth();
+  });
+})();
+</script>

@@ -1,0 +1,305 @@
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}Real Cases Statistics | Decide${% endblock %}
+
+{% block body_class %}alea-page{% endblock %}
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .stats-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<section class="hero">
+    <div class="container text-center wrap">
+        <h1>Real Cases Statistics</h1>
+        <p>Overview of your real cases by type, status and solution.</p>
+        <div class="breadcrumbs">
+            <a href="{{ path('app_home') }}">Home</a> / <a href="{{ path('app_alea') }}">Unexpected Events & Real Cases</a> / <a href="{{ path('imprevu_history') }}">History</a> / <span class="active">Statistics</span>
+        </div>
+        <div class="hero-actions">
+            <a class="btn-soft" href="{{ path('imprevu_history') }}">Back to history</a>
+            <a class="btn-soft" href="{{ path('imprevu_history_pdf') }}">Export PDF</a>
+        </div>
+    </div>
+</section>
+
+<section class="container py-5">
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-primary border-3">
+                <h6>Total Cases</h6>
+                <h3 class="text-primary">{{ stats.count }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-success border-3">
+                <h6>Total Gains</h6>
+                <h3 class="text-success">+{{ stats.totalPositif|number_format(2, ',', ' ') }} DT</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-danger border-3">
+                <h6>Total Expenses</h6>
+                <h3 class="text-danger">-{{ stats.totalNegatif|number_format(2, ',', ' ') }} DT</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-info border-3">
+                <h6>Net</h6>
+                <h3 class="{% if stats.totalNet >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ stats.totalNet|number_format(2, ',', ' ') }} DT
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-12">
+            <div class="stats-card p-4 h-100 border-start border-4 border-warning">
+                <h5 class="mb-3">Typologie des Risques Personnels</h5>
+                <p class="mb-2">{{ riskTypology.exposureMessage }}</p>
+                <p class="mb-2">
+                    Risque futur:
+                    {% if riskInsights.riskLevel == 'ELEVE' %}
+                        <span class="badge bg-danger">Élevé ({{ riskInsights.riskScore }}/100)</span>
+                    {% elseif riskInsights.riskLevel == 'MOYEN' %}
+                        <span class="badge bg-warning text-dark">Moyen ({{ riskInsights.riskScore }}/100)</span>
+                    {% else %}
+                        <span class="badge bg-success">Faible ({{ riskInsights.riskScore }}/100)</span>
+                    {% endif %}
+                </p>
+                <canvas id="riskTypologyChart" height="180"></canvas>
+                <hr>
+                <h6 class="mb-2">Conseils hebdomadaires</h6>
+                <ul class="mb-2">
+                    {% for tip in riskInsights.weeklyTips %}
+                        <li>{{ tip }}</li>
+                    {% endfor %}
+                </ul>
+                <h6 class="mb-2">Rendez-vous suggere</h6>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    {% if riskTypology.counts.VOITURE|default(0) >= 2 %}
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                onclick="openGoogleCalendarSuggestion('Entretien voiture mensuel', 'VOITURE', 30)">
+                            <i class="fas fa-calendar-plus me-1"></i>Entretien voiture mensuel
+                        </button>
+                    {% endif %}
+                    {% if riskTypology.counts.SANTE|default(0) >= 2 %}
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                onclick="openGoogleCalendarSuggestion('Bilan sante mensuel', 'SANTE', 30)">
+                            <i class="fas fa-calendar-plus me-1"></i>Bilan sante mensuel
+                        </button>
+                    {% endif %}
+                </div>
+                <h6 class="mb-2">Imprévus suggérés</h6>
+                <div>
+                    {% for item in riskInsights.suggestedIncidents %}
+                        <span class="badge bg-light text-dark border me-1">{{ item }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="stats-card p-4 h-100">
+                <h5 class="mb-3">By Status</h5>
+                <canvas id="statusChart" height="220"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="stats-card p-4 h-100">
+                <h5 class="mb-3">By Type</h5>
+                <canvas id="typeChart" height="220"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="stats-card p-4 h-100">
+                <h5 class="mb-3">Average Amount</h5>
+                <p class="display-6 mb-0">{{ stats.averageAmount|number_format(2, ',', ' ') }} DT</p>
+                <hr>
+                <h6 class="mb-2">Amounts</h6>
+                <canvas id="amountChart" height="140"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-card p-4 mt-4">
+        <h5 class="mb-3">Top Solutions Used</h5>
+        {% if stats.solutionCounts is empty %}
+            <div class="alert alert-info mb-0">No data available.</div>
+        {% else %}
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <canvas id="solutionChart" height="220"></canvas>
+                </div>
+                <div class="col-lg-5">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Solution</th>
+                                <th>Count</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for solution, count in stats.solutionCounts %}
+                                <tr>
+                                    <td>{{ solution }}</td>
+                                    <td>{{ count }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const statusData = {
+            labels: ['Pending', 'Validated', 'Rejected'],
+            values: [
+                {{ stats.statusCounts.EN_ATTENTE|default(0) }},
+                {{ stats.statusCounts.VALIDE|default(0) }},
+                {{ stats.statusCounts.REFUSE|default(0) }}
+            ]
+        };
+
+        const typeData = {
+            labels: ['Gains', 'Expenses'],
+            values: [
+                {{ stats.typeCounts.POSITIF|default(0) }},
+                {{ stats.typeCounts.NEGATIF|default(0) }}
+            ]
+        };
+
+        const amountData = {
+            labels: ['Total Gains', 'Total Expenses', 'Net'],
+            values: [
+                {{ stats.totalPositif|default(0) }},
+                {{ stats.totalNegatif|default(0) }},
+                {{ stats.totalNet|default(0) }}
+            ]
+        };
+
+        const solutionLabels = {{ solutionLabels|json_encode|raw }};
+        const solutionValues = {{ solutionValues|json_encode|raw }};
+        const riskTypologyData = {
+            labels: ['Voiture', 'Sante', 'Pannes maison', 'Education', 'Factures', 'Autres'],
+            values: [
+                {{ riskTypology.percentages.VOITURE|default(0) }},
+                {{ riskTypology.percentages.SANTE|default(0) }},
+                {{ riskTypology.percentages.PANNE_MAISON|default(0) }},
+                {{ riskTypology.percentages.EDUCATION|default(0) }},
+                {{ riskTypology.percentages.FACTURES|default(0) }},
+                {{ riskTypology.percentages.AUTRE|default(0) }}
+            ]
+        };
+
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: statusData.labels,
+                datasets: [{
+                    data: statusData.values,
+                    backgroundColor: ['#f59f00', '#198754', '#dc3545']
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        new Chart(document.getElementById('typeChart'), {
+            type: 'pie',
+            data: {
+                labels: typeData.labels,
+                datasets: [{
+                    data: typeData.values,
+                    backgroundColor: ['#20c997', '#ff6b6b']
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        new Chart(document.getElementById('amountChart'), {
+            type: 'bar',
+            data: {
+                labels: amountData.labels,
+                datasets: [{
+                    label: 'DT',
+                    data: amountData.values,
+                    backgroundColor: ['#198754', '#dc3545', '#0d6efd']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        if (solutionLabels.length) {
+            new Chart(document.getElementById('solutionChart'), {
+                type: 'bar',
+                data: {
+                    labels: solutionLabels,
+                    datasets: [{
+                        label: 'Count',
+                        data: solutionValues,
+                        backgroundColor: '#0d6efd'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+        }
+
+        new Chart(document.getElementById('riskTypologyChart'), {
+            type: 'doughnut',
+            data: {
+                labels: riskTypologyData.labels,
+                datasets: [{
+                    data: riskTypologyData.values,
+                    backgroundColor: ['#0d6efd', '#20c997', '#f59f00', '#8b5cf6', '#0ea5e9', '#6c757d']
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+        window.openGoogleCalendarSuggestion = function (title, category, days) {
+            const url = '/alea/google/calendar-link?title='
+                + encodeURIComponent(title)
+                + '&category=' + encodeURIComponent(category)
+                + '&days=' + encodeURIComponent(days || 30);
+
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.json())
+                .then(d => {
+                    if (d && d.success && d.url) {
+                        window.open(d.url, '_blank');
+                        return;
+                    }
+                    alert((d && d.message) ? d.message : 'Impossible de generer le rendez-vous.');
+                })
+                .catch(() => alert('Erreur lors de la creation du rendez-vous.'));
+        };
+    </script>
+{% endblock %}

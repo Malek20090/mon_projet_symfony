@@ -32,6 +32,6 @@ return [
         'version' => '0.3.4',
     ],
     '@symfony/ux-chartjs' => [
-        'version' => '2.32.0',
+        'path' => './vendor/symfony/ux-chartjs/assets/dist/controller.js',
     ],
 ];

@@ -18,12 +18,15 @@ class Transaction
 
     #[ORM\Column(length: 30)]
     #[Assert\NotBlank(message: 'Transaction type is required.')]
-    #[Assert\Choice(choices: ['EXPENSE', 'SAVING', 'INVESTMENT'], message: 'Transaction type is invalid.')]
+    #[Assert\Choice(
+        choices: ['EXPENSE', 'SAVING', 'INVESTMENT'],
+        message: 'Transaction type must be EXPENSE, SAVING or INVESTMENT.'
+    )]
     private string $type;
 
     #[ORM\Column]
     #[Assert\NotNull(message: 'Amount is required.')]
-    #[Assert\Positive(message: 'Amount must be greater than 0.')]
+    #[Assert\GreaterThan(value: 0, message: 'Amount must be greater than 0.')]
     #[Assert\LessThanOrEqual(value: 1000000, message: 'Amount cannot exceed 1,000,000.')]
     private float $montant;
 

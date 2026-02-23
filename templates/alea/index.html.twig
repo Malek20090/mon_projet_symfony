@@ -1,4 +1,4 @@
-﻿{# Same appearance as Savings, Contact, Service — base_pages = glass-nav + footer-decides #}
+{# Same appearance as Savings, Contact, Service â€” base_pages = glass-nav + footer-decides #}
 {% extends 'base_pages.html.twig' %}
 
 {% block title %}Unexpected Events & Real Cases | Decide${% endblock %}
@@ -8,6 +8,50 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
+        .alea-panel {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        }
+        .section-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .06em;
+            color: #1d4ed8;
+            text-transform: uppercase;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 999px;
+            padding: 5px 12px;
+            margin-bottom: 10px;
+        }
+        .event-list-shell .list-group-item.bg-light {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .decision-shell .event-headline {
+            font-size: 11px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 700;
+        }
+        .decision-shell .event-title {
+            font-size: clamp(1.2rem, 2vw, 1.7rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin: 0;
+        }
+        .helper-note {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 8px;
+        }
         /* Custom styles for +/- logic */
         .clickable-item {
             cursor: pointer;
@@ -61,21 +105,72 @@
             font-size: 0.85em;
             color: #6c757d;
         }
+
+        .ai-section-header {
+            background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+            border: 1px solid #bfdbfe;
+            color: #1e3a8a;
+        }
+
+        .google-tools-card {
+            border: 1px solid #dbeafe;
+            background: linear-gradient(180deg, #ffffff, #f8fbff);
+        }
+
+        .google-action-btn {
+            border-width: 1.5px;
+            font-weight: 600;
+        }
+
+        #googleToolsStatus {
+            min-height: 22px;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .nearby-list .nearby-card {
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #60a5fa;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #fff;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+        }
+
+        .nearby-list .nearby-name {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .nearby-list .nearby-type {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #1d4ed8;
+            background: #dbeafe;
+            border-radius: 999px;
+            padding: 2px 10px;
+            margin-top: 6px;
+        }
     </style>
 {% endblock %}
 
 {% block body %}
-    <!-- Hero (same style as Savings — blue gradient, breadcrumbs, actions) -->
+    <!-- Hero (same style as Savings â€” blue gradient, breadcrumbs, actions) -->
     <section class="hero">
         <div class="container text-center wrap">
             <h1>Unexpected Events & Real Cases</h1>
-            <p>Unexpected events management and real-case simulation — run simulations and submit your requests.</p>
+            <p>Unexpected events management and real-case simulation â€” run simulations and submit your requests.</p>
             <div class="breadcrumbs">
                 <a href="{{ path('app_home') }}">Home</a> / <a href="{{ path('app_service') }}">Modules</a> / <span class="active">Unexpected Events & Real Cases</span>
             </div>
             <div class="hero-actions">
-                <a class="btn-primary2" href="#decisionPanel">Choisir un cas</a>
                 <a class="btn-soft" href="#customEventForm">Add a case</a>
+                <a class="btn-soft" href="{{ path('imprevu_history') }}">
+        📜 My History
+    </a>
+
             </div>
         </div>
     </section>
@@ -86,8 +181,8 @@
                 <div class="col-md-4">
                     <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-primary border-3">
                         <i class="fas fa-university text-primary fa-2x mb-2"></i>
-                        <h6>Total Savingss</h6>
-                        <h3 class="text-dark">{{ epargnes|length }} comptes</h3>
+                        <h6>Total Objectifs</h6>
+                        <h3 class="text-dark">{{ objectifs|default([])|length }} objectifs</h3>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -110,8 +205,9 @@
                 <!-- Left Panel -->
                 <div class="col-lg-5">
                     <!-- Add un Real Case -->
-                    <div class="bg-white rounded p-4 shadow-sm mb-4">
-                        <h5 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Add un Real Case</h5>
+                    <div class="alea-panel p-4 mb-4">
+                        <div class="section-kicker"><i class="fas fa-plus-circle"></i>New Case</div>
+                        <h5 class="mb-3">Add a Real Case</h5>
                         <form id="customEventForm">
                             <div class="mb-2">
                                 <input type="text" id="customTitle" class="form-control" placeholder="Titre">
@@ -127,13 +223,19 @@
                                     <input type="number" id="customAmount" class="form-control" placeholder="Montant (DT)">
                                 </div>
                             </div>
+                            <button type="button" id="voiceCaseBtn" class="btn btn-outline-secondary w-100 btn-sm mb-2" onclick="startVoiceCaseInput()">
+                                <i class="fas fa-microphone me-2"></i>Parler (titre + montant + plus/moins)
+                            </button>
+                            <div id="voiceCaseStatus" class="small text-muted mb-2 d-none"></div>
                             <button type="button" onclick="addCustomEvent()" class="btn btn-primary w-100 btn-sm">Choisir ce cas</button>
+                            <div class="helper-note">Tip: ex. "fuite salle de bain moins 180" ou "prime plus 350".</div>
                         </form>
                     </div>
 
                     <!-- Unexpected Events Possibles -->
-                    <h5 class="mb-3">Possible unexpected events (database)</h5>
-                    <div class="list-group shadow-sm">
+                    <div class="alea-panel event-list-shell p-3">
+                    <h5 class="mb-3 mt-1">Possible unexpected events (database)</h5>
+                    <div class="list-group shadow-sm rounded-3 overflow-hidden">
                         <!-- Risques -->
                         <div class="list-group-item bg-light fw-bold text-danger">
                             <i class="fas fa-arrow-down me-2"></i>Risques (-)
@@ -150,6 +252,7 @@
                             {% endif %}
                         {% endfor %}
 
+
                         <!-- Opportunities -->
                         <div class="list-group-item bg-light fw-bold text-success mt-2">
                             <i class="fas fa-arrow-up me-2"></i>Opportunities (+)
@@ -165,19 +268,48 @@
                                 </div>
                             {% endif %}
                         {% endfor %}
+
+
+                        {% if aiRiskInsights.suggestedIncidents is not empty or aiRiskInsights.suggestedOpportunities is not empty %}
+                            <div class="list-group-item fw-bold ai-section-header mt-2">
+                                <i class="fas fa-robot me-2"></i>Generated by AI from repeated cases
+                            </div>
+
+                            {% for item in aiRiskInsights.suggestedIncidents %}
+                                <div class="list-group-item list-group-item-action clickable-item item-negative p-3"
+                                     onclick="loadEvent('NEGATIF', '{{ item|escape('js') }}', 120, 'Suggestion IA basee sur repetition des incidents.')">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-brain text-muted me-2"></i>{{ item }}</span>
+                                        <span class="fw-bold text-danger">-120 DT</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+
+                            {% for item in aiRiskInsights.suggestedOpportunities %}
+                                <div class="list-group-item list-group-item-action clickable-item item-positive p-3"
+                                     onclick="loadEvent('POSITIF', '{{ item|escape('js') }}', 80, 'Opportunite preventive generee par IA selon votre historique.')">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-lightbulb text-muted me-2"></i>{{ item }}</span>
+                                        <span class="fw-bold text-success">+80 DT</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
+                    </div>
+
                 </div>
 
                 <!-- Right Panel / Decision -->
                 <div class="col-lg-7">
-                    <div id="decisionPanel" class="bg-white rounded p-5 shadow-sm theme-negative">
+                    <div id="decisionPanel" class="alea-panel decision-shell p-5 theme-negative">
                         <div class="d-flex align-items-center mb-4">
                             <div class="btn-lg-square rounded-circle me-3 card-header-icon d-flex align-items-center justify-content-center" style="width:60px;height:60px;">
                                 <i id="eventIcon" class="fas fa-exclamation-triangle fa-2x"></i>
                             </div>
                             <div>
-                                <h6 class="text-uppercase text-muted mb-1">Real Case En Course</h6>
-                                <h2 id="eventTitle" class="mb-0">Select a case...</h2>
+                                <div class="event-headline">Selected Case</div>
+                                <h2 id="eventTitle" class="event-title">Select a case...</h2>
                             </div>
                         </div>
                         <div class="p-4 border rounded bg-light mb-4">
@@ -201,9 +333,9 @@
                             </button>
                             
                             <!-- Option 2: Use savings -->
-                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn solution-btn" data-solution="EPARGNE" onclick="selectSolution(this)">
-                                <i class="fas fa-piggy-bank text-warning me-3 fa-lg"></i>
-                                <strong>Use savings</strong>
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn solution-btn" data-solution="OBJECTIF" onclick="selectSolution(this)">
+                                <i class="fas fa-bullseye text-warning me-3 fa-lg"></i>
+                                <strong>Use objectif</strong>
                             </button>
                             
                             <!-- Option 3: Famille -->
@@ -214,28 +346,28 @@
                             
                             <!-- Section de savings selection (hidden by default) -->
                             <div id="epargneSelection" class="mt-3 p-3 border rounded bg-white d-none">
-                                <h6 class="mb-3"><i class="fas fa-piggy-bank text-warning me-2"></i>Select the savings account:</h6>
-                                {% for epargne in epargnes %}
-                                    {% set hasEnough = epargne.sold >= 0 %}
+                                <h6 class="mb-3"><i class="fas fa-bullseye text-warning me-2"></i>Select objectif:</h6>
+                                {% for objectif in objectifs|default([]) %}
+                                    {% set hasEnough = objectif.current >= 0 %}
                                     <div class="epargne-card {% if not hasEnough %}disabled{% endif %}" 
-                                         data-id="{{ epargne.id }}" 
-                                         data-balance="{{ epargne.sold }}"
+                                         data-id="{{ objectif.id }}" 
+                                         data-balance="{{ objectif.current }}"
                                          onclick="selectEpargne(this)"
                                          {% if not hasEnough %}style="opacity:0.5;cursor:not-allowed;"{% endif %}>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
-                                                <div class="fw-bold">Compte #{{ epargne.id }}</div>
-                                                <div class="epargne-date">Created on: {{ epargne.dateCreation|date('d/m/Y') }}</div>
+                                                <div class="fw-bold">{{ objectif.name }}</div>
+                                                <div class="epargne-date">Target: {{ objectif.target|number_format(2, ',', ' ') }} DT</div>
                                             </div>
-                                            <div class="epargne-balance {% if epargne.sold < currentAmount|default(0) %}text-danger{% else %}text-success{% endif %}">
-                                                {{ epargne.sold|number_format(2, ',', ' ') }} DT
+                                            <div class="epargne-balance {% if objectif.current < currentAmount|default(0) %}text-danger{% else %}text-success{% endif %}">
+                                                {{ objectif.current|number_format(2, ',', ' ') }} DT
                                             </div>
                                         </div>
                                     </div>
                                 {% else %}
                                     <div class="text-muted text-center py-3">
                                         <i class="fas fa-info-circle me-2"></i>
-                                        No savings account available
+                                        No objectif available
                                     </div>
                                 {% endfor %}
                             </div>
@@ -253,30 +385,30 @@
                             </button>
                             
                             <!-- Option 2: Add to savings -->
-                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn solution-btn" data-solution="EPARGNE" onclick="selectSolution(this)">
-                                <i class="fas fa-piggy-bank text-warning me-3 fa-lg"></i>
-                                <strong>Add to savings</strong>
+                            <button class="btn btn-light border w-100 p-3 mb-2 choice-btn solution-btn" data-solution="OBJECTIF" onclick="selectSolution(this)">
+                                <i class="fas fa-bullseye text-warning me-3 fa-lg"></i>
+                                <strong>Add to objectif</strong>
                             </button>
                             
                             <!-- Section de savings selection (hidden by default) -->
                             <div id="epargneSelectionPos" class="mt-3 p-3 border rounded bg-white d-none">
-                                <h6 class="mb-3"><i class="fas fa-piggy-bank text-warning me-2"></i>Select the savings account:</h6>
-                                {% for epargne in epargnes %}
-                                    <div class="epargne-card" data-id="{{ epargne.id }}" data-balance="{{ epargne.sold }}" onclick="selectEpargnePos(this)">
+                                <h6 class="mb-3"><i class="fas fa-bullseye text-warning me-2"></i>Select objectif:</h6>
+                                {% for objectif in objectifs|default([]) %}
+                                    <div class="epargne-card" data-id="{{ objectif.id }}" data-balance="{{ objectif.current }}" onclick="selectEpargnePos(this)">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
-                                                <div class="fw-bold">Compte #{{ epargne.id }}</div>
-                                                <div class="epargne-date">Created on: {{ epargne.dateCreation|date('d/m/Y') }}</div>
+                                                <div class="fw-bold">{{ objectif.name }}</div>
+                                                <div class="epargne-date">Target: {{ objectif.target|number_format(2, ',', ' ') }} DT</div>
                                             </div>
                                             <div class="epargne-balance text-success">
-                                                {{ epargne.sold|number_format(2, ',', ' ') }} DT
+                                                {{ objectif.current|number_format(2, ',', ' ') }} DT
                                             </div>
                                         </div>
                                     </div>
                                 {% else %}
                                     <div class="text-muted text-center py-3">
                                         <i class="fas fa-info-circle me-2"></i>
-                                        No savings account available
+                                        No objectif available
                                     </div>
                                 {% endfor %}
                             </div>
@@ -289,6 +421,21 @@
                             </button>
                         </div>
                     </div>
+
+                    <div class="rounded p-4 shadow-sm mt-4 google-tools-card">
+                        <h6 class="mb-3"><i class="fas fa-map-marker-alt text-primary me-2"></i>Smart Nearby Assistant</h6>
+                        <p class="text-muted small mb-3">Select a case, then find contextual places or create a reminder.</p>
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm google-action-btn" onclick="createGoogleCalendarReminder()">
+                                <i class="fas fa-calendar-plus me-2"></i>Add reminder to Google Calendar
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm google-action-btn" onclick="findNearbyServices()">
+                                <i class="fas fa-map me-2"></i>Find matching nearby services
+                            </button>
+                        </div>
+                        <div id="googleToolsStatus" class="small mt-3"></div>
+                        <div id="nearbyResults" class="mt-2 nearby-list"></div>
+                    </div>
                 </div>
             </div>
     </section>
@@ -298,15 +445,15 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Confirmation</h5>
+                <h5 class="modal-title">Confirmation de la demande</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="confirmMessage">
-                Are you sure you want to send this request?
+                Voulez-vous vraiment envoyer cette demande ?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-primary" onclick="confirmSubmit()">Confirmer</button>
+                <button type="button" class="btn btn-primary" onclick="confirmSubmit()">Oui, confirmer</button>
             </div>
         </div>
     </div>
@@ -317,7 +464,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header" id="resultHeader">
-                <h5 class="modal-title" id="resultTitle">Result</h5>
+                <h5 class="modal-title" id="resultTitle">Resultat</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="resultMessage">
@@ -329,11 +476,54 @@
     </div>
 </div>
 
+<!-- Refusal notification modal -->
+<div class="modal fade" id="refusalNotificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-bell me-2"></i>Notification de refus</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6 id="refusalNotifTitle" class="fw-bold mb-2"></h6>
+                <p id="refusalNotifMessage" class="mb-2"></p>
+                <small id="refusalNotifDate" class="text-muted"></small>
+            </div>
+            <div class="modal-footer">
+                <a href="{{ path('imprevu_history') }}" class="btn btn-outline-danger">Voir l'historique</a>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Scripts -->
+<script src="{{ asset('js/alea-google-tools.js') }}"></script>
 <script>
 let currentEvent = null;
+window.currentEvent = null;
 let selectedSolution = null;
 let selectedEpargneId = null;
+const refusalPopup = {{ refusalPopup ? {
+    title: refusalPopup.title,
+    message: refusalPopup.message,
+    createdAt: refusalPopup.createdAt ? refusalPopup.createdAt|date('d/m/Y H:i') : ''
+}|json_encode|raw : 'null' }};
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (!refusalPopup) return;
+    const titleEl = document.getElementById('refusalNotifTitle');
+    const msgEl = document.getElementById('refusalNotifMessage');
+    const dateEl = document.getElementById('refusalNotifDate');
+    if (!titleEl || !msgEl || !dateEl) return;
+
+    titleEl.textContent = refusalPopup.title || 'Demande refusee';
+    msgEl.textContent = refusalPopup.message || '';
+    dateEl.textContent = refusalPopup.createdAt ? ('Traitee le : ' + refusalPopup.createdAt) : '';
+
+    const popupModal = new bootstrap.Modal(document.getElementById('refusalNotificationModal'));
+    popupModal.show();
+});
 
 function loadEvent(type, title, amount, desc) {
     const panel = document.getElementById('decisionPanel');
@@ -346,6 +536,7 @@ function loadEvent(type, title, amount, desc) {
     const submitSection = document.getElementById('submitSection');
 
     currentEvent = { type, title, amount, desc };
+    window.currentEvent = currentEvent;
     selectedSolution = null;
     selectedEpargneId = null;
 
@@ -398,8 +589,114 @@ function addCustomEvent() {
     if(title && amount) {
         loadEvent(type, title, amount, "Custom case");
     } else {
-        alert('Please fill in all fields');
+        alert('Veuillez remplir tous les champs.');
     }
+}
+
+function startVoiceCaseInput() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const status = document.getElementById('voiceCaseStatus');
+    const btn = document.getElementById('voiceCaseBtn');
+
+    if (!SpeechRecognition) {
+        fallbackManualCaseInput('Speech-to-text non supporte par ce navigateur.');
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    if (status) {
+        status.classList.remove('d-none');
+        status.textContent = 'Ecoute en cours... Exemple: "panne voiture moins 250"';
+    }
+    if (btn) btn.disabled = true;
+
+    recognition.onresult = function (event) {
+        const transcript = (event.results?.[0]?.[0]?.transcript || '').trim();
+        if (!transcript) {
+            if (status) status.textContent = 'Aucun texte detecte.';
+            return;
+        }
+
+        const parsed = parseVoiceCaseText(transcript);
+        if (parsed.title) document.getElementById('customTitle').value = parsed.title;
+        if (parsed.amount !== null) document.getElementById('customAmount').value = parsed.amount;
+        if (parsed.type) document.getElementById('customType').value = parsed.type;
+
+        if (status) {
+            status.textContent = 'Texte detecte: "' + transcript + '"';
+        }
+    };
+
+    recognition.onerror = function (event) {
+        const err = event && event.error ? event.error : 'unknown';
+        const detailMap = {
+            'not-allowed': 'Permission micro refusee',
+            'service-not-allowed': 'Service vocal bloque par le navigateur/systeme',
+            'no-speech': 'Aucune voix detectee',
+            'audio-capture': 'Aucun micro detecte',
+            'network': 'Erreur reseau/service vocal',
+            'aborted': 'Ecoute annulee',
+            'language-not-supported': 'Langue non supportee'
+        };
+        const detail = detailMap[err] || ('Erreur: ' + err);
+        if (status) status.textContent = 'Erreur vocale (' + err + '). Passage en mode manuel...';
+        fallbackManualCaseInput('Reconnaissance vocale indisponible.\n' + detail);
+    };
+
+    recognition.onend = function () {
+        if (btn) btn.disabled = false;
+    };
+
+    recognition.start();
+}
+
+function fallbackManualCaseInput(reason) {
+    if (reason) {
+        alert(reason + '\nSaisie manuelle guidee activee.');
+    }
+
+    const line = prompt('Entrez: "titre, montant, plus ou moins"\nExemple: Panne voiture, 250, moins');
+    if (!line) return;
+
+    const parts = line.split(',');
+    const title = (parts[0] || '').trim();
+    const amountText = (parts[1] || '').trim().replace(',', '.');
+    const sign = (parts[2] || '').trim().toLowerCase();
+
+    const amount = parseFloat(amountText);
+    const type = /plus|positif|gain|prime|bonus|remboursement|vente|bourse|aide/.test(sign) ? 'POSITIF' : 'NEGATIF';
+
+    if (title) document.getElementById('customTitle').value = title;
+    if (!Number.isNaN(amount)) document.getElementById('customAmount').value = amount;
+    document.getElementById('customType').value = type;
+}
+
+function parseVoiceCaseText(text) {
+    const raw = (text || '').toLowerCase();
+    const amountMatch = raw.match(/(\d+(?:[.,]\d+)?)/);
+    const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : null;
+
+    let type = null;
+    if (/\b(moins|negatif|nÃ©gatif|depense|dÃ©pense|expense|panne|fuite|facture|reparation|loyer|urgence)\b/.test(raw)) {
+        type = 'NEGATIF';
+    } else if (/\b(plus|positif|gain|prime|bonus|remboursement|vente|bourse|aide)\b/.test(raw)) {
+        type = 'POSITIF';
+    }
+
+    let title = raw
+        .replace(/\b(moins|negatif|nÃ©gatif|depense|dÃ©pense|expense|panne|fuite|facture|reparation|plus|positif|gain|prime|bonus|remboursement|vente|bourse|aide)\b/g, ' ')
+        .replace(/(\d+(?:[.,]\d+)?)/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    if (title.length > 0) {
+        title = title.charAt(0).toUpperCase() + title.slice(1);
+    }
+
+    return { title, amount, type };
 }
 
 function selectSolution(btn) {
@@ -418,7 +715,7 @@ function selectSolution(btn) {
     const epargneNeg = document.getElementById('epargneSelection');
     const epargnePos = document.getElementById('epargneSelectionPos');
     
-    if (selectedSolution === 'EPARGNE') {
+    if (selectedSolution === 'OBJECTIF') {
         if (currentEvent.type === 'NEGATIF') {
             epargneNeg.classList.remove('d-none');
         } else {
@@ -457,17 +754,17 @@ function selectEpargnePos(card) {
 
 function submitRequest() {
     if (!currentEvent) {
-        alert('Please select a case');
+        alert('Veuillez selectionner un cas.');
         return;
     }
     
     if (!selectedSolution) {
-        alert('Please select an option');
+        alert('Veuillez selectionner une option.');
         return;
     }
     
-    if ((selectedSolution === 'EPARGNE') && !selectedEpargneId) {
-        alert('Please select a savings account');
+    if ((selectedSolution === 'OBJECTIF') && !selectedEpargneId) {
+        alert('Veuillez selectionner un objectif.');
         return;
     }
     
@@ -475,10 +772,10 @@ function submitRequest() {
     const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
     document.getElementById('confirmMessage').innerHTML = `
         <strong>Titre:</strong> ${currentEvent.title}<br>
-        <strong>Type:</strong> ${currentEvent.type === 'NEGATIF' ? 'Expense' : 'Gain'}<br>
+        <strong>Type:</strong> ${currentEvent.type === 'NEGATIF' ? 'Depense' : 'Gain'}<br>
         <strong>Montant:</strong> ${currentEvent.amount} DT<br>
         <strong>Solution:</strong> ${getSolutionLabel(selectedSolution)}
-        ${selectedEpargneId ? '<br><strong>Savings account:</strong> #' + selectedEpargneId : ''}
+        ${selectedEpargneId ? '<br><strong>Objectif:</strong> #' + selectedEpargneId : ''}
     `;
     modal.show();
 }
@@ -486,7 +783,7 @@ function submitRequest() {
 function getSolutionLabel(solution) {
     const labels = {
         'FONDS_SECURITE': 'Emergency Fund',
-        'EPARGNE': selectedEpargneId ? 'Compte Savings #' + selectedEpargneId : 'Savings',
+        'OBJECTIF': selectedEpargneId ? 'Objectif #' + selectedEpargneId : 'Objectif',
         'FAMILLE': 'Famille'
     };
     return labels[solution] || solution;
@@ -504,7 +801,7 @@ function confirmSubmit() {
     formData.append('montant', currentEvent.amount);
     formData.append('solution', selectedSolution);
     if (selectedEpargneId) {
-        formData.append('epargne_id', selectedEpargneId);
+        formData.append('financial_goal_id', selectedEpargneId);
     }
     
     // Send request
@@ -520,14 +817,14 @@ function confirmSubmit() {
         
         if (data.success) {
             resultHeader.className = 'modal-header bg-success text-white';
-            resultTitle.innerText = 'Success';
+            resultTitle.innerText = 'Succes';
             document.getElementById('resultMessage').innerHTML = `
                 <i class="fas fa-check-circle text-success fa-3x d-block text-center mb-3"></i>
                 ${data.message}
             `;
         } else {
             resultHeader.className = 'modal-header bg-danger text-white';
-            resultTitle.innerText = 'Error';
+            resultTitle.innerText = 'Erreur';
             document.getElementById('resultMessage').innerHTML = `
                 <i class="fas fa-times-circle text-danger fa-3x d-block text-center mb-3"></i>
                 ${data.message}
@@ -540,6 +837,7 @@ function confirmSubmit() {
             document.getElementById('customTitle').value = '';
             document.getElementById('customAmount').value = '';
             currentEvent = null;
+            window.currentEvent = null;
             selectedSolution = null;
             selectedEpargneId = null;
             document.querySelectorAll('.solution-btn').forEach(btn => {
@@ -556,7 +854,7 @@ function confirmSubmit() {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        alert('Une erreur est survenue. Veuillez reessayer.');
     });
 }
 </script>

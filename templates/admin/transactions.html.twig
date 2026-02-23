@@ -46,9 +46,6 @@
                    name="user"
                    class="form-control"
                    placeholder="User name"
-                   maxlength="60"
-                   pattern="[A-Za-z0-9@._\\-\\s]{0,60}"
-                   title="Use letters, numbers, @ . _ - and spaces only."
                    value="{{ app.request.get('user') }}">
 
             <select name="type" class="form-select">
@@ -100,15 +97,13 @@
 
             <div class="tx-field">
                 {{ form_label(form.description) }}
-                {{ form_widget(form.description, { attr: { class: 'form-control', rows: 2, maxlength: 500, 'data-counter': 'tx-desc-counter' } }) }}
-                <small id="tx-desc-counter" class="tx-counter">0 / 500</small>
+                {{ form_widget(form.description, { attr: { class: 'form-control', rows: 2 } }) }}
                 {{ form_errors(form.description) }}
             </div>
 
             <div class="tx-field tx-field-full">
                 {{ form_label(form.moduleSource) }}
-                {{ form_widget(form.moduleSource, { attr: { class: 'form-control', maxlength: 50, pattern: '[A-Za-z0-9 _.-]*', title: 'Allowed: letters, numbers, space, dot, underscore, dash.', 'data-counter': 'tx-source-counter' } }) }}
-                <small id="tx-source-counter" class="tx-counter">0 / 50</small>
+                {{ form_widget(form.moduleSource, { attr: { class: 'form-control' } }) }}
                 {{ form_errors(form.moduleSource) }}
             </div>
         </div>
@@ -189,35 +184,10 @@
         </div>
 
         <div class="pagination-wrapper">
-            {{ knp_pagination_render(transactions) }}
+            {{ knp_pagination_render(transactions, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
         </div>
     </section>
 </div>
 {% endblock %}
 
-{% block javascripts %}
-    {{ parent() }}
-    <script>
-        (function () {
-            function attachCounter(selector) {
-                const input = document.querySelector(selector);
-                if (!input) return;
-                const counterId = input.getAttribute('data-counter');
-                const counter = counterId ? document.getElementById(counterId) : null;
-                if (!counter) return;
-                const max = Number(input.getAttribute('maxlength')) || 0;
-
-                const render = () => {
-                    const len = input.value.length;
-                    counter.textContent = max ? `${len} / ${max}` : `${len}`;
-                    counter.classList.toggle('tx-counter-limit', max > 0 && len >= max);
-                };
-                input.addEventListener('input', render);
-                render();
-            }
-
-            attachCounter('textarea[name$=\"[description]\"]');
-            attachCounter('input[name$=\"[moduleSource]\"]');
-        })();
-    </script>
-{% endblock %}
+{% block javascripts %}{{ parent() }}{% endblock %}

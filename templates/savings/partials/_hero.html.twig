@@ -1,26 +1,17 @@
 <section class="hero">
   <div class="container text-center wrap">
     <h1>Savings & Goals</h1>
-    <p>Track savings, create goals, contribute, and monitor progress — all in one place.</p>
+    <p>Track savings, create goals, contribute, and monitor progress - all in one place.</p>
 
     <div class="breadcrumbs">
-      <a href="#">Home</a> / <a href="#">Modules</a> / <span class="active">Savings & Goals</span>
+      <a href="{{ path('app_home') }}">Home</a> / <a href="{{ path('app_home') }}">Modules</a> / <span class="active">Savings & Goals</span>
     </div>
 
     <div class="hero-actions">
-  <a class="btn-primary2"
-     href="{{ path('app_savings_index', { tab: 'savings' }) }}#deposit">
-    ➕ Add Deposit
-  </a>
-
-  <a class="btn-soft"
-     href="{{ path('app_savings_index', { tab: 'goals' }) }}#goal-form">
-    🎯 Create Goal
-  </a>
-
-  <button class="btn-soft" type="button" id="openCalendar">📅 Calendar</button>
-  <button class="btn-soft" type="button" id="openSimulation">📈 What-if?</button>
-</div>
-
+      <a class="btn-primary2" id="heroAddDeposit" href="{{ path('app_savings_index', { tab: 'savings' }) }}#depositForm">Add Deposit</a>
+      <a class="btn-soft" id="heroCreateGoal" href="{{ path('app_savings_index', { tab: 'goals' }) }}#goalAddForm">Create Goal</a>
+      <button class="btn-soft" type="button" id="openCalendar">Calendar</button>
+      <button class="btn-soft" type="button" id="openSimulation">What-if?</button>
+    </div>
   </div>
 </section>

@@ -16,6 +16,43 @@
         body { padding-top: 76px; }
         /* Header: light by default (same as Savings) */
         .glass-nav { background: rgba(255,255,255,.96) !important; backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,.08) !important; }
+        .glass-nav .header-shell {
+            max-width: 100%;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        .glass-nav .header-brand {
+            margin-right: 24px;
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: .2px;
+            line-height: 1;
+            flex: 0 0 auto;
+        }
+        .glass-nav .header-links {
+            align-items: center;
+            gap: 12px !important;
+            flex: 1 1 auto;
+            justify-content: center;
+            margin: 0 20px;
+        }
+        .glass-nav .header-links .nav-link {
+            font-size: 1rem;
+            font-weight: 800;
+            padding: .45rem .55rem;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        .glass-nav .header-actions {
+            flex: 0 0 auto;
+            gap: 10px;
+            margin-left: 16px;
+        }
+        .glass-nav .header-actions .btn {
+            font-weight: 800;
+            padding-left: 18px;
+            padding-right: 18px;
+        }
         .glass-nav .navbar-brand { color: #0d6efd !important; }
         .glass-nav .nav-link { color: #212529 !important; }
         .glass-nav .nav-link.text-info.fw-bold,
@@ -82,15 +119,50 @@
         body.theme-dark .header-user-avatar {
             border-color: rgba(0, 191, 229, 0.42);
         }
+        @media (max-width: 1200px) {
+            .glass-nav .header-links .nav-link {
+                font-size: .95rem;
+                padding: .4rem .45rem;
+            }
+            .glass-nav .header-actions .btn {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+        }
+        @media (max-width: 992px) {
+            .glass-nav .header-shell {
+                flex-wrap: wrap;
+                row-gap: 10px;
+            }
+            .glass-nav .header-brand {
+                margin-right: auto;
+            }
+            .glass-nav .header-links {
+                order: 3;
+                width: 100%;
+                justify-content: flex-start;
+                margin: 0;
+                overflow-x: auto;
+                padding-bottom: 2px;
+            }
+            .glass-nav .header-actions {
+                margin-left: 0;
+                margin-right: 0;
+            }
+        }
     </style>
     {% block stylesheets %}{% endblock %}
+    {{ importmap('app') }}
 </head>
 <body class="{% block body_class %}{% endblock %}" id="basePagesBody">
 
 <!-- ================= NAVBAR (same as Contact, Service, About) ================= -->
 <nav class="navbar navbar-expand-lg fixed-top glass-nav">
-    <div class="container">
-        <a class="navbar-brand fw-bold text-white" href="{{ path('app_home') }}">
+    <div class="container-fluid header-shell">
+        {% set currentRoute = app.request.attributes.get('_route') ?? '' %}
+        {% set isStudentSpace = app.user and ('ROLE_ETUDIANT' in app.user.roles) and (currentRoute starts with 'student_') %}
+
+        <a class="navbar-brand header-brand fw-bold text-white" href="{{ isStudentSpace ? path('student_cours_index') : path('app_home') }}">
             <i class="fas fa-wallet text-info me-2"></i> Decide$
         </a>
 
@@ -125,8 +197,7 @@
                 <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_contact' ? 'text-info fw-bold' : '' }}" href="{{ path('app_contact') }}">Contact</a>
             </li>
         </ul>
-
-        <div class="d-flex align-items-center">
+        <div class="d-flex align-items-center header-actions">
             {% if app.user and (('ROLE_SALARY' in app.user.roles) or ('ROLE_ETUDIANT' in app.user.roles)) %}
                 {% set userProfileRoute = ('ROLE_SALARY' in app.user.roles) ? 'salary_profile' : 'student_profile' %}
                 {% set startRoute = ('ROLE_ETUDIANT' in app.user.roles) ? 'student_cours_index' : 'app_salary_expense_index' %}
@@ -141,7 +212,7 @@
                 <i class="fas fa-moon"></i>
                 <i class="fas fa-sun"></i>
             </button>
-            <a href="{{ path(startRoute) }}" class="btn btn-info rounded-pill px-4">To Start</a>
+            <a href="{{ isStudentSpace ? path('student_cours_index') : path('app_salary_expense_index') }}" class="btn btn-info rounded-pill px-4">To Start</a>
             <a href="{{ path('app_logout') }}" class="btn btn-outline-danger rounded-pill px-4 ms-2">Logout</a>
         </div>
     </div>
@@ -195,6 +266,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js"></script>
 <script>if (typeof WOW !== 'undefined') { new WOW().init(); }</script>
 <script src="{{ asset('js/theme-toggle.js') }}"></script>
+{{ importmap('app') }}
 {% block javascripts %}{% endblock %}
 </body>
 </html>

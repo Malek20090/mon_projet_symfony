@@ -22,30 +22,58 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 final class UserController extends AbstractController
 {
     #[Route('/', name: 'app_user_index', methods: ['GET'])]
-public function index(UserRepository $userRepository): Response
-{
-    $users = $userRepository->findAll();
-    /** @var User|null $currentUser */
-    $currentUser = $this->getUser();
+    public function index(Request $request, UserRepository $userRepository): Response
+    {
+        $search = trim((string) $request->query->get('q', ''));
+        $role = (string) $request->query->get('role', '');
+        $sortBy = (string) $request->query->get('sort', 'nom');
+        $order = strtoupper((string) $request->query->get('order', 'ASC'));
 
-    $admins = [];
-    $others = [];
-
-    foreach ($users as $user) {
-        $isCurrentUser = $currentUser !== null && $currentUser->getId() === $user->getId();
-        if (in_array('ROLE_ADMIN', $user->getRoles(), true) || $isCurrentUser) {
-            $admins[] = $user;
-        } else {
-            $others[] = $user;
+        $allowedRoles = ['', 'ROLE_ADMIN', 'ROLE_SALARY', 'ROLE_ETUDIANT', 'ROLE_USER_ONLY'];
+        if (!in_array($role, $allowedRoles, true)) {
+            $role = '';
         }
-    }
 
-    return $this->render('user/index.html.twig', [
-        'admins' => $admins,
-        'users' => $others,
-        'current_admin_id' => $currentUser?->getId(),
-    ]);
-}
+        $allowedSort = ['id', 'nom', 'email', 'solde', 'date'];
+        if (!in_array($sortBy, $allowedSort, true)) {
+            $sortBy = 'nom';
+        }
+        if (!in_array($order, ['ASC', 'DESC'], true)) {
+            $order = 'ASC';
+        }
+
+        $all = $userRepository->findForAdminIndex(
+            $search !== '' ? $search : null,
+            $role !== '' ? $role : null,
+            $sortBy,
+            $order
+        );
+
+        /** @var User|null $currentUser */
+        $currentUser = $this->getUser();
+
+        $admins = [];
+        $others = [];
+
+        foreach ($all as $user) {
+            $isCurrentUser = $currentUser !== null && $currentUser->getId() === $user->getId();
+            if (in_array('ROLE_ADMIN', $user->getRoles(), true) || $isCurrentUser) {
+                $admins[] = $user;
+            } else {
+                $others[] = $user;
+            }
+        }
+
+        return $this->render('user/index.html.twig', [
+            'admins' => $admins,
+            'users' => $others,
+            'current_admin_id' => $currentUser?->getId(),
+            'filter_q' => $search,
+            'filter_role' => $role,
+            'filter_sort' => $sortBy,
+            'filter_order' => $order,
+        ]);
+    }
 
     #[Route('/new', name: 'app_user_new', methods: ['GET', 'POST'])]
     public function new(

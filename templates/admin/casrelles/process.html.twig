@@ -50,8 +50,8 @@
                             <td>
                                 {% if cas.solution == 'FONDS_SECURITE' %}
                                     <span class="badge bg-info"><i class="fas fa-shield-alt me-1"></i>Emergency Fund</span>
-                                {% elseif cas.solution == 'EPARGNE' %}
-                                    <span class="badge bg-warning"><i class="fas fa-piggy-bank me-1"></i>Savings</span>
+                                {% elseif cas.solution == 'OBJECTIF' or cas.solution == 'EPARGNE' %}
+                                    <span class="badge bg-warning"><i class="fas fa-bullseye me-1"></i>Objectif</span>
                                 {% elseif cas.solution == 'FAMILLE' %}
                                     <span class="badge bg-secondary"><i class="fas fa-users me-1"></i>Famille</span>
                                 {% else %}
@@ -93,39 +93,44 @@
                     </div>
                 </div>
 
-                {% if cas.solution == 'EPARGNE' and cas.epargne %}
+                {% if (cas.solution == 'OBJECTIF' or cas.solution == 'EPARGNE') and cas.financialGoal %}
                 <div class="card mb-4">
                     <div class="card-header text-dark" style="background: #fef3c7; border-bottom-color: #fcd34d;">
-                        <h5 class="mb-0"><i class="fas fa-piggy-bank me-2"></i>Savings account</h5>
+                        <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Financial goal</h5>
                     </div>
                 <div class="card-body">
                     <table class="table table-borderless mb-0">
                         <tr>
-                            <td><strong>Compte:</strong></td>
-                            <td>#{{ cas.epargne.id }}</td>
+                            <td><strong>Nom:</strong></td>
+                            <td>{{ cas.financialGoal.nom }}</td>
                         </tr>
                         <tr>
-                            <td><strong>Solde actuel:</strong></td>
-                            <td class="{% if cas.type == 'NEGATIF' and cas.epargne.sold < cas.montant %}text-danger{% else %}text-success{% endif %}">
-                                {{ cas.epargne.sold|number_format(2, ',', ' ') }} DT
+                            <td><strong>Montant cible:</strong></td>
+                            <td>{{ cas.financialGoal.montantCible|number_format(2, ',', ' ') }} DT</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Montant actuel:</strong></td>
+                            {% set objectifCurrent = casObjectifCurrent ?? 0 %}
+                            <td class="{% if cas.type == 'NEGATIF' and objectifCurrent < cas.montant %}text-danger{% else %}text-success{% endif %}">
+                                {{ objectifCurrent|number_format(2, ',', ' ') }} DT
                             </td>
                         </tr>
                         <tr>
                             <td><strong>Created on:</strong></td>
-                            <td>{{ cas.epargne.dateCreation|date('d/m/Y') }}</td>
+                            <td>{{ cas.dateEffet ? cas.dateEffet|date('d/m/Y') : '-' }}</td>
                         </tr>
                         {% if cas.type == 'NEGATIF' %}
                         <tr>
                             <td><strong>After transaction:</strong></td>
                             <td class="text-primary">
-                                {{ (cas.epargne.sold - cas.montant)|number_format(2, ',', ' ') }} DT
+                                {{ (objectifCurrent - cas.montant)|number_format(2, ',', ' ') }} DT
                             </td>
                         </tr>
                         {% else %}
                         <tr>
                             <td><strong>After transaction:</strong></td>
                             <td class="text-primary">
-                                {{ (cas.epargne.sold + cas.montant)|number_format(2, ',', ' ') }} DT
+                                {{ (objectifCurrent + cas.montant)|number_format(2, ',', ' ') }} DT
                             </td>
                         </tr>
                         {% endif %}
@@ -147,10 +152,26 @@
                             <i class="fas fa-info-circle me-2"></i>
                             By accepting, transactions will be automatically executed on the savings account or emergency fund.
                         </div>
+                        <div class="alert alert-light border mt-3 mb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong><i class="fas fa-robot me-2 text-primary"></i>AI Decision Proposal</strong>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    id="generateAiProposalBtn"
+                                    data-url="{{ path('admin_casrelles_ai_decision_proposal', { id: cas.id }) }}"
+                                >
+                                    Generate proposal
+                                </button>
+                            </div>
+                            <div id="aiProposalResult" class="small text-muted mt-2">
+                                Click "Generate proposal" to get an intelligent recommendation.
+                            </div>
+                        </div>
                     </div>
                     <div class="card-footer">
                         <form method="POST" class="d-flex flex-column gap-2">
-                            <button type="submit" name="action" value="accept" class="btn btn-success" onclick="return confirm('Are you sure you want to accept this request?');">
+                            <button type="submit" name="action" value="accept" class="btn btn-success" onclick="return confirm('Confirmer la validation de cette demande ?');">
                                 <i class="fas fa-check me-2"></i>Accept request
                             </button>
                             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
@@ -170,15 +191,15 @@
                         <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
                         <h4 class="text-success">Demande Accepted</h4>
                         <p>The request was processed successfully.</p>
-                        {% if cas.solution == 'EPARGNE' and cas.epargne %}
+                        {% if (cas.solution == 'OBJECTIF' or cas.solution == 'EPARGNE') and cas.financialGoal %}
                             <div class="alert alert-success">
-                                <strong>Savings account #{{ cas.epargne.id }}</strong><br>
+                                <strong>Financial goal: {{ cas.financialGoal.nom }}</strong><br>
                                 {% if cas.type == 'NEGATIF' %}
-                                    {{ cas.montant }} DT were withdrawn<br>
+                                    {{ cas.montant }} DT were used<br>
                                 {% else %}
                                     {{ cas.montant }} DT were added<br>
                                 {% endif %}
-                                New solde: {{ cas.epargne.sold|number_format(2, ',', ' ') }} DT
+                                Current amount: {{ (casObjectifCurrent ?? 0)|number_format(2, ',', ' ') }} DT
                             </div>
                         {% elseif cas.solution == 'FONDS_SECURITE' %}
                             <div class="alert alert-info">
@@ -232,6 +253,16 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="raisonRefus" class="form-label fw-bold">Rejection reason:</label>
+                        <div class="d-flex justify-content-end mb-2">
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-primary"
+                                id="generateAiReasonBtn"
+                                data-url="{{ path('admin_casrelles_ai_refusal_reason', { id: cas.id }) }}"
+                            >
+                                <i class="fas fa-robot me-1"></i>Generate with AI
+                            </button>
+                        </div>
                         <textarea class="form-control" id="raisonRefus" name="raisonRefus" rows="4" 
                                   placeholder="Please provide the reason for rejection..." required></textarea>
                         <div class="form-text">This reason will be communicated to the user.</div>
@@ -249,5 +280,73 @@
 </div>
 {% endblock %}
 
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const btn = document.getElementById('generateAiReasonBtn');
+            const proposalBtn = document.getElementById('generateAiProposalBtn');
+            const textarea = document.getElementById('raisonRefus');
+            const proposalBox = document.getElementById('aiProposalResult');
+            if (!btn || !textarea) return;
 
+            btn.addEventListener('click', async function () {
+                const url = btn.dataset.url;
+                if (!url) return;
 
+                const originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generating...';
+
+                try {
+                    const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    const data = await response.json();
+                    if (data.success && data.reason) {
+                        textarea.value = data.reason;
+                    } else {
+                        alert(data.message || 'AI generation failed.');
+                    }
+                } catch (e) {
+                    alert('Network error while generating AI reason.');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            });
+
+            if (!proposalBtn || !proposalBox) return;
+            proposalBtn.addEventListener('click', async function () {
+                const url = proposalBtn.dataset.url;
+                if (!url) return;
+
+                const originalHtml = proposalBtn.innerHTML;
+                proposalBtn.disabled = true;
+                proposalBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generating...';
+
+                try {
+                    const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    const data = await response.json();
+                    if (data.success && data.proposal) {
+                        const p = data.proposal;
+                        proposalBox.innerHTML =
+                            '<div><strong>Recommended action:</strong> ' + (p.recommended_action || '-') + '</div>' +
+                            '<div><strong>Recommended solution:</strong> ' + (p.recommended_solution || '-') + '</div>' +
+                            '<div><strong>Confidence:</strong> ' + (p.confidence || 0) + '%</div>' +
+                            '<div class="mt-1"><strong>Rationale:</strong> ' + (p.rationale || '-') + '</div>';
+
+                        if (p.recommended_action === 'reject' && p.refusal_reason && !textarea.value.trim()) {
+                            textarea.value = p.refusal_reason;
+                        }
+                    } else {
+                        proposalBox.textContent = data.message || 'AI proposal failed.';
+                    }
+                } catch (e) {
+                    proposalBox.textContent = 'Network error while generating AI proposal.';
+                } finally {
+                    proposalBtn.disabled = false;
+                    proposalBtn.innerHTML = originalHtml;
+                }
+            });
+        })();
+    </script>
+{% endblock %}
