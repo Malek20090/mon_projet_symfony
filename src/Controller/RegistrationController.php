@@ -286,35 +286,54 @@ class RegistrationController extends AbstractController
     #[Route('/api/email/validate', name: 'api_email_validate', methods: ['POST'])]
     public function validateEmailApi(Request $request, UserRepository $userRepository): JsonResponse
     {
-        $payload = json_decode((string) $request->getContent(), true);
-        if (!is_array($payload)) {
-            return $this->json(['success' => false, 'message' => 'Invalid JSON payload.'], 400);
-        }
+        try {
+            $payload = json_decode((string) $request->getContent(), true);
+            if (!is_array($payload)) {
+                return $this->json([
+                    'success' => true,
+                    'valid' => false,
+                    'available' => false,
+                    'message' => 'Invalid JSON payload.'
+                ], 200);
+            }
 
-        $email = strtolower(trim((string) ($payload['email'] ?? '')));
-        if ($email === '') {
-            return $this->json(['success' => false, 'message' => 'Email is required.'], 400);
-        }
+            $email = strtolower(trim((string) ($payload['email'] ?? '')));
+            if ($email === '') {
+                return $this->json([
+                    'success' => true,
+                    'valid' => false,
+                    'available' => false,
+                    'message' => 'Email is required.'
+                ], 200);
+            }
 
-        if (strlen($email) > 180 || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            if (strlen($email) > 180 || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+                return $this->json([
+                    'success' => true,
+                    'valid' => false,
+                    'available' => false,
+                    'email' => $email,
+                    'message' => 'Invalid email format.',
+                ], 200);
+            }
+
+            $exists = $userRepository->findOneBy(['email' => $email]) !== null;
+
             return $this->json([
                 'success' => true,
-                'valid' => false,
-                'available' => false,
+                'valid' => true,
+                'available' => !$exists,
                 'email' => $email,
-                'message' => 'Invalid email format.',
-            ]);
+                'message' => $exists ? 'Email is already used.' : 'Email is available.',
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => true,
+                'valid' => true,
+                'available' => true,
+                'message' => 'Email validation temporarily unavailable. Please try again.'
+            ], 200);
         }
-
-        $exists = $userRepository->findOneBy(['email' => $email]) !== null;
-
-        return $this->json([
-            'success' => true,
-            'valid' => true,
-            'available' => !$exists,
-            'email' => $email,
-            'message' => $exists ? 'Email is already used.' : 'Email is available.',
-        ]);
     }
     private function refreshCaptcha(SessionInterface $session): string
     {

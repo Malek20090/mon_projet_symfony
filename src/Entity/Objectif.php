@@ -61,10 +61,17 @@ private ?float $targetMultiplier = null;
 )]
 private Collection $investissements;
 
+    /**
+     * @var Collection<int, AiObjectiveReport>
+     */
+    #[ORM\OneToMany(mappedBy: 'objectif', targetEntity: AiObjectiveReport::class)]
+    private Collection $aiObjectiveReports;
+
 
     public function __construct()
     {
         $this->investissements = new ArrayCollection();
+        $this->aiObjectiveReports = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -168,6 +175,36 @@ private Collection $investissements;
             // set the owning side to null (unless already changed)
             if ($investissement->getObjectif() === $this) {
                 $investissement->setObjectif(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, AiObjectiveReport>
+     */
+    public function getAiObjectiveReports(): Collection
+    {
+        return $this->aiObjectiveReports;
+    }
+
+    public function addAiObjectiveReport(AiObjectiveReport $aiObjectiveReport): static
+    {
+        if (!$this->aiObjectiveReports->contains($aiObjectiveReport)) {
+            $this->aiObjectiveReports->add($aiObjectiveReport);
+            $aiObjectiveReport->setObjectif($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAiObjectiveReport(AiObjectiveReport $aiObjectiveReport): static
+    {
+        if ($this->aiObjectiveReports->removeElement($aiObjectiveReport)) {
+            // set the owning side to null (unless already changed)
+            if ($aiObjectiveReport->getObjectif() === $this) {
+                $aiObjectiveReport->setObjectif(null);
             }
         }
 

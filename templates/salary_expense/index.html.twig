@@ -214,7 +214,14 @@
         <div>
           <h4>Total Income</h4>
           <div class="small">Somme des revenus</div>
-          <div class="value">{{ totalIncome|number_format(2, '.', ' ') }} TND</div>
+          <div class="value">{{ monthlyTotalIncome|number_format(2, '.', ' ') }} TND</div>
+          <div class="small mt-2">Month</div>
+          <select class="form-select form-select-sm totals-month-select" data-totals-kind="revenue" aria-label="Select month for total income">
+            <option value="all" {{ totalsMonthRevenue == 'all' ? 'selected' : '' }}>All time</option>
+            {% for monthOption in totalsRevenueMonths %}
+              <option value="{{ monthOption }}" {{ totalsMonthRevenue == monthOption ? 'selected' : '' }}>{{ monthOption }}</option>
+            {% endfor %}
+          </select>
         </div>
         <div class="icon-bubble"><i class="fa-solid fa-wallet"></i></div>
       </div>
@@ -223,7 +230,14 @@
         <div>
           <h4>Total Expenses</h4>
           <div class="small">Total expenses</div>
-          <div class="value">{{ totalExpenses|number_format(2, '.', ' ') }} TND</div>
+          <div class="value">{{ monthlyTotalExpenses|number_format(2, '.', ' ') }} TND</div>
+          <div class="small mt-2">Month</div>
+          <select class="form-select form-select-sm totals-month-select" data-totals-kind="expense" aria-label="Select month for total expenses">
+            <option value="all" {{ totalsMonthExpense == 'all' ? 'selected' : '' }}>All time</option>
+            {% for monthOption in totalsExpenseMonths %}
+              <option value="{{ monthOption }}" {{ totalsMonthExpense == monthOption ? 'selected' : '' }}>{{ monthOption }}</option>
+            {% endfor %}
+          </select>
         </div>
         <div class="icon-bubble"><i class="fa-solid fa-credit-card"></i></div>
       </div>
@@ -244,6 +258,11 @@
         <div class="icon-bubble"><i class="fa-solid fa-calendar-alt"></i></div>
       </div>
     </div>
+    {% if budgetAlert %}
+      <div class="alert {{ budgetAlert.level == 'critical' ? 'alert-danger' : 'alert-warning' }} mt-3" role="alert">
+        <strong>{{ budgetAlert.level == 'critical' ? 'Critical' : 'Warning' }}:</strong> {{ budgetAlert.message }}
+      </div>
+    {% endif %}
 
     {# Tabs #}
     <div class="tabs">
@@ -261,11 +280,6 @@
         <div class="col-lg-5">
           <div class="stat-card p-4">
             <h4 class="mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Add an income</h4>
-            <div class="mb-3">
-              <a href="{{ path('app_dashboard', { focus: 'revenues' }) }}" class="btn btn-outline-primary w-100">
-                <i class="fa-solid fa-chart-column me-2"></i>Open Revenue Dashboard
-              </a>
-            </div>
             {{ form_start(formRevenue, { 'attr': { 'class': '' } }) }}
               <div class="mb-3">{{ form_row(formRevenue.amount, { 'attr': { 'class': 'form-control' }, 'label': 'Montant (TND)' }) }}</div>
               <div class="mb-3">{{ form_row(formRevenue.type, { 'attr': { 'class': 'form-select' } }) }}</div>
@@ -316,6 +330,11 @@
                 </div>
                 <div class="col-auto">
                   <button type="submit" class="btn btn-sm btn-outline-primary"><i class="fas fa-sort me-1"></i>Trier</button>
+                </div>
+                <div class="col-auto">
+                  <a href="{{ path('app_dashboard', { focus: 'revenues' }) }}" class="btn btn-outline-primary px-3 py-2">
+                    <i class="fa-solid fa-chart-column me-2"></i>Revenue chart
+                  </a>
                 </div>
               </div>
               <div class="row g-2 align-items-end">
@@ -496,17 +515,15 @@
         <div class="col-lg-5">
           <div class="stat-card p-4">
             <h4 class="mb-3"><i class="fas fa-minus-circle text-primary me-2"></i>Add an expense</h4>
-            <div class="mb-3">
-              <a href="{{ path('app_dashboard', { focus: 'expenses' }) }}" class="btn btn-outline-primary w-100">
-                <i class="fa-solid fa-chart-pie me-2"></i>Open Expense Dashboard
-              </a>
-            </div>
             {{ form_start(formExpense, { 'attr': { 'class': '' } }) }}
               <div class="mb-3">{{ form_row(formExpense.amount, { 'attr': { 'class': 'form-control', 'data-suggest-amount': '1' }, 'label': 'Montant (TND)' }) }}</div>
               <div class="mb-3">{{ form_row(formExpense.category, { 'attr': { 'class': 'form-select', 'data-suggest-category': '1' } }) }}</div>
               <div class="mb-3">{{ form_row(formExpense.expenseDate, { 'attr': { 'class': 'form-control' }, 'label': 'Date' }) }}</div>
               <div class="mb-3">
                 {{ form_row(formExpense.description, { 'attr': { 'class': 'form-control', 'data-suggest-description': '1' }, 'required': false }) }}
+                <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="expense-category-suggest-btn">
+                  Suggest category
+                </button>
                 <div id="expense-category-suggestion" class="small mt-2 text-muted" style="display:none;"></div>
               </div>
               <div class="mb-3">{{ form_row(formExpense.revenue, { 'attr': { 'class': 'form-select' } }) }}</div>
@@ -555,6 +572,13 @@
                   <button type="submit" class="btn btn-sm btn-outline-primary"><i class="fas fa-sort me-1"></i>Trier</button>
                 </div>
               </div>
+              <div class="row g-2 align-items-end mt-1">
+                <div class="col-auto">
+                  <a href="{{ path('app_dashboard', { focus: 'expenses' }) }}" class="btn btn-outline-primary px-3 py-2">
+                    <i class="fa-solid fa-chart-pie me-2"></i>Expense chart
+                  </a>
+                </div>
+              </div>
               <div class="row g-2 align-items-end">
                 <div class="col-auto flex-grow-1">
                   <label class="form-label small mb-0">Recherche</label>
@@ -584,7 +608,12 @@
                     <tr>
                       <td class="col-id">{{ expense.id }}</td>
                       <td class="col-date">{{ expense.expenseDate ? expense.expenseDate|date('d/m/Y') : '—' }}</td>
-                      <td class="col-amount">{{ expense.amount|number_format(2, ',', ' ') }} TND</td>
+                      <td class="col-amount">
+                        {{ expense.amount|number_format(2, ',', ' ') }} TND
+                        {% if expense.id in anomalousExpenseIds %}
+                          <span class="badge bg-warning text-dark ms-2">Anomalous</span>
+                        {% endif %}
+                      </td>
                       <td>{{ expense.category }}</td>
                       <td>{{ expense.description|default('—') }}</td>
                       <td class="col-actions">
@@ -640,9 +669,36 @@ document.addEventListener('DOMContentLoaded', function () {
   const amountEl = document.querySelector('[data-suggest-amount="1"]');
   const categoryEl = document.querySelector('[data-suggest-category="1"]');
   const hintEl = document.getElementById('expense-category-suggestion');
+  const suggestBtnEl = document.getElementById('expense-category-suggest-btn');
 
   if (descEl && amountEl && categoryEl && hintEl) {
     let timer = null;
+
+    const applyCategoryValue = (value) => {
+      if (!value || !categoryEl) {
+        return false;
+      }
+
+      const normalizedValue = String(value).trim().toLowerCase();
+      if (normalizedValue === '') {
+        return false;
+      }
+
+      const options = Array.from(categoryEl.options || []);
+      const exact = options.find((opt) => String(opt.value).trim() === String(value).trim());
+      const caseInsensitive = options.find((opt) => String(opt.value).trim().toLowerCase() === normalizedValue);
+      const byLabel = options.find((opt) => String(opt.textContent || '').trim().toLowerCase() === normalizedValue);
+      const target = exact || caseInsensitive || byLabel;
+
+      if (!target) {
+        return false;
+      }
+
+      categoryEl.value = target.value;
+      categoryEl.dispatchEvent(new Event('change', { bubbles: true }));
+
+      return true;
+    };
 
     const renderSuggestion = (payload) => {
       if (!payload || !payload.category) {
@@ -662,8 +718,9 @@ document.addEventListener('DOMContentLoaded', function () {
       const applyBtn = document.getElementById('apply-category-suggestion');
       if (applyBtn) {
         applyBtn.addEventListener('click', function () {
-          categoryEl.value = payload.category;
-          categoryEl.dispatchEvent(new Event('change', { bubbles: true }));
+          if (!applyCategoryValue(payload.category)) {
+            hintEl.textContent = 'Suggested category does not match available category options.';
+          }
         }, { once: true });
       }
     };
@@ -679,13 +736,35 @@ document.addEventListener('DOMContentLoaded', function () {
         const url = new URL('{{ path('app_salary_expense_expense_suggest_category') }}', window.location.origin);
         if (description) url.searchParams.set('description', description);
         if (amount) url.searchParams.set('amount', amount);
-        const res = await fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const res = await fetch(url.toString(), {
+          credentials: 'same-origin',
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        if (res.status === 401) {
+          hintEl.style.display = '';
+          hintEl.textContent = 'Please sign in again to use category suggestions.';
+          return;
+        }
         if (!res.ok) {
           hintEl.style.display = '';
           hintEl.textContent = 'Category suggestion unavailable right now.';
           return;
         }
+        const contentType = String(res.headers.get('content-type') || '');
+        if (!contentType.includes('application/json')) {
+          hintEl.style.display = '';
+          hintEl.textContent = 'Category suggestion returned an unexpected response.';
+          return;
+        }
         const payload = await res.json();
+        if (payload && payload.error) {
+          hintEl.style.display = '';
+          hintEl.textContent = String(payload.error);
+          return;
+        }
         renderSuggestion(payload);
       } catch (e) {
         hintEl.style.display = '';
@@ -704,7 +783,31 @@ document.addEventListener('DOMContentLoaded', function () {
     amountEl.addEventListener('change', schedule);
     descEl.addEventListener('blur', schedule);
     amountEl.addEventListener('blur', schedule);
+    if (suggestBtnEl) {
+      suggestBtnEl.addEventListener('click', requestSuggestion);
+    }
     schedule();
+  }
+  const totalsSelects = document.querySelectorAll('.totals-month-select');
+  if (totalsSelects.length) {
+    totalsSelects.forEach((sel) => {
+      sel.addEventListener('change', () => {
+        const value = sel.value;
+        const kind = sel.dataset.totalsKind;
+        if (!kind) {
+          return;
+        }
+        try {
+          const url = new URL(window.location.href);
+          if (kind === 'revenue') {
+            url.searchParams.set('totals_month_revenue', value);
+          } else if (kind === 'expense') {
+            url.searchParams.set('totals_month_expense', value);
+          }
+          window.location.href = url.toString();
+        } catch (e) {}
+      });
+    });
   }
 });
 </script>

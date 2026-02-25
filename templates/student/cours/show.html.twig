@@ -40,6 +40,9 @@
                     </div>
                 </div>
                 <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <a href="{{ path('student_cours_export_pdf', {'id': cour.id}) }}" class="btn btn-danger rounded-pill px-4 mb-2" target="_blank">
+                        <i class="fas fa-file-pdf me-1"></i> Export PDF
+                    </a>
                     {% if cour.quizzes|length > 0 %}
                         <a href="{{ path('student_cours_quiz', {'id': cour.id}) }}" class="btn btn-success rounded-pill px-4 mb-2">
                             <i class="fas fa-play-circle me-1"></i> Start quizzes
@@ -101,6 +104,84 @@
                             </div>
                         {% endif %}
                     </div>
+                {% endif %}
+
+                <!-- Quiz Progress Section -->
+                {% if cour.quizzes|length > 0 %}
+                <div class="course-content-card mb-4">
+                    <h3 class="mb-4">
+                        <i class="fas fa-chart-line me-2"></i>Votre progression
+                    </h3>
+                    
+                    {% set totalQuizzes = cour.quizzes|length %}
+                    {% set completedQuizzes = 0 %}
+                    {% set totalScore = 0 %}
+                    {% set maxTotalScore = 0 %}
+                    
+                    {% for quiz in cour.quizzes %}
+                        {% set quizResult = quizResults[quiz.id] ?? null %}
+                        {% if quizResult %}
+                            {% set completedQuizzes = completedQuizzes + 1 %}
+                            {% set totalScore = totalScore + quizResult.score %}
+                            {% set maxTotalScore = maxTotalScore + quizResult.maxScore %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Quiz complétés</span>
+                            <span class="fw-bold">{{ completedQuizzes }} / {{ totalQuizzes }}</span>
+                        </div>
+                        <div class="progress" style="height: 12px; border-radius: 6px;">
+                            {% set progressPercent = (completedQuizzes / totalQuizzes) * 100 %}
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ progressPercent }}%">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quiz Results List -->
+                    <div class="quiz-results-list">
+                        <h5 class="mb-3">Résultats des quiz :</h5>
+                        {% for quiz in cour.quizzes %}
+                            {% set quizResult = quizResults[quiz.id] ?? null %}
+                            <div class="d-flex align-items-center justify-content-between p-3 mb-2 rounded {% if quizResult %}bg-light{% else %}bg-white border{% endif %}">
+                                <div class="d-flex align-items-center">
+                                    {% if quizResult %}
+                                        <span class="badge bg-success me-3">
+                                            <i class="fas fa-check"></i> Complété
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary me-3">
+                                            <i class="fas fa-clock"></i> Non complété
+                                        </span>
+                                    {% endif %}
+                                    <span>{{ quiz.question|length > 50 ? quiz.question|slice(0, 50) ~ '...' : quiz.question }}</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    {% if quizResult %}
+                                        <span class="badge {% if quizResult.isCorrect %}bg-success{% else %}bg-danger{% endif %} me-2">
+                                            {{ quizResult.score }} / {{ quizResult.maxScore }} pts
+                                        </span>
+                                    {% endif %}
+                                    <a href="{{ path('student_quiz_pass', {'id': quiz.id}) }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                        <i class="fas fa-play"></i> {% if quizResult %}Refaire{% else %}Passer{% endif %}
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Total Score -->
+                    {% if completedQuizzes > 0 %}
+                    <div class="mt-4 p-3 bg-primary bg-opacity-10 rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">Score total :</span>
+                            <span class="h4 mb-0 text-primary">{{ totalScore }} / {{ maxTotalScore }} points</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
                 {% endif %}
 
                 <!-- Navigation -->

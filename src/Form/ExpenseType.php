@@ -53,10 +53,6 @@ class ExpenseType extends AbstractType
                 'widget' => 'single_text',
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'La date de depense est obligatoire.']),
-                    new Assert\LessThanOrEqual([
-                        'value' => 'today',
-                        'message' => 'La date de depense ne peut pas etre dans le futur.',
-                    ]),
                 ],
             ])
             ->add('description', TextareaType::class, [

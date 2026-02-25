@@ -541,7 +541,7 @@ class SecurityController extends AbstractController
     private function redirectRouteByRole(UrlGeneratorInterface $urlGenerator, array $roles): string
     {
         if (in_array('ROLE_ADMIN', $roles, true)) {
-            return $urlGenerator->generate('app_transaction_index');
+            return $urlGenerator->generate('admin_dashboard');
         }
         if (in_array('ROLE_SALARY', $roles, true)) {
             return $urlGenerator->generate('salary_dashboard');
@@ -550,7 +550,7 @@ class SecurityController extends AbstractController
             return $urlGenerator->generate('student_cours_index');
         }
 
-        return $urlGenerator->generate('app_login');
+        return $urlGenerator->generate('app_home');
     }
 
     private function isIpAddress(string $host): bool

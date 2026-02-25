@@ -11,6 +11,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Service\AiObjectiveAdvisorService;
+use App\Entity\AiObjectiveReport;
+use App\Service\MonteCarloSimulationService;
+use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
+use Symfony\UX\Chartjs\Model\Chart;
 
 class ObjectifController extends AbstractController
 {
@@ -196,4 +201,69 @@ public function edit(
     ]);
 }
 
+
+#[Route('/objectifs/{id}/ai-analysis', name: 'objectif_ai_analysis')]
+public function aiAnalysis(
+    Objectif $objectif,
+    AiObjectiveAdvisorService $aiService,
+    EntityManagerInterface $em
+): Response {
+    // 🔐 Sécurité : vérifier que l'objectif appartient à l'utilisateur
+    if (!$this->isGranted('ROLE_ADMIN')) {
+        foreach ($objectif->getInvestissements() as $investissement) {
+            if ($investissement->getUserId() !== $this->getUser()) {
+                throw $this->createAccessDeniedException();
+            }
+        }
+    }
+
+    // 🤖 Analyse IA
+    $result = $aiService->analyze($objectif);
+
+    // 💾 Création du rapport
+    $report = new AiObjectiveReport();
+    $report->setContent($result['content']);
+    $report->setRiskScore($result['riskScore']);
+    $report->setCreatedAt(new \DateTime());
+    $report->setObjectif($objectif);
+
+    $em->persist($report);
+    $em->flush();
+
+    return $this->redirectToRoute('objectif_ai_show', [
+        'id' => $report->getId()
+    ]);
+}
+
+
+
+#[Route('/ai-report/{id}', name: 'objectif_ai_show')]
+public function showAiReport(AiObjectiveReport $report): Response
+{
+    return $this->render('objectif/ai_report.html.twig', [
+        'report' => $report
+    ]);
+}
+#[Route('/objectifs/{id}/simulation', name: 'objectif_simulation')]
+public function simulation(
+    Objectif $objectif,
+    MonteCarloSimulationService $simulationService
+): Response {
+
+    // 🔐 Sécurité (même logique que pour l'IA)
+    if (!$this->isGranted('ROLE_ADMIN')) {
+        foreach ($objectif->getInvestissements() as $investissement) {
+            if ($investissement->getUserId() !== $this->getUser()) {
+                throw $this->createAccessDeniedException();
+            }
+        }
+    }
+
+    $result = $simulationService->simulate($objectif);
+
+    return $this->render('objectif/simulation.html.twig', [
+        'objectif' => $objectif,
+        'result' => $result
+    ]);
+}
 }

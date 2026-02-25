@@ -11,6 +11,8 @@ parameters:
     openai_model_default: 'gpt-4o-mini'
     facepp_base_url: '%env(string:FACEPP_API_BASE_URL)%'
     facepp_min_confidence: '%env(float:FACEPP_MIN_CONFIDENCE)%'
+    expense_anomaly_sensitivity: 2.5
+    expense_anomaly_min_amount: 400
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -53,3 +55,7 @@ services:
             $apiSecret: '%env(string:FACEPP_API_SECRET)%'
             $baseUrl: '%facepp_base_url%'
             $minConfidence: '%facepp_min_confidence%'
+    App\Service\ExpenseAnomalyAIService:
+        arguments:
+            $sensitivity: '%expense_anomaly_sensitivity%'
+            $minAmount: '%expense_anomaly_min_amount%'

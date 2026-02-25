@@ -1,0 +1,179 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}AI Quiz Generator | Decide{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>Générateur de Quiz par IA
+                </h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Comment ça marche ?
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">Le générateur de quiz IA utilise <strong>OpenAI GPT-4</strong> pour créer des questions à choix multiples automatiquement à partir du contenu de vos cours.</p>
+                    <ol class="mb-0">
+                        <li>Sélectionnez un cours dans la liste ci-dessous</li>
+                        <li>Choisissez le nombre de questions et la difficulté</li>
+                        <li>Cliquez sur "Générer" pour créer les quiz</li>
+                        <li>Prévisualisez les quiz avant de les sauvegarder</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Connection -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-plug me-2"></i>Connexion API OpenAI
+                    </h5>
+                    <p class="text-muted">Vérifiez que votre clé API est valide avant de générer des quiz.</p>
+                    <a href="{{ path('admin_ai_quiz_test') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-check-circle me-1"></i> Tester la connexion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Selection -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book me-2"></i>Sélectionner un cours pour générer des quiz
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if cours_list is empty %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Aucun cours trouvé. Veuillez d'abord créer des cours dans la section "Course & Quiz".
+                            <a href="{{ path('admin_cours_new') }}" class="btn btn-sm btn-primary ms-2">
+                                <i class="fas fa-plus me-1"></i> Créer un cours
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Titre du cours</th>
+                                        <th>Type média</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cours in cours_list %}
+                                    <tr>
+                                        <td>{{ cours.id }}</td>
+                                        <td>{{ cours.titre }}</td>
+                                        <td>
+                                            {% if cours.typeMedia == 'video' %}
+                                                <span class="badge bg-danger"><i class="fas fa-video me-1"></i> Vidéo</span>
+                                            {% elseif cours.typeMedia == 'image' %}
+                                                <span class="badge bg-success"><i class="fas fa-image me-1"></i> Image</span>
+                                            {% elseif cours.typeMedia == 'texte' %}
+                                                <span class="badge bg-primary"><i class="fas fa-file-alt me-1"></i> Texte</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ cours.typeMedia }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#generateModal" data-cours-id="{{ cours.id }}" data-cours-titre="{{ cours.titre }}">
+                                                <i class="fas fa-magic me-1"></i> Générer des quiz
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generate Modal -->
+<div class="modal fade" id="generateModal" tabindex="-1" aria-labelledby="generateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generateModalLabel">
+                    <i class="fas fa-magic me-2"></i>Générer des quiz IA
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ path('admin_ai_quiz_generate', {coursId: 'COURS_ID'}) }}" method="post" id="generateForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Cours</label>
+                        <input type="text" class="form-control" id="coursTitre" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="count" class="form-label">Nombre de questions</label>
+                        <input type="number" class="form-control" id="count" name="count" value="5" min="1" max="20" required>
+                        <div class="form-text">Entre 1 et 20 questions</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="difficulty" class="form-label">Difficulté</label>
+                        <select class="form-select" id="difficulty" name="difficulty">
+                            <option value="easy">Facile</option>
+                            <option value="medium" selected>Moyenne</option>
+                            <option value="hard">Difficile</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-robot me-1"></i> Générer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const generateModal = document.getElementById('generateModal');
+    const generateForm = document.getElementById('generateForm');
+    const coursTitreInput = document.getElementById('coursTitre');
+    
+    generateModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const coursId = button.getAttribute('data-cours-id');
+        const coursTitre = button.getAttribute('data-cours-titre');
+        
+        coursTitreInput.value = coursTitre;
+        generateForm.action = '{{ path('admin_ai_quiz_generate', {coursId: 'COURS_ID'}) }}'.replace('COURS_ID', coursId);
+    });
+});
+</script>
+
+{% endblock %}

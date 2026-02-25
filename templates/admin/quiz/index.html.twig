@@ -127,7 +127,12 @@
                             </tr>
                         {% endfor %}
                     </tbody>
-                </table>
+</table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="mt-4">
+                {{ knp_pagination_render(quizzes, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
             </div>
         {% else %}
             <div class="text-center text-muted py-4">

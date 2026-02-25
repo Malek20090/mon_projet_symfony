@@ -65,7 +65,7 @@ window.addEventListener('load', () => {
                     </div>
                 {% endif %}
 
-                <form method="post" action="{{ path('app_login') }}">
+                <form method="post" action="{{ path('app_login_form') }}">
                     <div class="input-group">
                         <label>Email address</label>
                         <div class="input-wrapper">
@@ -258,7 +258,7 @@ window.addEventListener('load', () => {
                 }
 
                 setStatus('Success. Redirecting...');
-                window.location.href = verifyData.redirect || '{{ path('app_login') }}';
+                window.location.href = verifyData.redirect || '{{ path('app_login_form') }}';
             } catch (e) {
                 const details = e && e.name ? ` (${e.name})` : '';
                 setStatus(`Face ID login failed${details}.`);
@@ -358,7 +358,7 @@ window.addEventListener('load', () => {
 
                 stopStream();
                 setStatus('Success. Redirecting...');
-                window.location.href = data.redirect || '{{ path('app_login') }}';
+                window.location.href = data.redirect || '{{ path('app_login_form') }}';
             } catch (e) {
                 const details = e && e.name ? ` (${e.name})` : '';
                 setStatus(`Face++ login failed${details}.`);

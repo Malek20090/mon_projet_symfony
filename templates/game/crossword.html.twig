@@ -1,0 +1,283 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mots Croisés - FinanceLearn{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h1>✏️ Mots Croisés Financiers</h1>
+        <p class="lead">Complétez la grille!</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div id="crosswordContainer"></div>
+            
+            <div class="text-center mt-3">
+                <button class="btn btn-success" onclick="checkAnswers()">Vérifier</button>
+                <button class="btn btn-info" onclick="showAnswers()">Afficher</button>
+                <a href="{{ path('game_index') }}" class="btn btn-secondary">Retour</a>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Définitions</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Horizontal:</h6>
+                    <ul>
+                        <li><strong>1.</strong> Plan de gestion des revenus (BUDGET)</li>
+                        <li><strong>2.</strong> Argent mis de côté (EPARGNE)</li>
+                        <li><strong>3.</strong> Lieu où s'achètent les actions (BOURSE)</li>
+                    </ul>
+                    
+                    <h6 class="mt-3">Vertical:</h6>
+                    <ul>
+                        <li><strong>A.</strong> Pourcentage d'un crédit (TAUX)</li>
+                        <li><strong>B.</strong> Possibilité de perte (RISQUE)</li>
+                        <li><strong>C.</strong> Somme empruntée (CREDIT)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-body text-center">
+                    <span class="h2" id="scoreCount">0</span>
+                    <p class="text-muted mb-0">/ 6 mots</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+#crosswordContainer {
+    display: grid;
+    gap: 1px;
+    background: #333;
+    padding: 10px;
+    border-radius: 10px;
+    margin: 0 auto;
+    width: fit-content;
+}
+
+.cw-cell {
+    width: 45px;
+    height: 45px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    position: relative;
+}
+
+.cw-cell.black {
+    background: #333;
+}
+
+.cw-cell input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    background: transparent;
+    outline: none;
+}
+
+.cw-cell input:focus {
+    background: #fff3cd;
+}
+
+.cw-cell.correct {
+    background: #28a745 !important;
+    color: white;
+}
+
+.cw-cell.correct input {
+    color: white;
+}
+
+.cw-cell.wrong {
+    background: #dc3545 !important;
+    color: white;
+}
+
+.cw-cell.wrong input {
+    color: white;
+}
+
+.cell-num {
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    font-size: 0.6rem;
+    color: #666;
+}
+</style>
+
+<script>
+// Puzzle: 7x7 grid
+// Empty = black cell
+var puzzle = [
+    [' ', 'B', 'U', 'D', 'G', 'E', 'T'],
+    [' ', ' ', ' ', 'R', ' ', ' ', ' '],
+    ['E', 'P', 'A', 'R', 'G', 'N', 'E'],
+    [' ', ' ', 'T', 'A', 'U', 'X', ' '],
+    ['C', 'R', 'E', 'D', 'I', 'T', ' '],
+    [' ', ' ', ' ', ' ', 'S', ' ', ' '],
+    ['B', 'O', 'U', 'R', 'S', 'E', ' ']
+];
+
+// Numbers for starting cells
+var numbers = {
+    '0,1': '1',
+    '2,0': '2',
+    '6,0': '3'
+};
+
+// Answers
+var answers = {
+    '0,1': 'B', '0,2': 'U', '0,3': 'D', '0,4': 'G', '0,5': 'E', '0,6': 'T',
+    '2,0': 'E', '2,1': 'P', '2,2': 'A', '2,3': 'R', '2,4': 'G', '2,5': 'N', '2,6': 'E',
+    '4,0': 'C', '4,1': 'R', '4,2': 'E', '4,3': 'D', '4,4': 'I', '4,5': 'T',
+    '6,0': 'B', '6,1': 'O', '6,2': 'U', '6,3': 'R', '6,4': 'S', '6,5': 'E',
+    '0,3': 'R', '1,3': 'R', '2,3': 'R', '3,3': 'A', '4,3': 'D',
+    '2,2': 'A', '3,2': 'T', '4,2': 'E',
+    '3,1': 'T', '3,2': 'A', '3,3': 'U', '3,4': 'X',
+    '4,0': 'C', '5,0': 'R', '6,0': 'B',
+    '4,1': 'R', '5,1': 'I', '6,1': 'O',
+    '4,2': 'E', '5,2': 'S', '6,2': 'U',
+    '4,4': 'I', '5,4': 'S', '6,4': 'S',
+    '4,5': 'T', '5,5': 'E', '6,5': 'E'
+};
+
+var gridSize = 7;
+
+function initGrid() {
+    var container = document.getElementById('crosswordContainer');
+    container.style.gridTemplateColumns = 'repeat(' + gridSize + ', 45px)';
+    
+    for (var row = 0; row < gridSize; row++) {
+        for (var col = 0; col < gridSize; col++) {
+            var letter = puzzle[row][col];
+            var cell = document.createElement('div');
+            
+            if (letter === ' ') {
+                cell.className = 'cw-cell black';
+            } else {
+                cell.className = 'cw-cell';
+                
+                // Add number
+                if (numbers[row + ',' + col]) {
+                    var num = document.createElement('span');
+                    num.className = 'cell-num';
+                    num.textContent = numbers[row + ',' + col];
+                    cell.appendChild(num);
+                }
+                
+                var input = document.createElement('input');
+                input.maxLength = 1;
+                input.setAttribute('data-row', row);
+                input.setAttribute('data-col', col);
+                input.setAttribute('data-answer', letter);
+                
+                input.onkeydown = function(e) {
+                    handleKeyDown(e);
+                };
+                input.onfocus = function(e) {
+                    e.target.parentElement.style.boxShadow = '0 0 0 3px #ffc107';
+                };
+                input.onblur = function(e) {
+                    e.target.parentElement.style.boxShadow = 'none';
+                };
+                
+                cell.appendChild(input);
+            }
+            
+            container.appendChild(cell);
+        }
+    }
+}
+
+function handleKeyDown(e) {
+    var input = e.target;
+    var row = parseInt(input.getAttribute('data-row'));
+    var col = parseInt(input.getAttribute('data-col'));
+    
+    if (e.key === 'ArrowRight' && col < gridSize - 1) {
+        moveTo(row, col + 1);
+    } else if (e.key === 'ArrowLeft' && col > 0) {
+        moveTo(row, col - 1);
+    } else if (e.key === 'ArrowDown' && row < gridSize - 1) {
+        moveTo(row + 1, col);
+    } else if (e.key === 'ArrowUp' && row > 0) {
+        moveTo(row - 1, col);
+    } else if (e.key === 'Backspace') {
+        input.value = '';
+        if (col > 0) moveTo(row, col - 1);
+    } else if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+        input.value = e.key.toUpperCase();
+        if (col < gridSize - 1) moveTo(row, col + 1);
+    }
+    
+    e.preventDefault();
+}
+
+function moveTo(row, col) {
+    var input = document.querySelector('input[data-row="' + row + '"][data-col="' + col + '"]');
+    if (input) input.focus();
+}
+
+function checkAnswers() {
+    var inputs = document.querySelectorAll('.cw-cell input');
+    var correct = 0;
+    
+    for (var i = 0; i < inputs.length; i++) {
+        var input = inputs[i];
+        var answer = input.getAttribute('data-answer');
+        var userAnswer = input.value.toUpperCase();
+        var cell = input.parentElement;
+        
+        cell.classList.remove('correct', 'wrong');
+        
+        if (userAnswer === answer) {
+            if (userAnswer !== '') {
+                correct++;
+                cell.classList.add('correct');
+            }
+        } else if (userAnswer !== '') {
+            cell.classList.add('wrong');
+        }
+    }
+    
+    document.getElementById('scoreCount').textContent = correct;
+    
+    if (correct >= 6) {
+        setTimeout(function() { alert('🎉 Félicitations!'); }, 300);
+    }
+}
+
+function showAnswers() {
+    var inputs = document.querySelectorAll('.cw-cell input');
+    
+    for (var i = 0; i < inputs.length; i++) {
+        var input = inputs[i];
+        input.value = input.getAttribute('data-answer');
+        input.parentElement.classList.remove('wrong');
+        input.parentElement.classList.add('correct');
+    }
+    
+    document.getElementById('scoreCount').textContent = '6';
+}
+
+initGrid();
+</script>
+{% endblock %}
