@@ -216,6 +216,16 @@
             <button type="button" class="chip" id="calNextBtn">Next &rarr;</button>
           </div>
           <div class="cal-controls">
+            <label for="calMonthJump" class="tiny-note" style="margin:0;">Go to month</label>
+            <input id="calMonthJump" type="month" class="chip" style="padding:8px 12px;">
+            <button type="button" class="chip" id="calTodayBtn">Today</button>
+          </div>
+          <div class="cal-controls">
+            <label for="calDateJump" class="tiny-note" style="margin:0;">Go to date</label>
+            <input id="calDateJump" type="date" class="chip" style="padding:8px 12px;">
+            <button type="button" class="chip" id="calGoDateBtn">Open</button>
+          </div>
+          <div class="cal-controls">
             <label for="calCurrencySelect" class="tiny-note" style="margin:0;">Currency</label>
             <select id="calCurrencySelect" class="chip" style="padding:8px 12px; min-width:90px;">
               <option value="EUR" selected>EUR</option>
@@ -269,7 +279,11 @@
   const selectedDateLabel = document.getElementById('calSelectedDateLabel');
   const dayInsights = document.getElementById('calDayInsights');
   const currencySelect = document.getElementById('calCurrencySelect');
-  if (!modalEl || !openBtn || !grid || !eventsList || !summary || !monthLabel || !prevBtn || !nextBtn || !selectedDateLabel || !dayInsights || !currencySelect) return;
+  const monthJumpInput = document.getElementById('calMonthJump');
+  const dateJumpInput = document.getElementById('calDateJump');
+  const todayBtn = document.getElementById('calTodayBtn');
+  const goDateBtn = document.getElementById('calGoDateBtn');
+  if (!modalEl || !openBtn || !grid || !eventsList || !summary || !monthLabel || !prevBtn || !nextBtn || !selectedDateLabel || !dayInsights || !currencySelect || !monthJumpInput || !dateJumpInput || !todayBtn || !goDateBtn) return;
 
   const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   let cursor = new Date();
@@ -282,6 +296,12 @@
     const y = dateObj.getFullYear();
     const m = String(dateObj.getMonth() + 1).padStart(2, '0');
     return `${y}-${m}`;
+  }
+
+  function syncJumpInputs() {
+    monthJumpInput.value = fmtMonth(cursor);
+    const day = Number(selectedDay || 1);
+    dateJumpInput.value = `${fmtMonth(cursor)}-${String(Math.max(1, day)).padStart(2, '0')}`;
   }
 
   function escapeHtml(s) {
@@ -310,10 +330,11 @@
     });
   }
 
-  function weatherViewByRisk(risk) {
-    if (risk >= 0.7) return { emoji: '\u26c8\ufe0f', label: 'High risk' };
-    if (risk >= 0.45) return { emoji: '\ud83c\udf26\ufe0f', label: 'Medium risk' };
-    return { emoji: '\u2600\ufe0f', label: 'Low risk' };
+  function inflationViewByRate(rate) {
+    if (rate <= 0) return { emoji: '\u26a0\ufe0f', label: 'CPI unavailable' };
+    if (rate >= 0.08) return { emoji: '\ud83d\udcc8', label: 'High inflation' };
+    if (rate >= 0.04) return { emoji: '\ud83d\udcb8', label: 'Moderate inflation' };
+    return { emoji: '\u2705', label: 'Low inflation' };
   }
 
   function kindMeta(kind) {
@@ -331,11 +352,11 @@
     if (!currentPayload) return;
     const month = currentPayload.month || '';
     const dayKey = `${month}-${String(day).padStart(2, '0')}`;
-    const riskMap = currentPayload.weatherRiskByDate || {};
+    const inflationMap = currentPayload.inflationByDate || {};
     const fxMap = currentPayload.fxByDate || {};
     const plan = currentPayload.adaptivePlan || {};
-    const risk = Number(riskMap[dayKey] ?? plan.weatherRiskAvg ?? 0);
-    const weather = weatherViewByRisk(risk);
+    const inflationRate = Number(inflationMap[dayKey] ?? plan.inflationAnnualRate ?? 0);
+    const inflation = inflationViewByRate(inflationRate);
     const fx = Number(fxMap[dayKey] ?? plan.fxRateToTnd ?? 0);
     const currency = String(plan.currency || 'TND');
     const fxText = fx > 0 ? `1 ${currency} = ${fx.toFixed(4)} TND` : 'FX unavailable for this date';
@@ -345,9 +366,9 @@
 
     dayInsights.innerHTML = `
       <div class="day-insight-card">
-        <div class="day-insight-label">Weather</div>
-        <div class="day-insight-value">${weather.emoji} ${weather.label}</div>
-        <div class="tiny-note">Risk ${(risk * 100).toFixed(0)}%</div>
+        <div class="day-insight-label">Inflation / CPI</div>
+        <div class="day-insight-value">${inflation.emoji} ${inflation.label}</div>
+        <div class="tiny-note">${inflationRate > 0 ? `Annual rate ${(inflationRate * 100).toFixed(1)}%` : 'No CPI value from API'}</div>
       </div>
       <div class="day-insight-card">
         <div class="day-insight-label">Currency</div>
@@ -362,7 +383,7 @@
       <div class="day-insight-card">
         <div class="day-insight-label">Status</div>
         <div class="day-insight-value">Calendar ready</div>
-        <div class="tiny-note">Feasibility: ${String(plan.feasibility || 'on_track')}</div>
+        <div class="tiny-note">Feasibility: ${String(plan.feasibility || 'on_track')} | CPI mode: ${String(plan.inflationMode || 'balanced')}</div>
       </div>
     `;
   }
@@ -383,9 +404,12 @@
       const meta = kindMeta(String(e.kind || 'event'));
       const amountPart = typeof e.amount === 'number' ? `${e.amount.toFixed(2)} TND` : '';
       const progress = typeof e.progressPct === 'number' ? ` <span class="tiny-note">(${e.progressPct}% done)</span>` : '';
+      const inflationHint = (e.kind === 'goal_deadline' && typeof e.adjustedTarget === 'number')
+        ? `<div class="tiny-note">Adjusted target (CPI): ${Number(e.adjustedTarget).toFixed(2)} TND${typeof e.inflationDelta === 'number' ? ` (+${Number(e.inflationDelta).toFixed(2)})` : ''}</div>`
+        : '';
       return `<div class="event-item">
         <span class="event-kind">${meta.icon}</span>
-        <div class="event-title">${escapeHtml(e.title || 'Event')}${progress}</div>
+        <div class="event-title">${escapeHtml(e.title || 'Event')}${progress}${inflationHint}</div>
         <div class="event-amount">${amountPart}</div>
       </div>`;
     }).join('');
@@ -453,12 +477,18 @@
       }
       currentPayload = data;
       monthLabel.textContent = data.monthLabel || month;
+      monthJumpInput.value = month;
       renderSummary(data.summary || {});
       if (data.adaptivePlan) {
         const p = data.adaptivePlan;
+        const infQ = data.inflationDataQuality || {};
         const extra = [
-          `Mode: ${p.weatherMode || 'balanced'}`,
-          `Weather risk: ${((p.weatherRiskAvg || 0) * 100).toFixed(0)}%`,
+          `Mode: ${p.inflationMode || 'balanced'}`,
+          `CPI (${p.inflationYearOfView || 'year'}): ${((p.inflationAnnualRate || 0) * 100).toFixed(1)}%`,
+          `CPI year: ${p.inflationYear || 'N/A'}`,
+          `CPI source: ${p.inflationSource || 'N/A'}`,
+          `CPI API: ${p.inflationIsFallback ? `fallback (${infQ.error || 'unavailable'})` : 'live value'}`,
+          `CPI history years: ${(infQ.seriesYears || []).join(', ') || 'N/A'}`,
           `Currency: ${p.currency || 'TND'}`,
           `FX -> TND: ${p.fxRateToTnd > 0 ? Number(p.fxRateToTnd).toFixed(4) : 'N/A'}`,
           `Weekly: ${(p.weeklyRecommendedTnd || 0).toFixed(2)} TND`,
@@ -475,7 +505,14 @@
       const eventDays = Object.keys(data.dayEvents || {})
         .map((k) => Number(k))
         .filter((n) => (data.dayEvents[String(n)] || []).some((e) => e.kind !== 'plan_suggestion'));
-      selectedDay = eventDays.length > 0 ? eventDays[0] : 1;
+      const maxDay = Number(data.daysInMonth || 31);
+      const desiredDay = Number(selectedDay || 0);
+      if (desiredDay >= 1 && desiredDay <= maxDay) {
+        selectedDay = desiredDay;
+      } else {
+        selectedDay = eventDays.length > 0 ? eventDays[0] : 1;
+      }
+      syncJumpInputs();
       renderGrid(data);
       renderEvents(selectedDay);
     } catch (e) {
@@ -516,9 +553,36 @@
     loadCalendarMonth();
   });
 
+  monthJumpInput.addEventListener('change', () => {
+    const raw = String(monthJumpInput.value || '');
+    if (!/^\d{4}-\d{2}$/.test(raw)) return;
+    const [y, m] = raw.split('-').map(Number);
+    cursor = new Date(y, Math.max(0, m - 1), 1);
+    selectedDay = 1;
+    loadCalendarMonth();
+  });
+
+  goDateBtn.addEventListener('click', () => {
+    const raw = String(dateJumpInput.value || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return;
+    const [y, m, d] = raw.split('-').map(Number);
+    cursor = new Date(y, Math.max(0, m - 1), 1);
+    selectedDay = Math.max(1, d);
+    loadCalendarMonth();
+  });
+
+  todayBtn.addEventListener('click', () => {
+    const now = new Date();
+    cursor = new Date(now.getFullYear(), now.getMonth(), 1);
+    selectedDay = now.getDate();
+    loadCalendarMonth();
+  });
+
   currencySelect.addEventListener('change', () => {
     selectedCurrency = String(currencySelect.value || 'EUR').toUpperCase();
     loadCalendarMonth();
   });
+
+  syncJumpInputs();
 })();
 </script>

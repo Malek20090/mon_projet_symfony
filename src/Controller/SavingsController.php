@@ -1645,6 +1645,24 @@ class SavingsController extends AbstractController
 
         $monthEnd = $monthStart->modify('last day of this month');
         $daysInMonth = (int) $monthStart->format('t');
+        $todayForInflation = new \DateTimeImmutable('today');
+        $inflationSnapshot = $savingsCalendarService->fetchAnnualInflationSnapshot($country);
+        $inflationSeries = is_array($inflationSnapshot['series'] ?? null) ? $inflationSnapshot['series'] : [];
+        $projectionStartYear = (int) $todayForInflation->format('Y');
+        $projectionEndYear = max((int) $monthEnd->format('Y') + 10, $projectionStartYear + 1);
+        $inflationByYear = $savingsCalendarService->buildProjectedInflationByYear(
+            $inflationSeries,
+            $projectionStartYear,
+            $projectionEndYear
+        );
+        $yearOfView = (int) $monthStart->format('Y');
+        $annualInflationRate = (float) ($inflationByYear[$yearOfView] ?? (float) ($inflationSnapshot['rate'] ?? 0.0));
+        $inflationByDate = $savingsCalendarService->buildDailyInflationMapForMonthUsingYearMap(
+            $yearOfView,
+            (int) $monthStart->format('m'),
+            $inflationByYear,
+            $annualInflationRate
+        );
 
         $dayEvents = [];
         for ($d = 1; $d <= $daysInMonth; $d++) {
@@ -1678,11 +1696,28 @@ class SavingsController extends AbstractController
             $target = (float) ($g['montant_cible'] ?? 0);
             $current = (float) ($g['montant_actuel'] ?? 0);
             $progressPct = $target > 0 ? min(100.0, ($current / $target) * 100.0) : 0.0;
+            $deadlineDt = \DateTimeImmutable::createFromFormat('Y-m-d', substr($date, 0, 10)) ?: null;
+            $adjustedTarget = $target;
+            $deadlineRate = $annualInflationRate;
+            if ($deadlineDt instanceof \DateTimeImmutable) {
+                $deadlineRate = (float) ($inflationByYear[(int) $deadlineDt->format('Y')] ?? $annualInflationRate);
+                $adjustedTarget = $savingsCalendarService->adjustAmountForInflationByYear(
+                    $target,
+                    $todayForInflation,
+                    $deadlineDt,
+                    $inflationByYear,
+                    $annualInflationRate
+                );
+            }
+            $inflationDelta = max(0.0, $adjustedTarget - $target);
 
             $dayEvents[(string) $day][] = [
                 'kind' => 'goal_deadline',
                 'title' => 'Goal deadline: ' . (string) ($g['nom'] ?? 'Goal'),
                 'amount' => $target,
+                'adjustedTarget' => round($adjustedTarget, 2),
+                'inflationDelta' => round($inflationDelta, 2),
+                'inflationRate' => round($deadlineRate, 4),
                 'progressPct' => round($progressPct, 1),
                 'priority' => (int) ($g['priorite'] ?? 3),
             ];
@@ -1752,10 +1787,6 @@ class SavingsController extends AbstractController
         // Keeps existing dayEvents intact and adds "plan_suggestion" events
         // ----------------------------
         $balance = $this->safeFloat(($accPack['currentAccount'][$accPack['accBalanceCol']] ?? 0));
-        $weatherRiskMap = $savingsCalendarService->fetchWeatherRiskMapForMonth(
-            (int) $monthStart->format('Y'),
-            (int) $monthStart->format('m')
-        );
         $fxByDate = $savingsCalendarService->fetchExchangeRateMapToTndForMonth(
             $currency,
             (int) $monthStart->format('Y'),
@@ -1797,21 +1828,20 @@ class SavingsController extends AbstractController
         $baseMonthlyNeed = $remainingTotal;
         $baseWeeklyNeed = $baseMonthlyNeed / 4.0;
 
-        $avgWeatherRisk = 0.0;
-        if (!empty($weatherRiskMap)) {
-            $avgWeatherRisk = array_sum($weatherRiskMap) / count($weatherRiskMap);
-        }
-        $weatherMode = 'balanced';
-        $weatherFactor = 1.0;
-        if ($avgWeatherRisk >= 0.65) {
-            $weatherMode = 'safe';
-            $weatherFactor = 0.90;
-        } elseif ($avgWeatherRisk <= 0.30) {
-            $weatherMode = 'aggressive';
-            $weatherFactor = 1.08;
+        $inflationMode = 'balanced';
+        $inflationFactor = 1.0;
+        if ($annualInflationRate <= 0.0) {
+            $inflationMode = 'unavailable';
+            $inflationFactor = 1.0;
+        } elseif ($annualInflationRate >= 0.08) {
+            $inflationMode = 'inflation_guard';
+            $inflationFactor = 1.12;
+        } elseif ($annualInflationRate <= 0.03) {
+            $inflationMode = 'stable_prices';
+            $inflationFactor = 0.96;
         }
 
-        $monthlyRecommendedTnd = max(0.0, $baseMonthlyNeed * $weatherFactor);
+        $monthlyRecommendedTnd = max(0.0, $baseMonthlyNeed * $inflationFactor);
         $weeklyRecommendedTnd = $monthlyRecommendedTnd / 4.0;
 
         $coverage = $monthlyRecommendedTnd > 0 ? ($balance / $monthlyRecommendedTnd) : 1.0;
@@ -1859,7 +1889,7 @@ class SavingsController extends AbstractController
                 continue;
             }
             $day = (int) substr($dateKey, 8, 2);
-            $weatherRisk = (float) ($weatherRiskMap[$dateKey] ?? $avgWeatherRisk);
+            $inflationRate = (float) ($inflationByDate[$dateKey] ?? $annualInflationRate);
             $fxForDate = (float) ($fxByDate[$dateKey] ?? $fxToTnd);
             $displayAmount = $currency === 'TND'
                 ? $perSuggestionTnd
@@ -1869,14 +1899,14 @@ class SavingsController extends AbstractController
                 'kind' => 'plan_suggestion',
                 'title' => sprintf(
                     'Suggested contribution (%s mode): %.2f %s',
-                    $weatherMode,
+                    $inflationMode,
                     $displayAmount,
                     $currency
                 ),
                 'amount' => round($perSuggestionTnd, 2),
                 'amountCurrency' => $currency,
                 'amountConverted' => round($displayAmount, 2),
-                'weatherRisk' => round($weatherRisk, 2),
+                'inflationRate' => round($inflationRate, 4),
                 'fxRateToTnd' => round($fxForDate, 4),
             ];
 
@@ -1885,7 +1915,7 @@ class SavingsController extends AbstractController
                 'amountTnd' => round($perSuggestionTnd, 2),
                 'amount' => round($displayAmount, 2),
                 'currency' => $currency,
-                'weatherRisk' => round($weatherRisk, 2),
+                'inflationRate' => round($inflationRate, 4),
             ];
         }
 
@@ -1913,7 +1943,7 @@ class SavingsController extends AbstractController
             'firstDayIso' => (int) $monthStart->format('N'),
             'daysInMonth' => $daysInMonth,
             'dayEvents' => $dayEvents,
-            'weatherRiskByDate' => $weatherRiskMap,
+            'inflationByDate' => $inflationByDate,
             'fxByDate' => $fxByDate,
             'summary' => $counts,
             'country' => $country,
@@ -1921,9 +1951,21 @@ class SavingsController extends AbstractController
                 'isFallback' => $currency !== 'TND' && empty($fxByDate),
                 'source' => 'fawazahmed0/currency-api daily snapshots; fallback frankfurter latest',
             ],
+            'inflationDataQuality' => [
+                'isFallback' => (bool) ($inflationSnapshot['isFallback'] ?? true),
+                'source' => (string) ($inflationSnapshot['source'] ?? 'unknown'),
+                'year' => $inflationSnapshot['year'] ?? null,
+                'error' => $inflationSnapshot['error'] ?? null,
+                'seriesYears' => array_slice(array_values(array_keys($inflationSeries)), -8),
+            ],
             'adaptivePlan' => [
-                'weatherMode' => $weatherMode,
-                'weatherRiskAvg' => round($avgWeatherRisk, 2),
+                'inflationMode' => $inflationMode,
+                'inflationAnnualRate' => round($annualInflationRate, 4),
+                'cpiIndicator' => 'CPI',
+                'inflationYearOfView' => $yearOfView,
+                'inflationYear' => $inflationSnapshot['year'] ?? null,
+                'inflationSource' => (string) ($inflationSnapshot['source'] ?? 'unknown'),
+                'inflationIsFallback' => (bool) ($inflationSnapshot['isFallback'] ?? true),
                 'currency' => $currency,
                 'fxRateToTnd' => round($fxToTnd, 4),
                 'monthlyRecommendedTnd' => round($monthlyRecommendedTnd, 2),

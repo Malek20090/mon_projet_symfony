@@ -19,21 +19,6 @@
       </div>
     </div>
 
-    <div class="mt-16 sim-grid-2">
-      <div>
-        <label class="form-label">Strategic persona</label>
-        <select id="simPersona" class="form-control">
-          <option value="conservative">Conservative</option>
-          <option value="balanced" selected>Balanced</option>
-          <option value="aggressive">Aggressive Growth</option>
-        </select>
-      </div>
-      <div style="display:flex; align-items:end; gap:8px;">
-        <button type="button" id="simBrutalBtn" class="chip" style="border:1px solid #f2b0b0;">⚡ Brutal Financial Truth</button>
-        <button type="button" id="simLazyBtn" class="chip" style="border:1px solid #d7d7d7;">💤 Stay Lazy Mode</button>
-      </div>
-    </div>
-
     <div class="sim-box mt-16 sim-kpi-grid">
       <div class="sim-kpi sim-kpi-card">
         <div class="lbl">Months to finish</div>
@@ -244,16 +229,11 @@
   const date = document.getElementById('simDate');
   const insights = document.getElementById('simInsights');
   const conflict = document.getElementById('simConflict');
-  const persona = document.getElementById('simPersona');
-  const brutalBtn = document.getElementById('simBrutalBtn');
-  const lazyBtn = document.getElementById('simLazyBtn');
   const timelineCanvas = document.getElementById('simTimeline');
   const aiMeta = document.getElementById('simAiMeta');
   const aiAdvice = document.getElementById('simAiAdvice');
-  let brutalTruth = false;
-  let stayLazyMode = false;
 
-  if (!modal || !openBtn || !range || !val || !oneTime || !runBtn || !months || !remaining || !date || !insights || !conflict || !persona || !brutalBtn || !lazyBtn || !timelineCanvas || !aiMeta || !aiAdvice) return;
+  if (!modal || !openBtn || !range || !val || !oneTime || !runBtn || !months || !remaining || !date || !insights || !conflict || !timelineCanvas || !aiMeta || !aiAdvice) return;
 
   function openModal() {
     modal.style.display = 'flex';
@@ -274,16 +254,6 @@
   function setLoadingState(loading) {
     runBtn.disabled = loading;
     runBtn.textContent = loading ? 'Calculating...' : 'Run simulation';
-  }
-
-  function syncModeButtons() {
-    brutalBtn.style.background = brutalTruth ? 'rgba(239,68,68,0.12)' : '';
-    brutalBtn.style.borderColor = brutalTruth ? '#ef4444' : '#f2b0b0';
-    brutalBtn.textContent = brutalTruth ? '⚡ Brutal Financial Truth ON' : '⚡ Brutal Financial Truth';
-
-    lazyBtn.style.background = stayLazyMode ? 'rgba(59,130,246,0.12)' : '';
-    lazyBtn.style.borderColor = stayLazyMode ? '#3b82f6' : '#d7d7d7';
-    lazyBtn.textContent = stayLazyMode ? '💤 Stay Lazy Mode ON' : '💤 Stay Lazy Mode';
   }
 
   function escHtml(s) {
@@ -406,8 +376,7 @@
         recText = base;
       }
     }
-    const modeLine = `<b>Modes:</b> ${brutalTruth ? 'Brutal ON' : 'Brutal OFF'} | ${stayLazyMode ? 'Lazy ON' : 'Lazy OFF'}`;
-    insights.innerHTML = `${modeLine}<br><b>Risk:</b> ${riskText}<br><b>Recommended monthly:</b> ${recText}<br><b>Plan options:</b> ${altText || 'n/a'}`;
+    insights.innerHTML = `<b>Risk:</b> ${riskText}<br><b>Recommended monthly:</b> ${recText}<br><b>Plan options:</b> ${altText || 'n/a'}`;
     drawTimeline(data);
 
     const conflictPack = data.conflictAnalysis || {};
@@ -442,9 +411,6 @@
     const body = {
       monthlyDeposit: Number(range.value || 0),
       oneTimeDeposit: Number(oneTime.value || 0),
-      persona: String(persona.value || 'balanced'),
-      brutalTruth,
-      stayLazyMode,
       runId: String(Date.now()),
     };
 
@@ -486,16 +452,7 @@
     const n = Number(oneTime.value || 0);
     oneTime.value = Number.isFinite(n) && n > 0 ? String(Math.round(n)) : '0';
   });
-  brutalBtn.addEventListener('click', () => {
-    brutalTruth = !brutalTruth;
-    syncModeButtons();
-  });
-  lazyBtn.addEventListener('click', () => {
-    stayLazyMode = !stayLazyMode;
-    syncModeButtons();
-  });
   runBtn.addEventListener('click', () => runSimulation());
-  syncModeButtons();
   syncRangeValue();
 })();
 </script>
