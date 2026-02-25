@@ -48,18 +48,29 @@
                                     </small>
                                 {% endif %}
                             </div>
-                            <span class="badge bg-warning text-dark">
-                                <i class="fas fa-star me-1"></i>{{ quiz.pointsValeur }} points
-                            </span>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning text-dark me-3">
+                                    <i class="fas fa-star me-1"></i>{{ quiz.pointsValeur }} points
+                                </span>
+                                <div class="timer-badge" id="timerBadge">
+                                    <i class="fas fa-clock me-1"></i>
+                                    <span id="timerCountdown">30</span>s
+                                </div>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="question-section mb-4">
-                                <h4 class="text-dark mb-3">
-                                    <i class="fas fa-question text-primary"></i> {{ quiz.question }}
-                                </h4>
+                                <div class="d-flex align-items-start">
+                                    <h4 class="text-dark mb-0 flex-grow-1">
+                                        <i class="fas fa-question text-primary"></i> {{ quiz.question }}
+                                    </h4>
+                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-circle ms-2" onclick="speakQuestion()" title="Écouter la question" id="speakBtn">
+                                        <i class="fas fa-volume-up" id="speakIcon"></i>
+                                    </button>
+                                </div>
                             </div>
 
-                            <form method="POST" action="{{ path('student_quiz_pass', {'id': quiz.id}) }}">
+                            <form method="POST" action="{{ path('student_quiz_pass', {'id': quiz.id}) }}" id="quizForm" data-turbo="false">
                                 <div class="choices-section">
                                     {% for choix in quiz.choixReponses %}
                                         <div class="form-check mb-3 p-3 border rounded choice-option">
@@ -72,8 +83,13 @@
                                 </div>
 
                                 <div class="d-grid gap-2 mt-4">
-                                    <button type="submit" class="btn btn-primary btn-lg rounded-pill">
-                                        <i class="fas fa-paper-plane"></i> Submit my answer
+                                    <button type="submit" class="btn btn-primary btn-lg rounded-pill" id="submitBtn">
+                                        <span class="btn-content">
+                                            <i class="fas fa-paper-plane"></i> Submit my answer
+                                        </span>
+                                        <span class="btn-loading" style="display: none;">
+                                            <i class="fas fa-spinner fa-spin"></i> Checking...
+                                        </span>
                                     </button>
                                 </div>
                             </form>
@@ -93,6 +109,9 @@
                                 {% if isCorrect %}
                                     <i class="fas fa-check-circle fa-5x text-success"></i>
                                     <h2 class="text-success mt-3">Bravo ! Correct answer</h2>
+                                {% elseif previousResult.timeOut is defined and previousResult.timeOut %}
+                                    <i class="fas fa-clock fa-5x text-warning"></i>
+                                    <h2 class="text-warning mt-3">Temps écoulé !</h2>
                                 {% else %}
                                     <i class="fas fa-times-circle fa-5x text-danger"></i>
                                     <h2 class="text-danger mt-3">Incorrect answer</h2>
@@ -105,22 +124,20 @@
 
                             <div class="answer-section mb-4">
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="p-3 border rounded">
-                                            <strong class="text-muted">Your answer:</strong>
-                                            <p class="mb-0 mt-2">
-                                                <span class="badge bg-{% if isCorrect %}success{% else %}danger{% endif %} fs-6">
-                                                    {{ reponseUtilisateur }}
-                                                </span>
-                                            </p>
+                                    <div class="col-12 mb-3">
+                                        <div class="p-3 border rounded text-start">
+                                            <strong class="text-muted d-block mb-2">Your answer:</strong>
+                                            <span class="badge bg-{% if isCorrect %}success{% else %}danger{% endif %} fs-6 py-2 px-3 d-block text-wrap">
+                                                {{ reponseUtilisateur }}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <div class="p-3 border rounded">
-                                            <strong class="text-muted">Correct answer :</strong>
-                                            <p class="mb-0 mt-2">
-                                                <span class="badge bg-success fs-6">{{ quiz.reponseCorrecte }}</span>
-                                            </p>
+                                    <div class="col-12 mb-3">
+                                        <div class="p-3 border rounded text-start">
+                                            <strong class="text-muted d-block mb-2">Correct answer:</strong>
+                                            <span class="badge bg-success fs-6 py-2 px-3 d-block text-wrap">
+                                                {{ quiz.reponseCorrecte }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -181,7 +198,170 @@
             background-color: #e7f3ff;
             border-color: #1e3fa3 !important;
         }
+
+        .timer-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        .timer-badge.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: shake 0.5s infinite;
+        }
+
+        .timer-badge.danger {
+            background: linear-gradient(135deg, #fa709a 0%, #ee0979 100%);
+            animation: shake 0.3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
     </style>
+
+    <script>
+        // Text-to-Speech function
+        function speakQuestion() {
+            // Get the question text from the data attribute (cleaner than parsing DOM)
+            const questionElement = document.querySelector('.question-section h4');
+            let questionText = questionElement.textContent.replace(/question/gi, '').trim();
+            
+            const speakBtn = document.getElementById('speakBtn');
+            const speakIcon = document.getElementById('speakIcon');
+            
+            // Check if speech synthesis is supported
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(questionText);
+                utterance.lang = 'fr-FR'; // French
+                utterance.rate = 0.9; // Slightly slower for clarity
+                utterance.pitch = 1;
+                
+                // Change icon while speaking
+                utterance.onstart = function() {
+                    speakIcon.classList.remove('fa-volume-up');
+                    speakIcon.classList.add('fa-volume-up');
+                    speakBtn.classList.add('btn-primary');
+                    speakBtn.classList.remove('btn-outline-primary');
+                };
+                
+                utterance.onend = function() {
+                    speakIcon.classList.remove('fa-volume-up');
+                    speakIcon.classList.add('fa-volume-up');
+                    speakBtn.classList.remove('btn-primary');
+                    speakBtn.classList.add('btn-outline-primary');
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('Votre navigateur ne supporte pas la synthèse vocale.');
+            }
+        }
+        
+        // Start timer immediately, don't wait for DOMContentLoaded
+        (function() {
+            const form = document.getElementById('quizForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const timerBadge = document.getElementById('timerBadge');
+            const timerCountdown = document.getElementById('timerCountdown');
+            
+            // Timer configuration
+            const TIMER_DURATION = 30;
+            let timeLeft = TIMER_DURATION;
+            let timerInterval = null;
+            
+            // Timer function
+            function startTimer() {
+                if (!form || !timerBadge || !timerCountdown) return;
+                
+                // Reset timer to full duration
+                timeLeft = TIMER_DURATION;
+                timerCountdown.textContent = timeLeft;
+                timerBadge.classList.remove('warning', 'danger');
+                
+                timerInterval = setInterval(function() {
+                    timeLeft--;
+                    timerCountdown.textContent = timeLeft;
+                    
+                    // Update timer badge style based on time remaining
+                    if (timeLeft <= 10) {
+                        timerBadge.classList.add('danger');
+                        timerBadge.classList.remove('warning');
+                    } else if (timeLeft <= 20) {
+                        timerBadge.classList.add('warning');
+                    }
+                    
+                    // Time's up - submit the form automatically
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        
+                        // Disable all inputs
+                        const inputs = form.querySelectorAll('input[type="radio"]');
+                        inputs.forEach(function(input) {
+                            input.disabled = true;
+                        });
+                        submitBtn.disabled = true;
+                        
+                        // Auto-submit the form with empty answer (will be marked as incorrect)
+                        form.submit();
+                    }
+                }, 1000);
+            }
+            
+            // Start timer immediately if elements exist
+            if (form && timerBadge && timerCountdown) {
+                startTimer();
+            }
+            
+            // Handle page show event (bfcache)
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                    // Page was loaded from bfcache, restart timer
+                    if (timerInterval) clearInterval(timerInterval);
+                    startTimer();
+                }
+            });
+            
+            if (form && submitBtn) {
+                form.addEventListener('submit', function(e) {
+                    // Clear timer on submit
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                    }
+                    
+                    // Show loading state
+                    const btnContent = submitBtn.querySelector('.btn-content');
+                    const btnLoading = submitBtn.querySelector('.btn-loading');
+                    
+                    if (btnContent && btnLoading) {
+                        btnContent.style.display = 'none';
+                        btnLoading.style.display = 'inline';
+                    }
+                    
+                    // Disable button to prevent double submission
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-75');
+                });
+            }
+        })();
+    </script>
 {% endblock %}
 
 

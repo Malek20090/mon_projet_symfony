@@ -39,7 +39,8 @@ class QuizType extends AbstractType
                 'constraints' => [
                     new Assert\NotBlank(message: 'Les choix sont obligatoires.'),
                     new Callback(function ($value, ExecutionContextInterface $context) {
-                        $decoded = json_decode((string) $value, true);
+                        // $value peut être un array (après transformation) ou un string (avant transformation)
+                        $decoded = is_array($value) ? $value : json_decode((string) $value, true);
                         if ($decoded === null || !is_array($decoded) || count($decoded) < 2) {
                             $context->buildViolation('Le JSON doit être un tableau avec au moins 2 choix.')
                                 ->addViolation();

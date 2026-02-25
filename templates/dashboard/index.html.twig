@@ -26,6 +26,15 @@
     </div>
 
     <div class="row g-4">
+        {# Debug: Show raw data #}
+        {% if app.debug %}
+        <div class="col-12 alert alert-info">
+            <h5>Debug Info:</h5>
+            <p><strong>Monthly Revenues:</strong> {{ dashboardData.monthly_revenues|json_encode }}</p>
+            <p><strong>Expense Categories:</strong> {{ dashboardData.expense_categories|json_encode }}</p>
+        </div>
+        {% endif %}
+        
         {% if focus in ['all', 'revenues'] %}
         <div class="col-12 {{ focus == 'all' ? 'col-lg-7' : 'col-lg-10' }}">
             <div class="card shadow-sm h-100">
@@ -34,7 +43,7 @@
                 </div>
                 <div class="card-body">
                     <div style="height: 360px;">
-                        {{ render_chart(monthlyRevenueChart, {'style': 'height:360px'}) }}
+                        <canvas id="revenueChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -49,7 +58,7 @@
                 </div>
                 <div class="card-body">
                     <div style="height: 360px;">
-                        {{ render_chart(expenseCategoryChart, {'style': 'height:360px'}) }}
+                        <canvas id="expenseChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -57,4 +66,68 @@
         {% endif %}
     </div>
 </section>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Monthly Revenue Chart
+    const revenueData = {{ dashboardData.monthly_revenues|json_encode|raw }};
+    const revenueCtx = document.getElementById('revenueChart');
+    if (revenueCtx && revenueData.length > 0) {
+        new Chart(revenueCtx, {
+            type: 'bar',
+            data: {
+                labels: revenueData.map(r => r.month),
+                datasets: [{
+                    label: 'Monthly Revenues (TND)',
+                    data: revenueData.map(r => r.total),
+                    backgroundColor: 'rgba(13, 110, 253, 0.70)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // Expense Category Chart
+    const expenseData = {{ dashboardData.expense_categories|json_encode|raw }};
+    const expenseCtx = document.getElementById('expenseChart');
+    if (expenseCtx && expenseData.length > 0) {
+        new Chart(expenseCtx, {
+            type: 'pie',
+            data: {
+                labels: expenseData.map(e => e.category),
+                datasets: [{
+                    label: 'Expenses by Category',
+                    data: expenseData.map(e => e.total),
+                    backgroundColor: [
+                        '#0d6efd', '#20c997', '#ffc107', '#dc3545', 
+                        '#6f42c1', '#fd7e14', '#198754', '#0dcaf0'
+                    ],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}Simulation Monte Carlo{% endblock %}
+
+{% block body %}
+<section class="savings-zone">
+  <div class="container">
+    <div class="big-card">
+
+      <h2>🔮 Monte Carlo Simulation</h2>
+      <p><strong>Objectif :</strong> {{ objectif.name }}</p>
+
+      <div style="margin-top:20px; font-size:18px;">
+
+        <p>🎯 <strong>Probability of Success:</strong>
+          <span style="font-weight:bold; color:
+            {% if result.probability > 70 %}
+              #16a34a
+            {% elseif result.probability > 40 %}
+              #f59e0b
+            {% else %}
+              #dc2626
+            {% endif %}
+          ">
+            {{ result.probability }}%
+          </span>
+        </p>
+
+        <p>📈 <strong>Best Case:</strong> ${{ result.bestCase }}</p>
+        <p>📉 <strong>Worst Case:</strong> ${{ result.worstCase }}</p>
+
+      </div>
+
+      <div style="margin-top:20px;">
+        <a href="{{ path('objectif_index') }}" class="ghost-btn">
+          ← Retour
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

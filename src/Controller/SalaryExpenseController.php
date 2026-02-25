@@ -14,7 +14,9 @@ use App\Repository\RevenueRepository;
 use App\Service\ExpenseStatisticsService;
 use App\Service\ExpenseCategorySuggestionService;
 use App\Service\RecurringPatternService;
+use App\Service\FinancialMonitoringService;
 use App\Service\SalaryExpenseAiService;
+use App\Service\FinancialAlertMailerService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -34,7 +36,9 @@ class SalaryExpenseController extends AbstractController
         EntityManagerInterface $entityManager,
         ExpenseStatisticsService $expenseStatisticsService,
         SalaryExpenseAiService $salaryExpenseAiService,
-        RecurringPatternService $recurringPatternService
+        RecurringPatternService $recurringPatternService,
+        FinancialMonitoringService $financialMonitoringService,
+        \App\Service\ExpenseAnomalyMonitorService $expenseAnomalyMonitorService
     ): Response {
         $user = $this->getUser();
         if (!$user) {
@@ -45,6 +49,20 @@ class SalaryExpenseController extends AbstractController
         if (!preg_match('/^\d{4}\-(0[1-9]|1[0-2])$/', $selectedMonth)) {
             $selectedMonth = (new \DateTime())->format('Y-m');
         }
+        $totalsMonthRevenueRaw = (string) $request->query->get('totals_month_revenue', 'all');
+        if ($totalsMonthRevenueRaw !== 'all' && !preg_match('/^(0[1-9]|1[0-2])\-\d{4}$/', $totalsMonthRevenueRaw)) {
+            $totalsMonthRevenueRaw = 'all';
+        }
+        $totalsMonthExpenseRaw = (string) $request->query->get('totals_month_expense', 'all');
+        if ($totalsMonthExpenseRaw !== 'all' && !preg_match('/^(0[1-9]|1[0-2])\-\d{4}$/', $totalsMonthExpenseRaw)) {
+            $totalsMonthExpenseRaw = 'all';
+        }
+        $totalsRevenueMonthNormalized = $totalsMonthRevenueRaw === 'all'
+            ? 'all'
+            : ((\DateTimeImmutable::createFromFormat('m-Y', $totalsMonthRevenueRaw) ?: new \DateTimeImmutable())->format('Y-m'));
+        $totalsExpenseMonthNormalized = $totalsMonthExpenseRaw === 'all'
+            ? 'all'
+            : ((\DateTimeImmutable::createFromFormat('m-Y', $totalsMonthExpenseRaw) ?: new \DateTimeImmutable())->format('Y-m'));
 
         $revenues = $revenueRepository->findBy(['user' => $user], ['receivedAt' => 'DESC']);
         $expenses = $expenseRepository->findBy(['user' => $user], ['expenseDate' => 'DESC']);
@@ -81,6 +99,59 @@ class SalaryExpenseController extends AbstractController
         $totalIncome = array_sum(array_map(fn(Revenue $r) => $r->getAmount(), $revenues));
         $totalExpenses = array_sum(array_map(fn(Expense $e) => $e->getAmount(), $expenses));
         $netBalance = $totalIncome - $totalExpenses;
+        $monthlyTotalIncome = $totalsRevenueMonthNormalized === 'all'
+            ? $totalIncome
+            : array_sum(array_map(
+                fn(Revenue $r) => $r->getAmount(),
+                array_filter(
+                    $revenues,
+                    static fn(Revenue $r): bool => $r->getReceivedAt() !== null
+                        && $r->getReceivedAt()->format('Y-m') === $totalsRevenueMonthNormalized
+                )
+            ));
+        $monthlyTotalExpenses = $totalsExpenseMonthNormalized === 'all'
+            ? $totalExpenses
+            : array_sum(array_map(
+                fn(Expense $e) => $e->getAmount(),
+                array_filter(
+                    $expenses,
+                    static fn(Expense $e): bool => $e->getExpenseDate() !== null
+                        && $e->getExpenseDate()->format('Y-m') === $totalsExpenseMonthNormalized
+                )
+            ));
+        $monthlyNetBalance = $monthlyTotalIncome - $monthlyTotalExpenses;
+        $expenseRatio = $totalIncome > 0 ? ($totalExpenses / $totalIncome) : null;
+        $budgetAlert = null;
+        if ($totalIncome > 0 && $expenseRatio !== null && $expenseRatio > 1.0) {
+            $budgetAlert = [
+                'level' => 'critical',
+                'message' => sprintf(
+                    'Critical alert: expenses are %.1f%% of income (%.2f / %.2f TND).',
+                    $expenseRatio * 100,
+                    $totalExpenses,
+                    $totalIncome
+                ),
+            ];
+        } elseif ($totalIncome > 0 && $expenseRatio !== null && $expenseRatio > 0.8) {
+            $budgetAlert = [
+                'level' => 'warning',
+                'message' => sprintf(
+                    'Warning: expenses reached %.1f%% of income (%.2f / %.2f TND).',
+                    $expenseRatio * 100,
+                    $totalExpenses,
+                    $totalIncome
+                ),
+            ];
+        } elseif ($totalIncome <= 0 && $totalExpenses > 0) {
+            $budgetAlert = [
+                'level' => 'critical',
+                'message' => sprintf(
+                    'Critical alert: expenses are %.2f TND while income is %.2f TND.',
+                    $totalExpenses,
+                    $totalIncome
+                ),
+            ];
+        }
 
         $lastRevenueDate = null;
         foreach ($revenues as $revenueItem) {
@@ -258,6 +329,8 @@ class SalaryExpenseController extends AbstractController
             $user->setSoldeTotal($newSolde);
 
             $entityManager->flush();
+            $financialMonitoringService->evaluateAndNotify($user, true);
+            $expenseAnomalyMonitorService->handleNewExpense($expense);
 
             $this->addFlash('success', 'Revenu ajoute et solde mis a jour.');
 
@@ -300,6 +373,7 @@ class SalaryExpenseController extends AbstractController
             $entityManager->persist($transaction);
 
             $entityManager->flush();
+            $financialMonitoringService->evaluateAndNotify($user, true);
 
             $this->addFlash('success', 'Depense ajoutee et solde mis a jour.');
 
@@ -308,6 +382,51 @@ class SalaryExpenseController extends AbstractController
                 'month' => ($expense->getExpenseDate() ?? new \DateTimeImmutable())->format('Y-m'),
             ]);
         }
+        $totalsRevenueMonthsSet = [];
+        $totalsExpenseMonthsSet = [];
+        foreach ($revenues as $revenueItem) {
+            $date = $revenueItem->getReceivedAt();
+            if ($date) {
+                $totalsRevenueMonthsSet[$date->format('m-Y')] = true;
+            }
+        }
+        foreach ($expenses as $expenseItem) {
+            $date = $expenseItem->getExpenseDate();
+            if ($date) {
+                $totalsExpenseMonthsSet[$date->format('m-Y')] = true;
+            }
+        }
+        if (empty($totalsRevenueMonthsSet)) {
+            $totalsRevenueMonthsSet[(new \DateTime())->format('m-Y')] = true;
+        }
+        if (empty($totalsExpenseMonthsSet)) {
+            $totalsExpenseMonthsSet[(new \DateTime())->format('m-Y')] = true;
+        }
+        $totalsRevenueMonths = array_keys($totalsRevenueMonthsSet);
+        $totalsExpenseMonths = array_keys($totalsExpenseMonthsSet);
+        usort($totalsRevenueMonths, static function (string $a, string $b): int {
+            $aDate = \DateTimeImmutable::createFromFormat('m-Y', $a);
+            $bDate = \DateTimeImmutable::createFromFormat('m-Y', $b);
+            if (!$aDate || !$bDate) {
+                return strcmp($b, $a);
+            }
+            return $bDate <=> $aDate;
+        });
+        usort($totalsExpenseMonths, static function (string $a, string $b): int {
+            $aDate = \DateTimeImmutable::createFromFormat('m-Y', $a);
+            $bDate = \DateTimeImmutable::createFromFormat('m-Y', $b);
+            if (!$aDate || !$bDate) {
+                return strcmp($b, $a);
+            }
+            return $bDate <=> $aDate;
+        });
+
+        $anomalousExpenseIds = [];
+        foreach ($expenses as $expenseItem) {
+            if ($expenseAnomalyMonitorService->isAnomalousExpense($expenseItem)) {
+                $anomalousExpenseIds[] = $expenseItem->getId();
+            }
+        }
 
         return $this->render('salary_expense/index.html.twig', [
             'revenues' => $revenues,
@@ -315,14 +434,23 @@ class SalaryExpenseController extends AbstractController
             'totalIncome' => $totalIncome,
             'totalExpenses' => $totalExpenses,
             'netBalance' => $netBalance,
+            'monthlyTotalIncome' => $monthlyTotalIncome,
+            'monthlyTotalExpenses' => $monthlyTotalExpenses,
+            'monthlyNetBalance' => $monthlyNetBalance,
+            'budgetAlert' => $budgetAlert,
             'lastTransactionDate' => $lastTransactionDate,
             'formRevenue' => $formRevenue,
             'formExpense' => $formExpense,
             'selectedMonth' => $selectedMonth,
+            'totalsMonthRevenue' => $totalsMonthRevenueRaw,
+            'totalsMonthExpense' => $totalsMonthExpenseRaw,
+            'totalsRevenueMonths' => $totalsRevenueMonths,
+            'totalsExpenseMonths' => $totalsExpenseMonths,
             'expenseStats' => $expenseStats,
             'monthlyAdvice' => $monthlyAdvice,
             'recurringSuggestions' => $recurringSuggestions,
             'recurringRules' => $recurringRules,
+            'anomalousExpenseIds' => $anomalousExpenseIds,
         ]);
     }
 
@@ -506,6 +634,37 @@ class SalaryExpenseController extends AbstractController
         return $this->redirectToRoute('app_salary_expense_index');
     }
 
+    #[Route('/test-mail', name: 'test_mail', methods: ['GET'])]
+    public function testMail(FinancialAlertMailerService $mailer, \Psr\Log\LoggerInterface $logger): Response
+    {
+        try {
+            $mailer->sendOverspendingAlert(1000.0, 1200.0);
+            $mailer->sendMonthlySummary(1000.0, 1200.0, -200.0);
+            $this->addFlash('success', 'Test emails sent. Check your inbox/spam.');
+        } catch (\Throwable $exception) {
+            $logger->error('Test mail failed.', [
+                'exception' => $exception->getMessage(),
+            ]);
+            $this->addFlash('error', 'Test mail failed: ' . $exception->getMessage());
+        }
+
+        return $this->redirectToRoute('app_salary_expense_index');
+    }
+
+    #[Route('/reset-mail-cache', name: 'reset_mail_cache', methods: ['GET'])]
+    public function resetMailCache(FinancialMonitoringService $monitoringService): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $monitoringService->clearAlertCache($user);
+        $this->addFlash('success', 'Mail cache cleared. Alerts can be sent again.');
+
+        return $this->redirectToRoute('app_salary_expense_index');
+    }
+
     #[Route('/expense/suggest-category', name: 'expense_suggest_category', methods: ['GET'])]
     public function suggestExpenseCategory(
         Request $request,
@@ -518,7 +677,8 @@ class SalaryExpenseController extends AbstractController
 
         $description = (string) $request->query->get('description', '');
         $amountRaw = (string) $request->query->get('amount', '');
-        $amount = is_numeric($amountRaw) ? (float) $amountRaw : null;
+        $normalizedAmount = str_replace(',', '.', trim($amountRaw));
+        $amount = is_numeric($normalizedAmount) ? (float) $normalizedAmount : null;
 
         $suggestion = $suggestionService->suggest($user, $description, $amount);
 

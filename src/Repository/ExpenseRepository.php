@@ -181,4 +181,52 @@ class ExpenseRepository extends ServiceEntityRepository
 
         return $share > 0.40 ? $topCategory : null;
     }
+
+    /**
+     * Return statistical metrics for expense amounts.
+     *
+     * @return array{average: float, stddev: float, count: int}
+     */
+    public function getExpenseStats(?User $user = null, ?string $category = null, ?int $excludeId = null): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = <<<SQL
+            SELECT
+                AVG(e.amount) AS avg_amount,
+                AVG(e.amount * e.amount) AS avg_sq_amount,
+                COUNT(*) AS cnt
+            FROM expense e
+            WHERE 1 = 1
+        SQL;
+
+        $params = [];
+        if ($user !== null) {
+            $sql .= ' AND e.user_id = :userId';
+            $params['userId'] = $user->getId();
+        }
+        if ($category !== null && trim($category) !== '') {
+            $sql .= ' AND e.category = :category';
+            $params['category'] = $category;
+        }
+        if ($excludeId !== null) {
+            $sql .= ' AND e.id <> :excludeId';
+            $params['excludeId'] = $excludeId;
+        }
+
+        $row = $conn->executeQuery($sql, $params)->fetchAssociative();
+        if (!$row) {
+            return ['average' => 0.0, 'stddev' => 0.0, 'count' => 0];
+        }
+
+        $avg = (float) ($row['avg_amount'] ?? 0.0);
+        $avgSq = (float) ($row['avg_sq_amount'] ?? 0.0);
+        $count = (int) ($row['cnt'] ?? 0);
+
+        // Variance = E[x^2] - (E[x])^2. Clamp to avoid negatives from floating error.
+        $variance = max(0.0, $avgSq - ($avg * $avg));
+        $stddev = sqrt($variance);
+
+        return ['average' => $avg, 'stddev' => $stddev, 'count' => $count];
+    }
 }

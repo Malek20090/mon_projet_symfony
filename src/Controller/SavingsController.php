@@ -10,7 +10,9 @@ use App\Service\SavingsPdfService;
 use App\Service\SavingsAssistantService;
 use App\Service\SavingsGoalStatsService;
 use App\Service\SavingsStatsService;
-use App\Service\SavingsWhatIfAiService;
+use App\Service\GoalWhatIfService;
+use App\Service\GoalWhatIfAdvisor;
+use App\Service\WhatIfAiNarratorService;
 use Doctrine\DBAL\Connection;
 use Knp\Component\Pager\PaginatorInterface;
 use RichId\CsvGeneratorBundle\Configuration\CsvGeneratorConfiguration;
@@ -1097,211 +1099,134 @@ class SavingsController extends AbstractController
         string $runId = ''
     ): string
     {
-        $monthsText = $result['monthsToFinish'] === null
-            ? 'not computable'
-            : ($result['monthsToFinish'] . ' month(s)');
+        $selectedGoalName = (string) ($scenario['selectedGoalName'] ?? 'selected goal');
+        $finishDate = (string) ($result['projectedFinishDate'] ?? 'n/a');
+        $riskLevel = strtoupper((string) ($result['riskLevel'] ?? 'UNKNOWN'));
+        $riskGoals = (int) ($result['goalsAtRisk'] ?? 0);
+        $feasibilityScore = (float) ($result['feasibilityScore'] ?? 0.0);
+        $stressIndex = (float) ($result['stressIndex'] ?? 0.0);
+        $accGain = (float) ($result['accelerationGainMonths'] ?? 0.0);
+        $requiredAdjustment = (float) ($result['requiredAdjustmentTnd'] ?? 0.0);
+        $overcommit = (bool) ($result['overcommitmentFlag'] ?? false);
+        $recommendedMonthly = (float) ($result['recommendedMonthly'] ?? 0.0);
+        $monthlyNow = (float) ($scenario['monthlyDeposit'] ?? 0.0);
+        $remaining = (float) ($result['remainingAfterNow'] ?? 0.0);
+        $net30d = (float) ($history['net30d'] ?? 0.0);
+        $monthsText = $result['monthsToFinish'] === null ? 'n/a' : ((int) $result['monthsToFinish'] . ' month(s)');
+
+        $toneHeader = "Based on current projections:";
+        if ($stressIndex >= 70.0) {
+            $toneHeader = "Based on current projections, this configuration is fragile:";
+        } elseif ($feasibilityScore < 60.0) {
+            $toneHeader = "Based on current projections, this scenario is under-realistic:";
+        } elseif ($accGain >= 3.0) {
+            $toneHeader = "Based on current projections, this scenario is a strong optimization:";
+        }
+
+        $bestAlt = null;
+        foreach ($alternatives as $alt) {
+            if (($alt['monthsToFinish'] ?? null) === null) {
+                continue;
+            }
+            if ($bestAlt === null || (int) ($alt['goalsAtRisk'] ?? 999) < (int) ($bestAlt['goalsAtRisk'] ?? 999)) {
+                $bestAlt = $alt;
+                continue;
+            }
+            if ((int) ($alt['goalsAtRisk'] ?? 999) === (int) ($bestAlt['goalsAtRisk'] ?? 999)
+                && (int) ($alt['monthsToFinish'] ?? 999) < (int) ($bestAlt['monthsToFinish'] ?? 999)) {
+                $bestAlt = $alt;
+            }
+        }
+
+        $topCut = null;
+        if (!empty($expenseByCategory)) {
+            $row = $expenseByCategory[0];
+            if (is_array($row)) {
+                $cat = (string) ($row['category'] ?? 'Other');
+                $amt = (float) ($row['total'] ?? 0.0);
+                $topCut = ['category' => $cat, 'monthly' => round($amt * 0.12, 2)];
+            }
+        }
 
         $lines = [];
-        $personaLabel = match ($persona) {
-            'conservative' => 'Conservative Mode',
-            'aggressive' => 'Aggressive Growth Mode',
-            default => 'Balanced Mode',
-        };
-
-        $lines[] = "Strategic Persona: " . $personaLabel;
-        $lines[] = "Executive Summary:";
+        $lines[] = "Executive Insight:";
+        $lines[] = $toneHeader;
         $lines[] = sprintf(
-            "- %.2f TND still needed, projected completion in %s (risk goals: %d).",
-            (float) ($result['remainingAfterNow'] ?? 0.0),
-            $monthsText,
-            (int) ($result['goalsAtRisk'] ?? 0)
+            "- Goal \"%s\": finish date %s, risk level %s, feasibility %.1f/100.",
+            $selectedGoalName,
+            $finishDate,
+            $riskLevel,
+            $feasibilityScore
+        );
+        $lines[] = sprintf(
+            "- Remaining %.2f TND, monthly deposit %.2f TND, stress index %.1f/100.",
+            $remaining,
+            $monthlyNow,
+            $stressIndex
         );
 
-        $net30d = (float) ($history['net30d'] ?? 0.0);
+        $lines[] = "Quantified Improvement Path:";
         $lines[] = sprintf(
-            "- Last 30 days net cashflow = %.2f TND, current monthly plan = %.0f TND.",
-            $net30d
-            ,
-            (float) ($scenario['monthlyDeposit'] ?? 0.0)
+            "- Acceleration gain: %+.1f month(s). Required adjustment: %+.2f TND/month.",
+            $accGain,
+            $requiredAdjustment
         );
-
-        $best = null;
-        if (!empty($alternatives)) {
-            foreach ($alternatives as $alt) {
-                if (($alt['monthsToFinish'] ?? null) === null) {
-                    continue;
-                }
-                if (($alt['goalsAtRisk'] ?? 0) > 0) {
-                    continue;
-                }
-                if ($best === null || (float) $alt['monthlyDeposit'] < (float) $best['monthlyDeposit']) {
-                    $best = $alt;
-                }
-            }
-        }
-
-        if ($best === null && !empty($alternatives)) {
-            foreach ($alternatives as $alt) {
-                if (($alt['monthsToFinish'] ?? null) === null) {
-                    continue;
-                }
-                if ($best === null || (int) $alt['monthsToFinish'] < (int) $best['monthsToFinish']) {
-                    $best = $alt;
-                }
-            }
-        }
-
-        $monthly = max(0.0, (float) ($scenario['monthlyDeposit'] ?? 0.0));
-        $monthlyNeed12 = round(max(0.0, (float) ($result['remainingAfterNow'] ?? 0.0)) / 12.0, 2);
-        $monthlyGap = round(max(0.0, $monthlyNeed12 - $monthly), 2);
-        $lens = $this->pickVariant(['speed', 'risk', 'cashflow']);
-
-        $cutIdeas = [];
-        foreach (array_slice($expenseByCategory, 0, 3) as $row) {
-            $cat = (string) ($row['category'] ?? 'Other');
-            $total = max(0.0, (float) ($row['total'] ?? 0.0));
-            if ($total <= 0.0) {
-                continue;
-            }
-            $rate = $this->pickVariant([0.12, 0.15, 0.18, 0.20]);
-            $cutIdeas[] = [
-                'category' => $cat,
-                'monthly' => round($total * (float) $rate, 2),
-            ];
-        }
-
-        $incomeIdeas = [];
-        foreach (array_slice($revenueByType, 0, 2) as $row) {
-            $type = (string) ($row['type'] ?? 'income');
-            $total = max(0.0, (float) ($row['total'] ?? 0.0));
-            if ($total <= 0.0) {
-                continue;
-            }
-            $rate = $this->pickVariant([0.10, 0.12, 0.15]);
-            $incomeIdeas[] = [
-                'type' => $type,
-                'monthly' => round($total * (float) $rate, 2),
-            ];
-        }
-
-        $extraFromCuts = 0.0;
-        foreach ($cutIdeas as $c) {
-            $extraFromCuts += (float) ($c['monthly'] ?? 0.0);
-        }
-        $extraFromIncome = 0.0;
-        foreach ($incomeIdeas as $i) {
-            $extraFromIncome += (float) ($i['monthly'] ?? 0.0);
-        }
-        $extraTotal = round($extraFromCuts + $extraFromIncome, 2);
-
-        $lines[] = "Conflict Analysis:";
-        $lines[] = '- ' . (string) ($conflictAnalysis['summary'] ?? 'No conflict analysis available.');
-        foreach (array_slice((array) ($conflictAnalysis['scenarios'] ?? []), 0, 3) as $s) {
-            $m = $s['months'] === null ? 'n/a' : ((int) $s['months'] . 'm');
+        if ($recommendedMonthly > 0.0) {
             $lines[] = sprintf(
-                "- Scenario %s | %s | Result: %s, risk %d",
-                (string) ($s['code'] ?? '?'),
-                (string) ($s['drop'] ?? ''),
-                $m,
-                (int) ($s['riskGoals'] ?? 0)
+                "- Engine target monthly deposit: %.2f TND (current %.2f TND).",
+                $recommendedMonthly,
+                $monthlyNow
+            );
+        }
+        if ($bestAlt !== null) {
+            $lines[] = sprintf(
+                "- Best tested option: %.0f TND/month -> %s, risk %d.",
+                (float) ($bestAlt['monthlyDeposit'] ?? 0.0),
+                ($bestAlt['monthsToFinish'] ?? null) === null ? 'n/a' : ((int) $bestAlt['monthsToFinish'] . ' month(s)'),
+                (int) ($bestAlt['goalsAtRisk'] ?? 0)
             );
         }
 
-        $lines[] = "Best Plan:";
-        if ($best !== null) {
+        $lines[] = "Risk Interpretation:";
+        $lines[] = sprintf(
+            "- Deadline risk count: %d. Overcommitment flag: %s.",
+            $riskGoals,
+            $overcommit ? 'ON' : 'OFF'
+        );
+        if ($overcommit) {
             $lines[] = sprintf(
-                "- Base target: %.0f TND/month (projection %d months, risk goals: %d).",
-                (float) $best['monthlyDeposit'],
-                (int) $best['monthsToFinish'],
-                (int) $best['goalsAtRisk']
+                "- Monthly plan exceeds recent net cashflow (net30d %.2f TND). Execution risk is elevated.",
+                $net30d
+            );
+        } elseif ($stressIndex < 35.0) {
+            $lines[] = "- Execution pressure is controlled; timeline stability is acceptable.";
+        } else {
+            $lines[] = "- Execution pressure is moderate; keep weekly tracking strict.";
+        }
+
+        $lines[] = "Strategic Action:";
+        if ($requiredAdjustment > 0) {
+            $lines[] = sprintf(
+                "- Increase monthly contribution by %.2f TND to align with engine target.",
+                $requiredAdjustment
+            );
+        } elseif ($requiredAdjustment < 0) {
+            $lines[] = sprintf(
+                "- You can reduce monthly contribution by %.2f TND and keep the current timeline.",
+                abs($requiredAdjustment)
             );
         } else {
-            $lines[] = "- Base target: increase monthly deposit in steps of +300 TND until risk starts dropping.";
+            $lines[] = "- Keep current monthly contribution; no structural adjustment required.";
         }
-
-        if ($monthlyGap > 0) {
+        if ($topCut !== null) {
             $lines[] = sprintf(
-                "- Gap to 12-month objective: +%.0f TND/month needed (target %.0f TND/month).",
-                $monthlyGap,
-                $monthlyNeed12
-            );
-        }
-
-        if (!empty($cutIdeas)) {
-            $cutParts = [];
-            foreach (array_slice($cutIdeas, 0, 2) as $c) {
-                $cutParts[] = sprintf("%s: save ~%.0f TND/mo", $c['category'], $c['monthly']);
-            }
-            $lines[] = "- Reduce spend: " . implode(' | ', $cutParts) . '.';
-        } else {
-            $lines[] = "- Reduce spend: cap flexible spending by 10-15% and redirect the saved amount to goals.";
-        }
-
-        if (!empty($incomeIdeas)) {
-            $incParts = [];
-            foreach ($incomeIdeas as $i) {
-                $incParts[] = sprintf("%s: add ~%.0f TND/mo", $i['type'], $i['monthly']);
-            }
-            $lines[] = "- Increase income: " . implode(' | ', $incParts) . '.';
-        } else {
-            $lines[] = "- Increase income: add one side income stream targeting +200 to +400 TND/mo.";
-        }
-
-        $riskGoals = array_values(array_filter($goalTimeline, static fn(array $g): bool => (bool) ($g['atRisk'] ?? false)));
-        if (count($riskGoals) > 0) {
-            $g = $riskGoals[0];
-            $lines[] = sprintf(
-                "- Priority focus: secure goal \"%s\" first (deadline %s).",
-                (string) ($g['name'] ?? 'priority goal'),
-                (string) (($g['deadline'] ?? 'n/a'))
-            );
-        }
-
-        $personaLine = match ($persona) {
-            'conservative' => '- Persona move: lock savings first, protect emergency buffer before risky goals.',
-            'aggressive' => '- Persona move: route up to 70% of new surplus to highest-growth/high-priority goals and accept volatility.',
-            default => '- Persona move: split surplus 60% urgent goals / 40% growth goals.',
-        };
-        $lines[] = $personaLine;
-
-        $lensLine = match ($lens) {
-            'speed' => '- Decision lens (this run): maximize completion speed even if effort is high.',
-            'risk' => '- Decision lens (this run): minimize missed deadlines before optimizing speed.',
-            default => '- Decision lens (this run): keep plan affordable with stable execution.',
-        };
-        $lines[] = $lensLine;
-
-        if ($extraTotal > 0) {
-            $lines[] = sprintf(
-                "Next 30 Days:\n- If you free +%.0f TND/mo, redirect it fully to goals for faster completion.\n- Automate weekly transfer: %.0f TND every week.",
-                $extraTotal,
-                round(($extraTotal + (float) ($scenario['monthlyDeposit'] ?? 0.0)) / 4.0, 2)
+                "- Structural move: cut %s by ~%.2f TND/month and redirect to this goal.",
+                (string) $topCut['category'],
+                (float) $topCut['monthly']
             );
         } else {
-            $lines[] = "Next 30 Days:\n- Track expenses weekly and cut one non-essential category.\n- Add one recurring transfer to goals each week.";
+            $lines[] = "- Structural move: lock one automatic weekly transfer for this goal.";
         }
-
-        if ($brutalTruth) {
-            $lines[] = "Brutal Financial Truth:";
-            $lines[] = sprintf(
-                "- With current net cashflow (%.2f TND), this plan depends on strict discipline and extra income.",
-                (float) ($history['net30d'] ?? 0.0)
-            );
-            $lines[] = sprintf(
-                "- If you do nothing for %d years: 0 goals completed, inflation drag %.2f TND, opportunity cost %.2f TND.",
-                (int) ($stayLazyProjection['years'] ?? 3),
-                (float) ($stayLazyProjection['inflationLoss'] ?? 0.0),
-                (float) ($stayLazyProjection['opportunityCost'] ?? 0.0)
-            );
-        }
-
-        $closing = $this->pickVariant([
-            "Commit to one weekly automation today and review in 14 days.",
-            "Pick one expense cut plus one income boost and start this week.",
-            "Treat this as an execution plan, not a motivation message.",
-            "Apply only two changes this week, then rerun simulation with fresh numbers.",
-        ]);
-        $lines[] = "Execution Note:\n- " . $closing;
 
         return implode("\n", $lines);
     }
@@ -2436,13 +2361,14 @@ class SavingsController extends AbstractController
 
         return $csvGenerator->streamResponse($configuration, 'savings_transactions');
     }
-
     #[Route('/savings/what-if', name: 'app_savings_what_if', methods: ['POST'])]
     public function whatIf(
         Connection $conn,
         Security $security,
         Request $request,
-        SavingsWhatIfAiService $aiService
+        GoalWhatIfService $goalWhatIfService,
+        GoalWhatIfAdvisor $goalWhatIfAdvisor,
+        WhatIfAiNarratorService $whatIfAiNarratorService
     ): JsonResponse {
         $userId = $this->resolveUserId($conn, $security, $request);
         $accPack = $this->getOrCreateCurrentAccount($conn, $userId);
@@ -2453,372 +2379,174 @@ class SavingsController extends AbstractController
             $payload = $request->request->all();
         }
 
-        $monthlyDeposit = max(0.0, $this->safeFloat($payload['monthlyDeposit'] ?? 0));
-        $oneTimeDeposit = max(0.0, $this->safeFloat($payload['oneTimeDeposit'] ?? 0));
-        $persona = strtolower(trim((string) ($payload['persona'] ?? 'balanced')));
-        if (!in_array($persona, ['conservative', 'balanced', 'aggressive'], true)) {
-            $persona = 'balanced';
-        }
-        $brutalTruth = filter_var($payload['brutalTruth'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $stayLazyMode = filter_var($payload['stayLazyMode'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $runId = (string) ($payload['runId'] ?? '');
-
-        if ($stayLazyMode) {
-            $monthlyDeposit = 0.0;
-            $oneTimeDeposit = 0.0;
+        $selectedGoalId = max(0, $this->safeInt($payload['selected_goal_id'] ?? ($payload['selectedGoalId'] ?? 0)));
+        $scenarioType = strtolower(trim((string) ($payload['scenario_type'] ?? ($payload['scenarioType'] ?? 'deposit_adjustment'))));
+        if (!in_array($scenarioType, ['deposit_adjustment', 'deadline_adjustment', 'target_adjustment'], true)) {
+            $scenarioType = 'deposit_adjustment';
         }
 
-        if (!$stayLazyMode && $monthlyDeposit <= 0 && $oneTimeDeposit <= 0) {
-            return new JsonResponse([
-                'ok' => false,
-                'message' => 'Please provide a monthly or one-time amount greater than 0.',
-            ], 422);
+        $monthlyDeposit = max(0.0, $this->safeFloat($payload['monthly_deposit'] ?? ($payload['monthlyDeposit'] ?? 0)));
+        $oneTimeDeposit = max(0.0, $this->safeFloat($payload['one_time_deposit'] ?? ($payload['oneTimeDeposit'] ?? 0)));
+        $deadlineAdjustmentMonths = (int) max(-24, min(24, $this->safeInt($payload['deadline_adjustment_months'] ?? ($payload['deadlineAdjustmentMonths'] ?? 0))));
+        $targetAdjustmentAmount = (float) max(-1000000.0, min(1000000.0, $this->safeFloat($payload['target_adjustment_amount'] ?? ($payload['targetAdjustmentAmount'] ?? 0))));
+        $baselineMonthlyDeposit = max(0.0, $this->safeFloat($payload['baseline_monthly_deposit'] ?? ($payload['baselineMonthlyDeposit'] ?? $monthlyDeposit)));
+
+        if ((int) $accPack['accId'] <= 0) {
+            return new JsonResponse(['ok' => false, 'message' => 'No savings account found.'], 422);
         }
 
-        $goals = [];
-        if ((int) $accPack['accId'] > 0) {
-            $goals = $conn->fetchAllAssociative(
-                "SELECT id, nom, montant_cible, montant_actuel, date_limite, priorite
-                 FROM financial_goal
-                 WHERE `$goalAccCol` = :acc
-                 ORDER BY priorite ASC, date_limite ASC",
-                ['acc' => (int) $accPack['accId']]
-            );
+        $goal = $conn->fetchAssociative(
+            "SELECT id, nom, montant_cible, montant_actuel, date_limite
+             FROM financial_goal
+             WHERE id = :gid AND `$goalAccCol` = :acc
+             LIMIT 1",
+            ['gid' => $selectedGoalId, 'acc' => (int) $accPack['accId']]
+        );
+        if (!$goal) {
+            return new JsonResponse(['ok' => false, 'message' => 'Selected goal not found.'], 422);
         }
 
-        $balance = $this->safeFloat(($accPack['currentAccount'][$accPack['accBalanceCol']] ?? 0));
-        $goalRows = [];
-        $totalRemaining = 0.0;
+        $goalName = (string) ($goal['nom'] ?? 'Goal');
+        $currentSaved = max(0.0, $this->safeFloat($goal['montant_actuel'] ?? 0));
+        $baseTarget = max(0.0, $this->safeFloat($goal['montant_cible'] ?? 0));
+        $baseDeadline = isset($goal['date_limite']) && (string) $goal['date_limite'] !== '' ? (string) $goal['date_limite'] : null;
+        $todayDate = (new \DateTimeImmutable('today'))->format('Y-m-d');
 
-        foreach ($goals as $g) {
-            $target = max(0.0, $this->safeFloat($g['montant_cible'] ?? 0));
-            $current = max(0.0, $this->safeFloat($g['montant_actuel'] ?? 0));
-            $remaining = max(0.0, $target - $current);
-            $totalRemaining += $remaining;
+        $scenarioTarget = $baseTarget;
+        $scenarioDeadline = $baseDeadline;
+        $scenarioNotes = [];
 
-            $goalRows[] = [
-                'id' => (int) ($g['id'] ?? 0),
-                'name' => (string) ($g['nom'] ?? 'Goal'),
-                'priority' => (int) ($g['priorite'] ?? 3),
-                'target' => round($target, 2),
-                'current' => round($current, 2),
-                'remaining' => round($remaining, 2),
-                'deadline' => $g['date_limite'] ? (string) $g['date_limite'] : null,
-            ];
-        }
-
-        $income30d = 0.0;
-        $expense30d = 0.0;
-        $savingsInflow30d = 0.0;
-        $recentTransactions = [];
-        $expenseByCategory = [];
-        $revenueByType = [];
-
-        try {
-            $income30d = (float) $conn->fetchOne(
-                "SELECT COALESCE(SUM(amount), 0)
-                 FROM revenue
-                 WHERE user_id = :uid
-                   AND received_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)",
-                ['uid' => $userId]
-            );
-        } catch (\Throwable $e) {
-        }
-
-        try {
-            $expense30d = (float) $conn->fetchOne(
-                "SELECT COALESCE(SUM(amount), 0)
-                 FROM expense
-                 WHERE user_id = :uid
-                   AND expense_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)",
-                ['uid' => $userId]
-            );
-        } catch (\Throwable $e) {
-        }
-
-        try {
-            $expenseByCategory = $conn->fetchAllAssociative(
-                "SELECT COALESCE(NULLIF(TRIM(category), ''), 'Other') AS category, COALESCE(SUM(amount), 0) AS total
-                 FROM expense
-                 WHERE user_id = :uid
-                   AND expense_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-                 GROUP BY category
-                 ORDER BY total DESC
-                 LIMIT 6",
-                ['uid' => $userId]
-            );
-        } catch (\Throwable $e) {
-            $expenseByCategory = [];
-        }
-
-        try {
-            $revenueByType = $conn->fetchAllAssociative(
-                "SELECT COALESCE(NULLIF(TRIM(type), ''), 'income') AS type, COALESCE(SUM(amount), 0) AS total
-                 FROM revenue
-                 WHERE user_id = :uid
-                   AND received_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-                 GROUP BY type
-                 ORDER BY total DESC
-                 LIMIT 4",
-                ['uid' => $userId]
-            );
-        } catch (\Throwable $e) {
-            $revenueByType = [];
-        }
-
-        try {
-            $savingsInflow30d = (float) $conn->fetchOne(
-                "SELECT COALESCE(SUM(montant), 0)
-                 FROM `transaction`
-                 WHERE user_id = :uid
-                   AND module_source = :src
-                   AND type IN ('EPARGNE', 'GOAL_CONTRIB')
-                   AND DATE(`date`) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)",
-                ['uid' => $userId, 'src' => 'SAVINGS']
-            );
-        } catch (\Throwable $e) {
-        }
-
-        try {
-            $recentTransactions = $conn->fetchAllAssociative(
-                "SELECT type, montant, `date`, description
-                 FROM `transaction`
-                 WHERE user_id = :uid
-                 ORDER BY `date` DESC
-                 LIMIT 8",
-                ['uid' => $userId]
-            );
-        } catch (\Throwable $e) {
-            $recentTransactions = [];
-        }
-
-        $availableNow = $balance + $oneTimeDeposit;
-        $remainingAfterNow = max(0.0, $totalRemaining - $availableNow);
-        $timelinePack = $this->simulateGoalTimeline($goalRows, $balance, $oneTimeDeposit, $monthlyDeposit);
-        $monthsToFinish = $timelinePack['monthsToFinish'];
-        $projectedFinishDate = $timelinePack['projectedFinishDate'];
-        $goalsAtRisk = (int) ($timelinePack['goalsAtRisk'] ?? 0);
-        $goalTimeline = $timelinePack['timeline'] ?? [];
-        $firstAtRisk = $timelinePack['firstAtRisk'] ?? null;
-
-        $monthlyCandidates = [];
-        if ($monthlyDeposit > 0) {
-            $monthlyCandidates = [
-                max(50.0, $this->roundToStep($monthlyDeposit * 0.6)),
-                max(50.0, $this->roundToStep($monthlyDeposit)),
-                max(50.0, $this->roundToStep($monthlyDeposit * 1.4)),
-            ];
+        if ($scenarioType === 'deadline_adjustment' && $baseDeadline !== null) {
+            try {
+                $scenarioDeadline = (new \DateTimeImmutable($baseDeadline))
+                    ->modify(($deadlineAdjustmentMonths >= 0 ? '+' : '') . $deadlineAdjustmentMonths . ' month')
+                    ->format('Y-m-d');
+                $scenarioNotes[] = sprintf('Deadline adjusted by %d month(s).', $deadlineAdjustmentMonths);
+            } catch (\Throwable $e) {
+                $scenarioNotes[] = 'Deadline adjustment skipped (invalid deadline date).';
+            }
+        } elseif ($scenarioType === 'target_adjustment') {
+            $scenarioTarget = max($currentSaved, round($baseTarget + $targetAdjustmentAmount, 2));
+            $scenarioNotes[] = sprintf('Target adjusted by %+.2f TND.', $targetAdjustmentAmount);
         } else {
-            $monthlyCandidates = [200.0, 500.0, 900.0];
-        }
-        $monthlyCandidates = array_values(array_unique(array_map(static fn($x) => (float) $x, $monthlyCandidates)));
-        sort($monthlyCandidates);
-
-        if ($persona === 'conservative') {
-            $monthlyCandidates[] = max(100.0, $this->roundToStep($monthlyDeposit * 0.85));
-        } elseif ($persona === 'aggressive') {
-            $monthlyCandidates[] = max(100.0, $this->roundToStep($monthlyDeposit * 1.8));
-        }
-        $monthlyCandidates = array_values(array_unique(array_map(static fn($x) => (float) $x, $monthlyCandidates)));
-        sort($monthlyCandidates);
-
-        $alternatives = [];
-        foreach ($monthlyCandidates as $candidateMonthly) {
-            $altPack = $this->simulateGoalTimeline($goalRows, $balance, $oneTimeDeposit, $candidateMonthly);
-            $alternatives[] = [
-                'monthlyDeposit' => round($candidateMonthly, 2),
-                'monthsToFinish' => $altPack['monthsToFinish'],
-                'projectedFinishDate' => $altPack['projectedFinishDate'],
-                'goalsAtRisk' => (int) ($altPack['goalsAtRisk'] ?? 0),
-            ];
+            $scenarioNotes[] = 'Deposit adjustment scenario applied.';
         }
 
-        $recommendedMonthly = null;
-        $recommendedMonthlyType = null; // safe | best_effort
-        $recommendedRiskAtMonthly = null;
-        $recommendedMonthsAtMonthly = null;
+        $baselineMetrics = $goalWhatIfService->simulate([
+            'current_saved' => $currentSaved,
+            'target_amount' => $baseTarget,
+            'deadline_date' => $baseDeadline,
+            'today_date' => $todayDate,
+            'monthly_deposit' => $baselineMonthlyDeposit,
+            'one_time_deposit' => 0.0,
+        ]);
 
-        foreach ($alternatives as $alt) {
-            if ($alt['monthsToFinish'] === null) {
-                continue;
-            }
-            if ((int) $alt['goalsAtRisk'] !== 0) {
-                continue;
-            }
-            if ($recommendedMonthly === null || (float) $alt['monthlyDeposit'] < $recommendedMonthly) {
-                $recommendedMonthly = (float) $alt['monthlyDeposit'];
-                $recommendedMonthlyType = 'safe';
-                $recommendedRiskAtMonthly = (int) ($alt['goalsAtRisk'] ?? 0);
-                $recommendedMonthsAtMonthly = (int) ($alt['monthsToFinish'] ?? 0);
-            }
+        $metrics = $goalWhatIfService->simulate([
+            'current_saved' => $currentSaved,
+            'target_amount' => $scenarioTarget,
+            'deadline_date' => $scenarioDeadline,
+            'today_date' => $todayDate,
+            'monthly_deposit' => $monthlyDeposit,
+            'one_time_deposit' => $oneTimeDeposit,
+        ]);
+
+        $baselineMonths = $baselineMetrics['months_to_finish'];
+        $scenarioMonths = $metrics['months_to_finish'];
+        $deltaMonths = null;
+        if (is_int($baselineMonths) && is_int($scenarioMonths)) {
+            $deltaMonths = $baselineMonths - $scenarioMonths;
         }
 
-        // If no fully safe scenario exists, provide best-effort recommendation
-        // based on lowest risk, then fastest completion, then lowest monthly effort.
-        if ($recommendedMonthly === null) {
-            $bestEffort = null;
-            foreach ($alternatives as $alt) {
-                if ($alt['monthsToFinish'] === null) {
-                    continue;
-                }
-                if ($bestEffort === null) {
-                    $bestEffort = $alt;
-                    continue;
-                }
+        $requiredAdjustment = round((float) ($metrics['required_monthly_to_hit_deadline'] ?? 0.0) - $monthlyDeposit, 2);
+        $metrics['required_adjustment_tnd'] = $requiredAdjustment;
+        $metrics['delta_months'] = $deltaMonths;
+        $metrics['delta_required_adjustment_tnd'] = round((float) ($metrics['required_monthly_to_hit_deadline'] ?? 0.0) - (float) ($baselineMetrics['required_monthly_to_hit_deadline'] ?? 0.0), 2);
+        $metrics['goal_name'] = $goalName;
+        $metrics['target_amount'] = $scenarioTarget;
+        $metrics['current_saved'] = $currentSaved;
+        $metrics['deadline_date'] = $scenarioDeadline;
 
-                $riskCur = (int) ($alt['goalsAtRisk'] ?? 9999);
-                $riskBest = (int) ($bestEffort['goalsAtRisk'] ?? 9999);
-                if ($riskCur < $riskBest) {
-                    $bestEffort = $alt;
-                    continue;
-                }
-                if ($riskCur > $riskBest) {
-                    continue;
-                }
-
-                $monthsCur = (int) ($alt['monthsToFinish'] ?? 9999);
-                $monthsBest = (int) ($bestEffort['monthsToFinish'] ?? 9999);
-                if ($monthsCur < $monthsBest) {
-                    $bestEffort = $alt;
-                    continue;
-                }
-                if ($monthsCur > $monthsBest) {
-                    continue;
-                }
-
-                $monthlyCur = (float) ($alt['monthlyDeposit'] ?? 0.0);
-                $monthlyBest = (float) ($bestEffort['monthlyDeposit'] ?? 0.0);
-                if ($monthlyCur < $monthlyBest) {
-                    $bestEffort = $alt;
-                }
-            }
-
-            if ($bestEffort !== null) {
-                $recommendedMonthly = (float) ($bestEffort['monthlyDeposit'] ?? 0.0);
-                $recommendedMonthlyType = 'best_effort';
-                $recommendedRiskAtMonthly = (int) ($bestEffort['goalsAtRisk'] ?? 0);
-                $recommendedMonthsAtMonthly = (int) ($bestEffort['monthsToFinish'] ?? 0);
-            }
-        }
-
-        $feasibility = 'critical';
-        if ($remainingAfterNow <= 0.0) {
-            $feasibility = 'on_track';
-        } elseif ($monthsToFinish !== null && $monthsToFinish <= 12) {
-            $feasibility = 'on_track';
-        } elseif ($monthsToFinish !== null && $monthsToFinish <= 24) {
-            $feasibility = 'warning';
-        }
-
-        $baselineMonthlyNeed = $totalRemaining > 0 ? round($totalRemaining / 12.0, 2) : 0.0;
-        $gapVsBaseline = round($monthlyDeposit - $baselineMonthlyNeed, 2);
-        $net30d = round($income30d - $expense30d, 2);
-        $savingsRate30d = $income30d > 0 ? round(($savingsInflow30d / $income30d) * 100, 2) : null;
-
-        $scenario = [
-            'monthlyDeposit' => round($monthlyDeposit, 2),
-            'oneTimeDeposit' => round($oneTimeDeposit, 2),
-        ];
-
-        $result = [
-            'balanceNow' => round($balance, 2),
-            'totalRemaining' => round($totalRemaining, 2),
-            'remainingAfterNow' => round($remainingAfterNow, 2),
-            'monthsToFinish' => $monthsToFinish,
-            'projectedFinishDate' => $projectedFinishDate,
-            'feasibility' => $feasibility,
-            'baselineMonthlyNeed' => $baselineMonthlyNeed,
-            'gapVsBaseline' => $gapVsBaseline,
-            'goalsCount' => count($goalRows),
-            'goalsAtRisk' => $goalsAtRisk,
-            'recommendedMonthly' => $recommendedMonthly,
-            'recommendedMonthlyType' => $recommendedMonthlyType,
-            'recommendedRiskAtMonthly' => $recommendedRiskAtMonthly,
-            'recommendedMonthsAtMonthly' => $recommendedMonthsAtMonthly,
-            'firstAtRisk' => $firstAtRisk,
-        ];
-
-        $history = [
-            'income30d' => round($income30d, 2),
-            'expense30d' => round($expense30d, 2),
-            'net30d' => $net30d,
-            'savingsInflow30d' => round($savingsInflow30d, 2),
-            'savingsRate30d' => $savingsRate30d,
-        ];
-
-        $conflictAnalysis = $this->buildConflictAnalysis($goalRows, $balance, $oneTimeDeposit, $monthlyDeposit);
-        $stayLazyProjection = $this->buildStayLazyProjection($remainingAfterNow, max(0.0, $monthlyDeposit));
-        $timelineSeries = $this->buildTimelineSeries($remainingAfterNow, max(0.0, $monthlyDeposit), $monthsToFinish);
-
-        $normalizedRecentTx = array_map(static function (array $row): array {
-            return [
-                'type' => (string) ($row['type'] ?? ''),
-                'amount' => round((float) ($row['montant'] ?? 0), 2),
-                'date' => isset($row['date']) ? (string) $row['date'] : null,
-                'description' => isset($row['description']) ? (string) $row['description'] : '',
-            ];
-        }, $recentTransactions);
-
-        $contextForAi = [
-            'module' => 'Savings & Goals What-if',
+        $fallbackAdvice = $goalWhatIfAdvisor->build($metrics, [
+            'goal_name' => $goalName,
+            'today_date' => $todayDate,
+            'current_saved' => $currentSaved,
+            'target_amount' => $scenarioTarget,
+            'deadline_date' => $scenarioDeadline,
+            'monthly_deposit' => $monthlyDeposit,
+            'one_time_deposit' => $oneTimeDeposit,
+            'scenario_type' => $scenarioType,
+        ]);
+        $aiInput = [
+            'goal_name' => $goalName,
             'currency' => 'TND',
-            'userId' => $userId,
-            'persona' => $persona,
-            'brutalTruth' => $brutalTruth,
-            'scenario' => $scenario,
-            'result' => $result,
-            'history' => $history,
-            'goals' => array_slice($goalRows, 0, 10),
-            'goalTimeline' => array_slice($goalTimeline, 0, 10),
-            'alternatives' => $alternatives,
-            'conflictAnalysis' => $conflictAnalysis,
-            'stayLazyProjection' => $stayLazyProjection,
-            'timelineSeries' => $timelineSeries,
-            'expenseByCategory30d' => $expenseByCategory,
-            'revenueByType30d' => $revenueByType,
-            'recentTransactions' => $normalizedRecentTx,
-            'instruction' => 'Use this user data only. Be predictive, strategic, and avoid repeating phrasing.',
+            'scenario_type' => match ($scenarioType) {
+                'deadline_adjustment' => 'Deadline Adjustment',
+                'target_adjustment' => 'Target Adjustment',
+                default => 'Deposit Adjustment',
+            },
+            'metrics' => [
+                'projected_finish_date' => $metrics['projected_finish_date'] ?? null,
+                'risk_level' => $metrics['risk_level'] ?? 'HIGH',
+                'feasibility_score' => (float) ($metrics['feasibility_score'] ?? 0.0),
+                'deadline_confidence' => (float) ($metrics['deadline_confidence'] ?? 0.0),
+                'deadline_gap_months' => (int) ($metrics['deadline_gap_months'] ?? 0),
+                'required_monthly_to_hit_deadline' => (float) ($metrics['required_monthly_to_hit_deadline'] ?? 0.0),
+                'current_monthly' => (float) $monthlyDeposit,
+                'one_time_deposit' => (float) $oneTimeDeposit,
+                'remaining_amount' => (float) ($metrics['remaining_after_now'] ?? 0.0),
+                'delta_months' => $deltaMonths,
+                'required_adjustment_safe' => (float) $requiredAdjustment,
+            ],
         ];
-
-        $aiResult = $aiService->buildAdvice($contextForAi);
-        $aiAdvice = (string) ($aiResult['text'] ?? '');
-        if (($aiResult['ok'] ?? false) !== true || trim($aiAdvice) === '') {
-            $aiAdvice = $this->buildWhatIfFallbackAdvice(
-                $scenario,
-                $result,
-                $history,
-                $alternatives,
-                $expenseByCategory,
-                $revenueByType,
-                $persona,
-                $brutalTruth,
-                $conflictAnalysis,
-                $stayLazyProjection,
-                $goalTimeline,
-                $runId
-            );
-        }
+        $cacheKey = implode('|', [
+            'goal:' . $selectedGoalId,
+            'scenario:' . $scenarioType,
+            'monthly:' . round($monthlyDeposit, 2),
+            'one_time:' . round($oneTimeDeposit, 2),
+            'deadline_adj:' . $deadlineAdjustmentMonths,
+            'target_adj:' . round($targetAdjustmentAmount, 2),
+            'target:' . round($scenarioTarget, 2),
+            'deadline:' . (string) $scenarioDeadline,
+            'remaining:' . round((float) ($metrics['remaining_after_now'] ?? 0.0), 2),
+            'gap:' . (int) ($metrics['deadline_gap_months'] ?? 0),
+        ]);
+        $aiNarration = $whatIfAiNarratorService->narrate($aiInput, $cacheKey);
+        $advice = (($aiNarration['ok'] ?? false) === true && is_array($aiNarration['advice'] ?? null))
+            ? $aiNarration['advice']
+            : $fallbackAdvice;
+        $options = [
+            $advice['best_action'] ?? ['title' => 'Best action', 'details' => 'No suggestion.'],
+            ...array_slice(is_array($advice['alternatives'] ?? null) ? $advice['alternatives'] : [], 0, 2),
+        ];
 
         return new JsonResponse([
             'ok' => true,
-            'scenario' => $scenario,
-            'persona' => $persona,
-            'brutalTruth' => $brutalTruth,
-            'result' => $result,
-            'goals' => $goalRows,
-            'history' => $history,
-            'goalTimeline' => $goalTimeline,
-            'alternatives' => $alternatives,
-            'conflictAnalysis' => $conflictAnalysis,
-            'stayLazyProjection' => $stayLazyProjection,
-            'timelineSeries' => $timelineSeries,
-            'aiAdvice' => $aiAdvice,
-            'aiSource' => ($aiResult['ok'] ?? false) === true ? 'openai' : 'fallback',
-            'aiModel' => $aiResult['model'] ?? null,
-            'aiError' => $aiResult['error'] ?? null,
+            'scenario' => [
+                'type' => $scenarioType,
+                'selected_goal_id' => $selectedGoalId,
+                'selected_goal_name' => $goalName,
+                'monthly_deposit' => round($monthlyDeposit, 2),
+                'one_time_deposit' => round($oneTimeDeposit, 2),
+                'deadline_adjustment_months' => $deadlineAdjustmentMonths,
+                'target_adjustment_amount' => round($targetAdjustmentAmount, 2),
+                'notes' => $scenarioNotes,
+            ],
+            'metrics' => $metrics,
+            'impact_summary' => [
+                'delta_months' => $deltaMonths,
+                'required_adjustment_tnd' => $requiredAdjustment,
+            ],
+            'advice' => $advice,
+            'options' => $options,
+            'advice_source' => ($aiNarration['ok'] ?? false) === true ? 'openai' : 'fallback',
+            'advice_model' => $aiNarration['model'] ?? null,
+            'advice_error' => $aiNarration['error'] ?? null,
+            'details' => [
+                'baseline' => $baselineMetrics,
+                'scenario' => $metrics,
+            ],
         ]);
     }
-
     #[Route('/savings/assistant/suggestions', name: 'app_savings_assistant_suggestions', methods: ['GET'])]
     public function assistantSuggestions(
         Connection $conn,
@@ -2826,9 +2554,7 @@ class SavingsController extends AbstractController
         Request $request,
         SavingsAssistantService $assistantService
     ): JsonResponse {
-        $userId = $this->resolveUserId($conn, $security, $request);
-        $ctx = $this->buildAssistantDbContext($conn, $userId);
-        $suggestions = $assistantService->buildSuggestions($ctx);
+        $suggestions = $assistantService->buildSuggestions([]);
 
         return new JsonResponse([
             'ok' => true,
@@ -2841,8 +2567,7 @@ class SavingsController extends AbstractController
         Connection $conn,
         Security $security,
         Request $request,
-        SavingsAssistantService $assistantService,
-        ValidatorInterface $validator
+        SavingsAssistantService $assistantService
     ): JsonResponse {
         $payload = json_decode((string) $request->getContent(), true);
         if (!is_array($payload)) {
@@ -2865,31 +2590,30 @@ class SavingsController extends AbstractController
         $userId = $this->resolveUserId($conn, $security, $request);
         $accPack = $this->getOrCreateCurrentAccount($conn, $userId);
         $goalAccCol = $this->goalAccountFkColumn($conn);
+        $session = $request->getSession();
+        $state = [];
+        if ($session && $session->has('savings_assistant_state')) {
+            $raw = $session->get('savings_assistant_state');
+            if (is_array($raw)) {
+                $state = $raw;
+            }
+        }
 
-        $actionResult = $this->tryHandleAssistantContribution(
+        $result = $assistantService->handleSavingsGoalsCommand(
             $conn,
             $userId,
             $accPack,
             $goalAccCol,
             $message,
-            $validator
+            $history,
+            $state
         );
-        if ($actionResult !== null) {
-            return new JsonResponse([
-                'ok' => (bool) ($actionResult['ok'] ?? false),
-                'reply' => (string) ($actionResult['reply'] ?? ''),
-                'source' => (string) ($actionResult['source'] ?? 'local-action'),
-                'model' => null,
-                'error' => $actionResult['error'] ?? null,
-                'dbContext' => [
-                    'balanceNow' => (float) ($accPack['currentAccount'][$accPack['accBalanceCol']] ?? 0),
-                    'goalsAtRisk' => 0,
-                ],
-            ], (bool) ($actionResult['ok'] ?? false) ? 200 : 422);
+
+        if ($session) {
+            $session->set('savings_assistant_state', is_array($result['state'] ?? null) ? $result['state'] : []);
         }
 
-        $ctx = $this->buildAssistantDbContext($conn, $userId);
-        $result = $assistantService->chat($ctx, $message, $history);
+        $ctx = $assistantService->buildSavingsGoalsSnapshot($conn, $userId, $accPack, $goalAccCol);
 
         return new JsonResponse([
             'ok' => (bool) ($result['ok'] ?? false),
@@ -2901,7 +2625,7 @@ class SavingsController extends AbstractController
                 'balanceNow' => $ctx['balanceNow'] ?? 0,
                 'goalsAtRisk' => $ctx['goalsAtRisk'] ?? 0,
             ],
-        ]);
+        ], (bool) ($result['ok'] ?? false) ? 200 : 422);
     }
 
     #[Route('/savings/export/pdf', name: 'app_savings_export_pdf', methods: ['GET'])]

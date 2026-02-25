@@ -11,6 +11,7 @@ use App\Repository\CoursRepository;
 use App\Repository\QuizRepository;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,15 +33,22 @@ class AdminController extends AbstractController
     // COURS CRUD
     // =========================
 
-    #[Route('/cours', name: 'admin_cours_index', methods: ['GET'])]
-    public function coursIndex(Request $request, CoursRepository $coursRepository): Response
+#[Route('/cours', name: 'admin_cours_index', methods: ['GET'])]
+    public function coursIndex(Request $request, CoursRepository $coursRepository, PaginatorInterface $paginator): Response
     {
         $search = $request->query->get('q');
         $typeMedia = $request->query->get('type_media');
         $sortBy = $request->query->get('sort', CoursRepository::SORT_TITRE);
         $order = $request->query->get('order', 'ASC');
 
-        $cours = $coursRepository->searchAndSort($search, $typeMedia, $sortBy, $order);
+        $allCours = $coursRepository->searchAndSort($search, $typeMedia, $sortBy, $order);
+
+        // Pagination with KnpPaginator
+        $cours = $paginator->paginate(
+            $allCours,
+            $request->query->getInt('page', 1),
+            10 // Items per page
+        );
 
         return $this->render('admin/cours/index.html.twig', [
             'cours' => $cours,
@@ -116,8 +124,8 @@ class AdminController extends AbstractController
     // QUIZ CRUD
     // =========================
 
-    #[Route('/quiz', name: 'admin_quiz_index', methods: ['GET'])]
-    public function quizIndex(Request $request, QuizRepository $quizRepository, CoursRepository $coursRepository): Response
+#[Route('/quiz', name: 'admin_quiz_index', methods: ['GET'])]
+    public function quizIndex(Request $request, QuizRepository $quizRepository, CoursRepository $coursRepository, PaginatorInterface $paginator): Response
     {
         $search = $request->query->get('q');
         $courseId = $request->query->getInt('cours_id');
@@ -126,8 +134,15 @@ class AdminController extends AbstractController
         $sortBy = $request->query->get('sort', QuizRepository::SORT_QUESTION);
         $order = $request->query->get('order', 'ASC');
 
-        $quizzes = $quizRepository->searchAndSort($search, $courseId, $pointsMin, $pointsMax, $sortBy, $order);
+        $allQuizzes = $quizRepository->searchAndSort($search, $courseId, $pointsMin, $pointsMax, $sortBy, $order);
         $courses = $coursRepository->findBy([], ['titre' => 'ASC']);
+
+        // Pagination with KnpPaginator
+        $quizzes = $paginator->paginate(
+            $allQuizzes,
+            $request->query->getInt('page', 1),
+            10 // Items per page
+        );
 
         return $this->render('admin/quiz/index.html.twig', [
             'quizzes' => $quizzes,

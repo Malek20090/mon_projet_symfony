@@ -1,0 +1,124 @@
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}Certifications | Decide${% endblock %}
+
+{% block body_class %}certification-page{% endblock %}
+
+{% block body %}
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container text-center wrap">
+            <div class="learning-hero-tag">
+                <i class="fas fa-certificate"></i> Certifications Officielles
+            </div>
+            <h1>Obtenez une Certification</h1>
+            <p>Testez vos connaissances et validez vos compétences en finance et crypto.</p>
+            <div class="breadcrumbs">
+                <a href="{{ path('app_home') }}">Home</a> /
+                <span class="active">Certifications</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="container py-5">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="fw-bold">Choisissez votre Certification</h2>
+                <p class="text-muted">Répondez correctement à 70% des questions pour obtenir votre certificat</p>
+            </div>
+        </div>
+
+        <div class="row justify-content-center g-4">
+            {% for type, cert in certifications %}
+                <div class="col-md-6 col-lg-5">
+                    <div class="card certification-card h-100 shadow-lg border-0">
+                        <div class="card-body text-center p-5">
+                            <div class="certification-icon mb-4">
+                                <i class="fas {{ cert.icon }} fa-4x text-{{ cert.color }}"></i>
+                            </div>
+                            <h3 class="card-title fw-bold mb-3">{{ cert.name }}</h3>
+                            <p class="card-text text-muted mb-4">{{ cert.description }}</p>
+                            
+                            <div class="certification-info mb-4">
+                                <div class="d-flex justify-content-center gap-4">
+                                    <div class="text-center">
+                                        <div class="fw-bold fs-4 text-{{ cert.color }}">{{ cert.questions }}</div>
+                                        <small class="text-muted">Questions</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="fw-bold fs-4 text-{{ cert.color }}">{{ cert.passing_score }}%</div>
+                                        <small class="text-muted">Pour valider</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <a href="{{ path('certification_start', {type: type}) }}" class="btn btn-{{ cert.color }} btn-lg rounded-pill px-5">
+                                <i class="fas fa-play me-2"></i> Commencer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Info Section -->
+        <div class="row mt-5">
+            <div class="col-lg-8 mx-auto">
+                <div class="alert alert-info border-0 shadow-sm">
+                    <h5><i class="fas fa-info-circle me-2"></i>Comment ça marche?</h5>
+                    <ol class="mb-0">
+                        <li>Choisissez une certification (Crypto ou Finance)</li>
+                        <li>Répondez aux questions à choix multiples</li>
+                        <li>Obtenez au moins 70% de bonnes réponses pour valider</li>
+                        <li>Téléchargez votre certificat PDF en cas de réussite</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        .certification-card {
+            transition: all 0.3s ease;
+            border-radius: 20px;
+        }
+
+        .certification-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+        }
+
+        .certification-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 100%);
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+        }
+    </style>
+{% endblock %}

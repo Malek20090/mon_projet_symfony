@@ -101,6 +101,7 @@ class RecurringPatternService
     private function detectExpensePatterns(array $expenses): array
     {
         $groups = [];
+        $monthlyCategoryGroups = [];
 
         foreach ($expenses as $expense) {
             $date = $expense->getExpenseDate();
@@ -112,12 +113,26 @@ class RecurringPatternService
                 continue;
             }
 
-            $amountBucket = number_format($amount, 2, '.', '');
+            // Relax amount matching so near-identical repeated charges are grouped together.
+            $amountBucket = number_format(round($amount / 5) * 5, 2, '.', '');
             $category = strtoupper((string) ($expense->getCategory() ?? 'OTHER'));
             $descNorm = $this->normalizeText((string) ($expense->getDescription() ?? ''));
-            $descKey = $descNorm !== '' ? $descNorm : 'no-desc';
+            // Keep only a short semantic prefix to avoid over-splitting by tiny description changes.
+            $descWords = preg_split('/\s+/', $descNorm) ?: [];
+            $descKey = $descNorm !== '' ? implode(' ', array_slice($descWords, 0, 3)) : 'no-desc';
             $key = implode('|', ['EXP', $category, $amountBucket, $descKey]);
             $groups[$key][] = $expense;
+
+            $monthKey = $date->format('Y-m');
+            $monthlyCategoryKey = implode('|', ['EXP_MONTH', $category, $monthKey]);
+            $monthlyCategoryGroups[$monthlyCategoryKey][] = $expense;
+        }
+
+        foreach ($monthlyCategoryGroups as $groupKey => $items) {
+            if (count($items) < 2) {
+                continue;
+            }
+            $groups[$groupKey] = $items;
         }
 
         return $this->buildSuggestionsFromGroups($groups, RecurringTransactionRule::KIND_EXPENSE);
@@ -132,7 +147,8 @@ class RecurringPatternService
         $suggestions = [];
 
         foreach ($groups as $groupKey => $items) {
-            if (count($items) < 3) {
+            $minOccurrences = $kind === RecurringTransactionRule::KIND_EXPENSE ? 2 : 3;
+            if (count($items) < $minOccurrences) {
                 continue;
             }
 
@@ -160,6 +176,13 @@ class RecurringPatternService
 
             $avgInterval = array_sum($intervals) / count($intervals);
             $frequency = $this->classifyFrequency($avgInterval);
+            if (
+                $frequency === null
+                && $kind === RecurringTransactionRule::KIND_EXPENSE
+                && $this->hasTwoOccurrencesInSameMonth($items)
+            ) {
+                $frequency = RecurringTransactionRule::FREQ_MONTHLY;
+            }
             if ($frequency === null) {
                 continue;
             }
@@ -232,6 +255,33 @@ class RecurringPatternService
         }
 
         return $suggestions;
+    }
+
+    /**
+     * @param array<int, Revenue|Expense> $items
+     */
+    private function hasTwoOccurrencesInSameMonth(array $items): bool
+    {
+        $months = [];
+
+        foreach ($items as $item) {
+            if (!$item instanceof Expense) {
+                continue;
+            }
+
+            $date = $item->getExpenseDate();
+            if (!$date) {
+                continue;
+            }
+
+            $monthKey = $date->format('Y-m');
+            $months[$monthKey] = ($months[$monthKey] ?? 0) + 1;
+            if ($months[$monthKey] >= 2) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function classifyFrequency(float $avgIntervalDays): ?string

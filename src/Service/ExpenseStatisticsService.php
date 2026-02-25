@@ -74,9 +74,7 @@ class ExpenseStatisticsService
         }
 
         $currentMonth = $referenceMonth;
-        $previousMonth = \DateTimeImmutable::createFromFormat('Y-m-d', $referenceMonth . '-01')
-            ?->modify('-1 month')
-            ->format('Y-m') ?? (new \DateTimeImmutable('first day of last month'))->format('Y-m');
+        $previousMonth = $this->resolvePreviousMonth($referenceMonth, array_keys($monthlyTotals));
         $currentMonthTotal = (float) ($monthlyTotals[$currentMonth] ?? 0.0);
         $previousMonthTotal = (float) ($monthlyTotals[$previousMonth] ?? 0.0);
 
@@ -112,6 +110,33 @@ class ExpenseStatisticsService
             ],
             'recommendations' => $this->buildRecommendations($months, $evolutionPercent, $averageMonthlySpend, $currentMonthTotal, $currentMonth),
         ];
+    }
+
+    /**
+     * @param string[] $availableMonths
+     */
+    private function resolvePreviousMonth(string $referenceMonth, array $availableMonths): string
+    {
+        $directPrevious = \DateTimeImmutable::createFromFormat('Y-m-d', $referenceMonth . '-01')
+            ?->modify('-1 month')
+            ->format('Y-m') ?? (new \DateTimeImmutable('first day of last month'))->format('Y-m');
+
+        if (in_array($directPrevious, $availableMonths, true)) {
+            return $directPrevious;
+        }
+
+        // Fallback to the nearest earlier month that has data.
+        $previousWithData = array_values(array_filter(
+            $availableMonths,
+            static fn (string $month): bool => $month < $referenceMonth
+        ));
+
+        if ($previousWithData !== []) {
+            rsort($previousWithData);
+            return $previousWithData[0];
+        }
+
+        return $directPrevious;
     }
 
     /**

@@ -1,0 +1,345 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Quiz Arcade - FinanceLearn{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h1>⚡ Quiz Arcade</h1>
+        <p class="lead">Répondez aux questions en 15 secondes!</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-3">
+            <div class="stat-box text-center">
+                <div class="h4 mb-0" id="score">0</div>
+                <small>Score</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box text-center">
+                <div class="h4 mb-0" id="combo">x0</div>
+                <small>Combo</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box text-center">
+                <div class="h4 mb-0"><span id="currentQ">1</span>/{{ total_questions }}</div>
+                <small>Question</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timer -->
+    <div class="progress mb-4" style="height: 25px;">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" id="timerBar" role="progressbar" style="width: 100%;"></div>
+    </div>
+    <div class="text-center mb-3">
+        <span class="h4" id="timerText">15s</span>
+    </div>
+
+    <!-- Question -->
+    <div class="card shadow mb-4">
+        <div class="card-body p-4">
+            <h3 id="questionText" class="text-center mb-4">Question...</h3>
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <button class="btn btn-answer w-100" data-answer="a" id="btnA">
+                        <strong>A:</strong> <span id="answerA">-</span>
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-answer w-100" data-answer="b" id="btnB">
+                        <strong>B:</strong> <span id="answerB">-</span>
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-answer w-100" data-answer="c" id="btnC">
+                        <strong>C:</strong> <span id="answerC">-</span>
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-answer w-100" data-answer="d" id="btnD">
+                        <strong>D:</strong> <span id="answerD">-</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div class="modal fade" id="resultModal" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="display-1 mb-3" id="resultIcon"></div>
+                    <h3 id="resultText"></h3>
+                    <p class="h4" id="resultPoints"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="modal fade" id="gameOverModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Partie Terminée!</h4>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="display-1" id="finalScore">0</div>
+                    <p>Points</p>
+                    <p>Meilleur combo: <strong id="maxCombo">x0</strong></p>
+                    <p>Réponses correctes: <strong id="correctCount">0</strong>/{{ total_questions }}</p>
+                </div>
+                <div class="modal-footer">
+                    <a href="{{ path('game_index') }}" class="btn btn-secondary">Menu</a>
+                    <button class="btn btn-primary" onclick="restartGame()">Rejouer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-box {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.btn-answer {
+    padding: 20px;
+    font-size: 1.1rem;
+    border: 2px solid #dee2e6;
+    background: white;
+    text-align: left;
+    transition: all 0.2s;
+}
+
+.btn-answer:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
+}
+
+.btn-answer.correct {
+    background: #28a745 !important;
+    color: white !important;
+    border-color: #28a745 !important;
+}
+
+.btn-answer.wrong {
+    background: #dc3545 !important;
+    color: white !important;
+    border-color: #dc3545 !important;
+}
+
+.btn-answer:disabled {
+    opacity: 1;
+}
+</style>
+
+<script>
+// Questions from PHP
+const questions = {{ game_data_json|raw }};
+
+let currentQuestion = 0;
+let score = 0;
+let combo = 0;
+let maxCombo = 0;
+let correctCount = 0;
+let timeLeft = 15;
+let timerInterval = null;
+let isAnswering = false;
+let modalShown = false;
+
+function initGame() {
+    if (questions.length > 0) {
+        showQuestion();
+    } else {
+        alert('Aucune question!');
+        window.location.href = '{{ path("game_index") }}';
+    }
+}
+
+function showQuestion() {
+    const q = questions[currentQuestion];
+    
+    document.getElementById('questionText').textContent = q.question;
+    document.getElementById('answerA').textContent = q.answers.a || '-';
+    document.getElementById('answerB').textContent = q.answers.b || '-';
+    document.getElementById('answerC').textContent = q.answers.c || '-';
+    document.getElementById('answerD').textContent = q.answers.d || '-';
+    document.getElementById('currentQ').textContent = currentQuestion + 1;
+    
+    // Reset buttons
+    ['btnA', 'btnB', 'btnC', 'btnD'].forEach(id => {
+        const btn = document.getElementById(id);
+        btn.classList.remove('correct', 'wrong');
+        btn.disabled = false;
+    });
+    
+    startTimer();
+}
+
+function startTimer() {
+    clearInterval(timerInterval);
+    timeLeft = 15;
+    isAnswering = false;
+    modalShown = false;
+    updateTimerDisplay();
+    
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            handleTimeout();
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const percent = (timeLeft / 15) * 100;
+    document.getElementById('timerBar').style.width = percent + '%';
+    document.getElementById('timerText').textContent = timeLeft + 's';
+    
+    const bar = document.getElementById('timerBar');
+    if (timeLeft <= 5) {
+        bar.style.background = '#dc3545';
+    } else if (timeLeft <= 10) {
+        bar.style.background = '#ffc107';
+    } else {
+        bar.style.background = '#28a745';
+    }
+}
+
+function handleTimeout() {
+    if (isAnswering) return;
+    isAnswering = true;
+    
+    combo = 0;
+    document.getElementById('combo').textContent = 'x' + combo;
+    showResult(false, 0);
+    
+    setTimeout(nextQuestion, 1500);
+}
+
+function selectAnswer(answer) {
+    if (isAnswering) return;
+    isAnswering = true;
+    clearInterval(timerInterval);
+    
+    const q = questions[currentQuestion];
+    const correct = q.correct;
+    const isCorrect = answer === correct;
+    
+    // Show correct/wrong
+    document.getElementById('btn' + answer.toUpperCase()).classList.add(isCorrect ? 'correct' : 'wrong');
+    document.getElementById('btn' + correct.toUpperCase()).classList.add('correct');
+    
+    // Disable all buttons
+    document.querySelectorAll('.btn-answer').forEach(btn => btn.disabled = true);
+    
+    if (isCorrect) {
+        combo++;
+        if (combo > maxCombo) maxCombo = combo;
+        correctCount++;
+        
+        const points = 100 + (combo * 10);
+        score += points;
+        
+        document.getElementById('score').textContent = score;
+        document.getElementById('combo').textContent = 'x' + combo;
+        showResult(true, points);
+    } else {
+        combo = 0;
+        document.getElementById('combo').textContent = 'x0';
+        showResult(false, 0);
+    }
+    
+    setTimeout(nextQuestion, 1500);
+}
+
+function showResult(correct, points) {
+    if (modalShown) return;
+    modalShown = true;
+    
+    const modal = new bootstrap.Modal(document.getElementById('resultModal'));
+    const icon = document.getElementById('resultIcon');
+    const text = document.getElementById('resultText');
+    const pts = document.getElementById('resultPoints');
+    
+    if (correct) {
+        icon.textContent = '✓';
+        icon.style.color = '#28a745';
+        text.textContent = 'Correct!';
+        text.style.color = '#28a745';
+        pts.textContent = '+' + points + ' points';
+    } else {
+        icon.textContent = '✗';
+        icon.style.color = '#dc3545';
+        text.textContent = 'Temps écoulé!';
+        text.style.color = '#dc3545';
+        pts.textContent = '';
+    }
+    
+    modal.show();
+    setTimeout(() => modal.hide(), 1200);
+}
+
+function nextQuestion() {
+    currentQuestion++;
+    
+    if (currentQuestion >= questions.length) {
+        endGame();
+    } else {
+        showQuestion();
+    }
+}
+
+function endGame() {
+    clearInterval(timerInterval);
+    
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('maxCombo').textContent = 'x' + maxCombo;
+    document.getElementById('correctCount').textContent = correctCount;
+    
+    new bootstrap.Modal(document.getElementById('gameOverModal')).show();
+}
+
+function restartGame() {
+    currentQuestion = 0;
+    score = 0;
+    combo = 0;
+    maxCombo = 0;
+    correctCount = 0;
+    
+    document.getElementById('score').textContent = '0';
+    document.getElementById('combo').textContent = 'x0';
+    
+    bootstrap.Modal.getInstance(document.getElementById('gameOverModal')).hide();
+    showQuestion();
+}
+
+// Event listeners
+document.querySelectorAll('.btn-answer').forEach(btn => {
+    btn.addEventListener('click', () => selectAnswer(btn.dataset.answer));
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    if (isAnswering) return;
+    const map = { a: 'a', b: 'b', c: 'c', d: 'd' };
+    if (map[e.key.toLowerCase()]) selectAnswer(map[e.key.toLowerCase()]);
+});
+
+// Start
+document.addEventListener('DOMContentLoaded', initGame);
+</script>
+{% endblock %}

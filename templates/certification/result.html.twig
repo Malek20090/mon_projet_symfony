@@ -1,0 +1,156 @@
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}Résultat de la Certification | Decide${% endblock %}
+
+{% block body_class %}certification-result-page{% endblock %}
+
+{% block body %}
+    <section class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Result Card -->
+                <div class="card shadow-lg result-card {% if passed %}border-success{% else %}border-danger{% endif %}">
+                    <div class="card-header text-center {% if passed %}bg-success{% else %}bg-danger{% endif %} text-white py-4">
+                        <i class="fas fa-{{ passed ? 'trophy' : 'times-circle' }} fa-4x mb-3"></i>
+                        <h2 class="mb-0">
+                            {% if passed %}
+                                Félicitations ! Vous avez réussi !
+                            {% else %}
+                                Dommage ! Réessayez
+                            {% endif %}
+                        </h2>
+                    </div>
+                    
+                    <div class="card-body text-center p-5">
+                        <!-- Score Circle -->
+                        <div class="score-circle mx-auto mb-4 {% if passed %}passed{% else %}failed{% endif %}">
+                            <span class="score-number">{{ percentage }}%</span>
+                            <span class="score-label">Score</span>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="row justify-content-center mb-4">
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between p-3 bg-light rounded">
+                                    <span>Bonnes réponses:</span>
+                                    <strong class="text-success">{{ score }} / {{ total }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Message -->
+                        <div class="result-message mb-4">
+                            {% if passed %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    Vous avez obtenu {{ percentage }}% de bonnes réponses. 
+                                    Le score minimum requis est de {{ certification.passing_score }}%.
+                                    Vous pouvez maintenant télécharger votre certificat !
+                                </div>
+                            {% else %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Vous avez obtenu {{ percentage }}% de bonnes réponses.
+                                    Le score minimum requis est de {{ certification.passing_score }}%.
+                                    Entraînez-vous encore et réessayez !
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-center gap-3 flex-wrap">
+                            {% if passed %}
+                                <a href="{{ path('certification_certificate', {type: type}) }}" class="btn btn-success btn-lg rounded-pill px-4">
+                                    <i class="fas fa-download me-2"></i> Télécharger le Certificat
+                                </a>
+                            {% endif %}
+                            
+                            <a href="{{ path('certification_start', {type: type}) }}" class="btn btn-outline-primary btn-lg rounded-pill px-4">
+                                <i class="fas fa-redo me-2"></i> Réessayer
+                            </a>
+                            
+                            <a href="{{ path('certification_index') }}" class="btn btn-secondary btn-lg rounded-pill px-4">
+                                <i class="fas fa-list me-2"></i> Autres Certifications
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Answer Review -->
+                {% if answers|length > 0 %}
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Revue des réponses</h5>
+                        </div>
+                        <div class="card-body">
+                            {% for answer in answers %}
+                                <div class="review-item border-bottom py-3">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-{{ answer.correct ? 'check-circle text-success' : 'times-circle text-danger' }} me-3 mt-1"></i>
+                                        <div>
+                                            <span class="badge bg-{{ answer.correct ? 'success' : 'danger' }} mb-2">
+                                                Question {{ loop.index }}
+                                            </span>
+                                            <p class="mb-1">
+                                                <strong>{{ answer.user_answer ? answer.user_answer : 'Non répondue' }}</strong>
+                                            </p>
+                                            {% if not answer.correct %}
+                                                <small class="text-muted">
+                                                    Réponse correcte: <span class="text-success">{{ answer.correct_answer }}</span>
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <style>
+        .result-card {
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 8px solid;
+        }
+
+        .score-circle.passed {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        }
+
+        .score-circle.failed {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        }
+
+        .score-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+
+        .review-item:last-child {
+            border-bottom: none !important;
+        }
+    </style>
+{% endblock %}

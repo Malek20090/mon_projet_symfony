@@ -83,7 +83,16 @@
     <i class="fas fa-flag-checkered"></i> <span>Goals</span>
 </a>
 
-          
+            <a href="{{ path('admin_stats_index') }}"
+               class="{{ _route starts with 'admin_stats' ? 'active' : '' }}">
+                <i class="fas fa-chart-pie"></i> <span>Statistics</span>
+            </a>
+
+            <a href="{{ path('admin_ai_quiz_index') }}"
+               class="{{ _route starts with 'admin_ai_quiz' ? 'active' : '' }}">
+                <i class="fas fa-robot"></i> <span>AI Quiz Generator</span>
+            </a>
+
         </nav>
 
         <div class="sidebar-footer">

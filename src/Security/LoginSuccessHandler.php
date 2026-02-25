@@ -22,7 +22,7 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
         $roles = $token->getRoleNames();
 
         if (in_array('ROLE_ADMIN', $roles)) {
-            return new RedirectResponse($this->router->generate('app_transaction_index'));
+            return new RedirectResponse($this->router->generate('admin_dashboard'));
         }
 
         if (in_array('ROLE_SALARY', $roles)) {
@@ -33,7 +33,8 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
             return new RedirectResponse($this->router->generate('student_cours_index'));
         }
 
-        // sécurité
-        return new RedirectResponse($this->router->generate('app_login'));
+        // Default fallback - redirect to homepage or a general page
+        // Avoid redirecting to login to prevent infinite loop
+        return new RedirectResponse($this->router->generate('app_home'));
     }
 }
