@@ -89,19 +89,32 @@
               </td>
 
               <td>
-                <a href="{{ path('objectif_edit', { id: objectif.id }) }}">
-                  <button class="ghost-btn" type="button">Modifier</button>
-                </a>
 
-                <form
-                  method="post"
-                  action="{{ path('objectif_delete', { id: objectif.id }) }}"
-                  style="display:inline-block"
-                  onsubmit="return confirm('Supprimer cet objectif ?');"
-                >
-                  <button class="danger-btn" type="submit">Supprimer</button>
-                </form>
-              </td>
+               <a href="{{ path('objectif_ai_analysis', { id: objectif.id }) }}">
+               <button class="primary-btn" type="button">
+                  🤖 IA
+               </button>
+              </a>
+              <a href="{{ path('objectif_simulation', { id: objectif.id }) }}">
+              <button class="ghost-btn" type="button">
+               🔮 MonteCarlo
+              </button>
+               </a>
+
+              <a href="{{ path('objectif_edit', { id: objectif.id }) }}">
+              <button class="ghost-btn" type="button">Modifier</button>
+              </a>
+
+            <form
+             method="post"
+             action="{{ path('objectif_delete', { id: objectif.id }) }}"
+             style="display:inline-block"
+             onsubmit="return confirm('Supprimer cet objectif ?');"
+             >
+            <button class="danger-btn" type="submit">Supprimer</button>
+           </form>
+
+            </td>
             </tr>
 
           {% else %}

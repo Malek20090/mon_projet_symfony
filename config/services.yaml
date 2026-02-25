@@ -51,10 +51,16 @@ services:
             $openAiApiKey: '%env(default:openai_api_key_default:OPENAI_API_KEY)%'
             $openAiModel: '%env(default:openai_model_default:OPENAI_MODEL)%'
 
+<<<<<<< HEAD
     App\Service\PdfShiftService:
         arguments:
             $apiKey: '%env(default:pdfshift_api_key_default:PDFSHIFT_API_KEY)%'
             $processorVersion: '%env(default:pdfshift_processor_version_default:PDFSHIFT_PROCESSOR_VERSION)%'
+=======
+    App\Service\WhatIfAiNarratorService:
+        arguments:
+            $cache: '@cache.app'
+>>>>>>> da0c78c827199d08486ab3b1d3cbb74d12cc98bd
 
     App\Service\FacePlusPlusService:
         arguments:

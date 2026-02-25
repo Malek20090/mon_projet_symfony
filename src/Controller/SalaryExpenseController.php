@@ -17,7 +17,10 @@ use App\Service\RecurringPatternService;
 use App\Service\FinancialMonitoringService;
 use App\Service\SalaryExpenseAiService;
 use App\Service\FinancialAlertMailerService;
+<<<<<<< HEAD
 use App\Service\PdfShiftService;
+=======
+>>>>>>> da0c78c827199d08486ab3b1d3cbb74d12cc98bd
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;

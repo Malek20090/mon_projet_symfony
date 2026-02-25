@@ -1,0 +1,347 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Statistiques | Decide{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Statistiques et Historique
+                </h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">Étudiants</h6>
+                            <h2 class="mb-0">{{ studentsCount }}</h2>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">Cours</h6>
+                            <h2 class="mb-0">{{ coursesCount }}</h2>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-book"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">Quiz</h6>
+                            <h2 class="mb-0">{{ quizzesCount }}</h2>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">Certifications</h6>
+                            <h2 class="mb-0">{{ passedCertifications }}/{{ totalCertifications }}</h2>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Répartition : Étudiants, Cours, Quiz
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statsPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Certifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if totalCertifications > 0 %}
+                        <canvas id="certDoughnutChart"></canvas>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-chart-pie fs-1 mb-3"></i>
+                            <p class="mb-0">Aucune certification effectuée</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score Average -->
+    {% if averageScore > 0 %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-line me-2"></i>Score Moyen des Certifications
+                    </h5>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1 me-3">
+                            <div class="progress" style="height: 30px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ averageScore }}%" 
+                                     aria-valuenow="{{ averageScore }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ averageScore }}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fs-4 fw-bold text-success">
+                            {{ averageScore }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Certification History -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-certificate me-2"></i>Historique des Certifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if certificationResults|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Étudiant</th>
+                                        <th>Type</th>
+                                        <th>Score</th>
+                                        <th>Résultat</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for result in certificationResults %}
+                                        <tr>
+                                            <td>{{ result.date|date('d/m/Y H:i') }}</td>
+                                            <td>{{ result.user_name }}</td>
+                                            <td>
+                                                {% if result.type == 'crypto' %}
+                                                    <span class="badge bg-warning">Crypto</span>
+                                                {% elseif result.type == 'investissement' %}
+                                                    <span class="badge bg-info">Investissement</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Finance</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <strong>{{ result.score }}/{{ result.total }}</strong>
+                                                ({{ result.percentage }}%)
+                                            </td>
+                                            <td>
+                                                {% if result.passed == true %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>Validée
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-times me-1"></i>Non validée
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">
+                            <i class="fas fa-inbox fs-1 d-block mb-2"></i>
+                            Aucune certification effectuée pour le moment.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Attempts History -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Historique des Quiz
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if quizResults|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Étudiant</th>
+                                        <th>Quiz</th>
+                                        <th>Score</th>
+                                        <th>Résultat</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for result in quizResults %}
+                                        <tr>
+                                            <td>{{ result.date|date('d/m/Y H:i') }}</td>
+                                            <td>{{ result.userName }}</td>
+                                            <td>{{ result.cours.titre|default('Quiz') }}</td>
+                                            <td>
+                                                <strong>{{ result.score }}/{{ result.total }}</strong>
+                                                ({{ result.percentage }}%)
+                                            </td>
+                                            <td>
+                                                {% if result.passed == true %}
+                                                    <span class="badge bg-success">Réussi</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Échoué</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">
+                            <i class="fas fa-inbox fs-1 d-block mb-2"></i>
+                            Aucun quiz passé pour le moment.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Pie Chart - Stats
+    const statsCtx = document.getElementById('statsPieChart').getContext('2d');
+    new Chart(statsCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Étudiants', 'Cours', 'Quiz'],
+            datasets: [{
+                data: [{{ studentsCount }}, {{ coursesCount }}, {{ quizzesCount }}],
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(255, 206, 86, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 206, 86, 1)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: 'Répartition : Étudiants, Cours, Quiz'
+                }
+            }
+        }
+    });
+
+    // Doughnut Chart - Certifications
+    {% if totalCertifications > 0 %}
+    const certCtx = document.getElementById('certDoughnutChart').getContext('2d');
+    new Chart(certCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Réussies', 'Échouées'],
+            datasets: [{
+                data: [{{ passedCertifications }}, {{ totalCertifications - passedCertifications }}],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(220, 53, 69, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(220, 53, 69, 1)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: 'Certifications'
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

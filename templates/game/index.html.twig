@@ -1,0 +1,98 @@
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}Jeux Éducatifs - FinanceLearn{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4">🎮 Jeux Éducatifs</h1>
+        <p class="lead">Apprenez la finance en vous amusant !</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <!-- Word Search -->
+        <div class="col-md-6 mb-4">
+            <div class="card game-card h-100 shadow-lg">
+                <div class="card-body text-center p-5">
+                    <div class="game-icon mb-4">
+                        <i class="fas fa-search fa-4x text-success"></i>
+                    </div>
+                    <h3 class="card-title">Word Search</h3>
+                    <p class="card-text">
+                        Trouvez les mots financiers cachés dans la grille !
+                        Un excellent moyen d'enrichir votre vocabulaire.
+                    </p>
+                    <ul class="list-unstyled text-start mb-4">
+                        <li>🔤 Mots financiers</li>
+                        <li>⏲️ Mode chrono</li>
+                        <li>✨ Niveaux variés</li>
+                    </ul>
+                    <a href="{{ path('game_wordsearch') }}" class="btn btn-success btn-lg">
+                        <i class="fas fa-play me-2"></i>Jouer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Crossword -->
+        <div class="col-md-6 mb-4">
+            <div class="card game-card h-100 shadow-lg">
+                <div class="card-body text-center p-5">
+                    <div class="game-icon mb-4">
+                        <i class="fas fa-th fa-4x text-warning"></i>
+                    </div>
+                    <h3 class="card-title">Mots Croisés</h3>
+                    <p class="card-text">
+                        Testez vos connaissances en finance avec nos mots croisés !
+                        Chaque définition vous apprendre quelque chose de nouveau.
+                    </p>
+                    <ul class="list-unstyled text-start mb-4">
+                        <li>📝 Définitions éducatives</li>
+                        <li>💡 Indices disponibles</li>
+                        <li>🎯 Progression</li>
+                    </ul>
+                    <a href="{{ path('game_crossword') }}" class="btn btn-warning btn-lg text-white">
+                        <i class="fas fa-play me-2"></i>Jouer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Student Dashboard -->
+    <div class="text-center mt-5">
+        <a href="{{ path('student_cours_index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Retour aux cours
+        </a>
+    </div>
+</div>
+
+<style>
+.game-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.game-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+}
+
+.game-icon {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.btn-lg {
+    padding: 12px 40px;
+    font-weight: 600;
+    border-radius: 30px;
+}
+</style>
+{% endblock %}

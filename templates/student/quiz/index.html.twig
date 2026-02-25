@@ -163,6 +163,14 @@
             </a>
         </div>
     </section>
+
+    <!-- Pagination -->
+    {% if quizzes|length > 0 %}
+    <div class="container py-3">
+        {{ knp_pagination_render(quizzes, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
+    </div>
+    {% endif %}
+
     <style>
         .quiz-card {
             border-radius: 18px;

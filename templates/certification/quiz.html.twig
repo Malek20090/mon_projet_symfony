@@ -1,0 +1,131 @@
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}{{ certification.name }} | Decide${% endblock %}
+
+{% block body_class %}certification-quiz-page{% endblock %}
+
+{% block body %}
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar-custom" style="width: {{ ((current_index + 1) / quizzes|length * 100) }}%"></div>
+    </div>
+
+    <section class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Quiz Header -->
+                <div class="quiz-header text-center mb-4">
+                    <span class="badge bg-{{ certification.color }} fs-6 mb-2">
+                        {{ certification.name }}
+                    </span>
+                    <div class="question-counter">
+                        Question {{ current_index + 1 }} sur {{ quizzes|length }}
+                    </div>
+                </div>
+
+                <!-- Quiz Card -->
+                <div class="card shadow quiz-card">
+                    <div class="card-body p-5">
+                        <!-- Question -->
+                        <div class="question-section mb-4">
+                            <h3 class="question-text">
+                                <i class="fas fa-question-circle text-{{ certification.color }} me-2"></i>
+                                {{ quizzes[current_index].question }}
+                            </h3>
+                        </div>
+
+                        <!-- Answer Buttons -->
+                        <div class="answers-section">
+                            {% set answer_keys = ['answer_a', 'answer_b', 'answer_c', 'answer_d'] %}
+                            {% set answer_labels = ['A', 'B', 'C', 'D'] %}
+                            
+                            {% for key in answer_keys %}
+                                {% if quizzes[current_index].answers[key] is defined %}
+                                    <a href="{{ path('certification_answer', {type: type, answer: key}) }}" 
+                                       class="answer-btn d-block mb-3">
+                                        <span class="answer-letter">{{ answer_labels[loop.index0] }}.</span>
+                                        {{ quizzes[current_index].answers[key] }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Back Link -->
+                <div class="text-center mt-4">
+                    <a href="{{ path('certification_index') }}" class="text-muted">
+                        <i class="fas fa-times me-1"></i> Abandonner la certification
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: #e9ecef;
+            z-index: 1000;
+        }
+
+        .progress-bar-custom {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            transition: width 0.3s ease;
+        }
+
+        .quiz-card {
+            border-radius: 20px;
+            border: none;
+        }
+
+        .question-counter {
+            font-size: 1.1rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+
+        .answer-btn {
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            background: white;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .answer-btn:hover {
+            border-color: #10b981;
+            background-color: #f8fff9;
+            transform: translateX(5px);
+            color: #333;
+        }
+
+        .answer-letter {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 0.9rem;
+        }
+    </style>
+{% endblock %}

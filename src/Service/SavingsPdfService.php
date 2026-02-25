@@ -2,15 +2,11 @@
 
 namespace App\Service;
 
-use Nucleos\DompdfBundle\Factory\DompdfFactoryInterface;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class SavingsPdfService
 {
-    public function __construct(
-        private readonly DompdfFactoryInterface $dompdfFactory
-    ) {
-    }
-
     /**
      * @param array<int, array<string, mixed>> $rows
      */
@@ -23,7 +19,10 @@ class SavingsPdfService
     ): string {
         $html = $this->buildHtml($rows, $range, $q, $sort, $generatedAt);
 
-        $dompdf = $this->dompdfFactory->create();
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+
+        $dompdf = new Dompdf($options);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();

@@ -119,6 +119,14 @@
             </div>
         {% endif %}
     </section>
+
+    <!-- Pagination -->
+    {% if cours|length > 0 %}
+    <div class="container py-3">
+        {{ knp_pagination_render(cours, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
+    </div>
+    {% endif %}
+
     <style>
         .learning-card {
             border-radius: 18px;

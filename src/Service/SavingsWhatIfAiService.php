@@ -97,35 +97,20 @@ class SavingsWhatIfAiService
         $temperature = $this->envFloat('OPENAI_TEMPERATURE', 0.72);
         $temperature = max(0.2, min(1.1, $temperature));
         $styleVariant = $this->pickStyleVariant();
+        $runNonce = (string) random_int(1000, 9999);
 
-        $persona = strtolower($this->textFromContext($context, 'persona', 'balanced'));
-        if (!in_array($persona, ['conservative', 'balanced', 'aggressive'], true)) {
-            $persona = 'balanced';
-        }
-        $brutalTruth = $this->boolFromContext($context, 'brutalTruth', false);
         $scenario = is_array($context['scenario'] ?? null) ? $context['scenario'] : [];
+        $scenarioType = $this->textFromContext($scenario, 'type', $this->textFromContext($context, 'scenarioType', 'change_monthly_deposit'));
+        $runId = $this->textFromContext($scenario, 'runId', 'n/a');
         $monthlyDeposit = (float) ($scenario['monthlyDeposit'] ?? 0.0);
         $oneTimeDeposit = (float) ($scenario['oneTimeDeposit'] ?? 0.0);
-        $stayLazyMode = ($monthlyDeposit <= 0.0 && $oneTimeDeposit <= 0.0);
-
-        $personaRule = match ($persona) {
-            'conservative' => 'Prioritize deadline safety and liquidity protection before speed.',
-            'aggressive' => 'Prioritize completion speed but explicitly quantify execution risk.',
-            default => 'Balance affordability and speed with consistent execution.',
-        };
-
-        $brutalRule = $brutalTruth
-            ? "Include a section titled 'Brutal Financial Truth:' with direct downside statements and no softening language."
-            : "Keep tone constructive and practical (not harsh).";
-
-        $lazyRule = $stayLazyMode
-            ? "Because this is a no-action scenario, include consequences and opportunity loss clearly."
-            : "Assume active contributions from scenario values.";
 
         $payload = [
             'model' => $model,
             'temperature' => $temperature,
             'top_p' => 0.95,
+            'frequency_penalty' => 0.35,
+            'presence_penalty' => 0.25,
             'max_tokens' => 900,
             'messages' => [
                 [
@@ -137,42 +122,34 @@ class SavingsWhatIfAiService
                 [
                     'role' => 'user',
                     'content' => "Analyze this savings what-if context and produce a high-value response with this exact structure:\n"
-                        . "Executive Summary:\n"
-                        . "- exactly 2 short lines with numbers.\n"
-                        . "Critical Risks:\n"
-                        . "- exactly 3 bullets, include deadline/conflict risks if present.\n"
-                        . "Recommended Allocation:\n"
-                        . "- exactly 3 bullets with explicit TND/month amounts and where to route them.\n"
-                        . "Best Plan:\n"
-                        . "- exactly 3 bullets, each with explicit TND/month actions.\n"
-                        . "- include at least 1 spending-reduction move and 1 income-increase move with estimated TND/month impact.\n"
-                        . "Next 30 Days:\n"
-                        . "- exactly 2 bullets with concrete steps.\n"
-                        . "Assessment:\n"
-                        . "- 1 or 2 lines only, mandatory if affordability/risk gap is high.\n"
-                        . "Brutal Financial Truth:\n"
-                        . "- include only when brutal mode is on (max 2 bullets).\n"
-                        . "If You Stay Lazy:\n"
-                        . "- include only when lazy mode is inferred (max 2 bullets).\n\n"
+                        . "Executive Insight:\n"
+                        . "- 2 lines max, both numeric and tied to finish date/risk/feasibility.\n"
+                        . "Quantified Improvement Path:\n"
+                        . "- 2 to 3 bullets using acceleration gain, required adjustment, and exact TND/month values.\n"
+                        . "Risk Interpretation:\n"
+                        . "- 2 bullets using stress index, overcommitment, and deadline risk.\n"
+                        . "Strategic Action:\n"
+                        . "- 1 to 2 precise actions only.\n\n"
                         . "Rules:\n"
                         . "- Do not invent missing data.\n"
-                        . "- If net30d is weak, warn about affordability with concrete numbers.\n"
-                        . "- Prioritize goals by priority/deadline.\n\n"
-                        . "- Ensure recommendations are implementable next week.\n"
-                        . "- Keep total response compact (~170-260 words).\n"
-                        . "- {$personaRule}\n"
-                        . "- {$brutalRule}\n"
-                        . "- {$lazyRule}\n\n"
+                        . "- Every recommendation must reference at least one numeric metric from context.\n"
+                        . "- Avoid generic advice like 'reduce spending 10-15%' unless category + amount is provided.\n"
+                        . "- If stress index > 70, prioritize sustainability tone.\n"
+                        . "- If acceleration gain >= 3 months, prioritize optimization tone.\n"
+                        . "- If feasibility score < 60, prioritize realism tone.\n"
+                        . "- Keep response compact (~130-210 words).\n"
+                        . "- Use a different opening sentence and phrasing style each run.\n\n"
                         . "Language rule:\n"
                         . "- Match language style from context/user.\n\n"
                         . "Style variant for this run:\n"
                         . "- {$styleVariant}\n\n"
                         . "Scenario snapshot:\n"
-                        . "- Persona: {$persona}\n"
+                        . "- Scenario type: {$scenarioType}\n"
+                        . "- Run id: {$runId}\n"
+                        . "- Variation nonce: {$runNonce}\n"
                         . "- Monthly deposit: {$monthlyDeposit}\n"
                         . "- One-time deposit: {$oneTimeDeposit}\n"
-                        . "- Brutal mode: " . ($brutalTruth ? 'on' : 'off') . "\n"
-                        . "- Lazy mode inferred: " . ($stayLazyMode ? 'on' : 'off') . "\n\n"
+                        . "- Scenario should be evaluated against current goals and deadlines.\n\n"
                         . "Input context JSON:\n"
                         . json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
                 ],

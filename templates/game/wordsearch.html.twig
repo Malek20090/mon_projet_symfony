@@ -1,0 +1,274 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Word Search - FinanceLearn{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="text-center mb-4">
+        <h1>🔤 Word Search Financier</h1>
+        <p class="lead">Trouvez les mots cachés liés à la finance!</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div id="gridContainer"></div>
+            
+            <div class="text-center mt-3">
+                <button class="btn btn-success" onclick="validateSelection()">Valider</button>
+                <button class="btn btn-warning" onclick="clearSelection()">Effacer</button>
+                <a href="{{ path('game_index') }}" class="btn btn-secondary">Retour</a>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Mots à trouver (<span id="foundCount">0</span>/<span id="totalCount">{{ words|length }}</span>)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="word-list" id="wordList">
+                        {% for word in words %}
+                            <li class="word-item" data-word="{{ word }}">{{ word }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-body text-center">
+                    <span class="h2" id="wordScore">0</span>
+                    <p class="text-muted mb-0">Points</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+#gridContainer {
+    display: grid;
+    gap: 2px;
+    background: #333;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 0 auto;
+    width: fit-content;
+}
+
+.word-cell {
+    width: 40px;
+    height: 40px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.3rem;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 4px;
+}
+
+.word-cell:hover {
+    background: #e8f4ff;
+}
+
+.word-cell.selected {
+    background: #ffc107;
+}
+
+.word-cell.found {
+    background: #28a745;
+    color: white;
+}
+
+.word-list {
+    list-style: none;
+    padding: 10px;
+    margin: 0;
+}
+
+.word-item {
+    padding: 10px;
+    margin: 5px 0;
+    background: #f8f9fa;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.word-item.found {
+    background: #28a745;
+    color: white;
+    text-decoration: line-through;
+}
+</style>
+
+<script>
+// Variables
+var gridData = [];
+var wordList = [];
+var gridSize = 12;
+var selectedCells = [];
+var foundWords = [];
+var score = 0;
+var startCell = null;
+var isSelecting = false;
+
+// Initialize from Twig
+{% set grid_json = grid|json_encode %}
+gridData = {{ grid_json|raw }};
+wordList = {{ words|json_encode|raw }};
+gridSize = {{ grid_size }};
+
+// Set grid style
+document.getElementById('gridContainer').style.gridTemplateColumns = 'repeat(' + gridSize + ', 40px)';
+
+function initGrid() {
+    var container = document.getElementById('gridContainer');
+    
+    for (var row = 0; row < gridSize; row++) {
+        for (var col = 0; col < gridSize; col++) {
+            var cell = document.createElement('div');
+            cell.className = 'word-cell';
+            cell.textContent = gridData[row][col];
+            cell.setAttribute('data-row', row);
+            cell.setAttribute('data-col', col);
+            cell.setAttribute('data-letter', gridData[row][col]);
+            
+            cell.onmousedown = function(e) {
+                handleMouseDown(e);
+            };
+            cell.onmouseenter = function(e) {
+                handleMouseEnter(e);
+            };
+            
+            container.appendChild(cell);
+        }
+    }
+    
+    document.onmouseup = function() {
+        isSelecting = false;
+    };
+}
+
+function handleMouseDown(e) {
+    var cell = e.target;
+    if (cell.classList.contains('found')) return;
+    
+    isSelecting = true;
+    startCell = cell;
+    clearSelection();
+    selectCell(cell);
+}
+
+function handleMouseEnter(e) {
+    if (!isSelecting || !startCell) return;
+    
+    var current = e.target;
+    if (current.classList.contains('found')) return;
+    
+    var row1 = parseInt(startCell.getAttribute('data-row'));
+    var col1 = parseInt(startCell.getAttribute('data-col'));
+    var row2 = parseInt(current.getAttribute('data-row'));
+    var col2 = parseInt(current.getAttribute('data-col'));
+    
+    var rowDiff = row2 - row1;
+    var colDiff = col2 - col1;
+    
+    // Must be horizontal, vertical, or diagonal
+    if (rowDiff !== 0 && colDiff !== 0 && Math.abs(rowDiff) !== Math.abs(colDiff)) {
+        return;
+    }
+    
+    // Clear and reselect
+    clearSelection();
+    selectCell(startCell);
+    
+    var rowStep = rowDiff === 0 ? 0 : (rowDiff > 0 ? 1 : -1);
+    var colStep = colDiff === 0 ? 0 : (colDiff > 0 ? 1 : -1);
+    
+    var r = row1;
+    var c = col1;
+    
+    while (true) {
+        var cell = document.querySelector('.word-cell[data-row="' + r + '"][data-col="' + c + '"]');
+        if (cell && !cell.classList.contains('found')) {
+            selectCell(cell);
+        }
+        
+        if (r === row2 && c === col2) break;
+        r += rowStep;
+        c += colStep;
+    }
+}
+
+function selectCell(cell) {
+    if (!cell.classList.contains('selected') && !cell.classList.contains('found')) {
+        cell.classList.add('selected');
+        selectedCells.push(cell);
+    }
+}
+
+function clearSelection() {
+    var cells = document.querySelectorAll('.word-cell.selected');
+    for (var i = 0; i < cells.length; i++) {
+        cells[i].classList.remove('selected');
+    }
+    selectedCells = [];
+}
+
+function validateSelection() {
+    if (selectedCells.length === 0) {
+        alert('Sélectionnez des lettres d\'abord!');
+        return;
+    }
+    
+    var selectedWord = '';
+    for (var i = 0; i < selectedCells.length; i++) {
+        selectedWord += selectedCells[i].getAttribute('data-letter');
+    }
+    var reversedWord = selectedWord.split('').reverse().join('');
+    
+    var found = false;
+    
+    for (var i = 0; i < wordList.length; i++) {
+        var word = wordList[i];
+        if ((selectedWord === word || reversedWord === word) && foundWords.indexOf(word) === -1) {
+            found = true;
+            foundWords.push(word);
+            score += word.length * 10;
+            
+            document.getElementById('wordScore').textContent = score;
+            document.getElementById('foundCount').textContent = foundWords.length;
+            
+            var wordItems = document.querySelectorAll('.word-item[data-word="' + word + '"]');
+            for (var j = 0; j < wordItems.length; j++) {
+                wordItems[j].classList.add('found');
+            }
+            
+            for (var k = 0; k < selectedCells.length; k++) {
+                selectedCells[k].classList.remove('selected');
+                selectedCells[k].classList.add('found');
+            }
+            
+            if (foundWords.length === wordList.length) {
+                setTimeout(function() { alert('🎉 Félicitations! Score: ' + score); }, 300);
+            }
+            
+            break;
+        }
+    }
+    
+    if (!found) {
+        alert('Mot non trouvé!');
+    }
+    
+    clearSelection();
+}
+
+// Start
+initGrid();
+</script>
+{% endblock %}

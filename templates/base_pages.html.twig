@@ -183,16 +183,23 @@
                 <li class="nav-item">
                     <a class="nav-link text-white {{ (app.request.attributes.get('_route') ?? '') starts with 'student_quiz_' ? 'text-info fw-bold' : '' }}" href="{{ path('student_quiz_index') }}">Quiz</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white {{ (app.request.attributes.get('_route') ?? '') starts with 'certification_' ? 'text-info fw-bold' : '' }}" href="{{ path('certification_index') }}">Certifications</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white {{ (app.request.attributes.get('_route') ?? '') starts with 'game_' ? 'text-info fw-bold' : '' }}" href="{{ path('game_index') }}"><i class="fas fa-gamepad me-1"></i> Games</a>
+                </li>
+            {% else %}
+                <li class="nav-item">
+                    <a class="nav-link text-white {{ (app.request.attributes.get('_route') ?? '') starts with 'app_salary_expense' ? 'text-info fw-bold' : '' }}" href="{{ path('app_salary_expense_index') }}">Income & Expenses</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white {{ app.request.attributes.get('_route') starts with 'app_savings' ? 'text-info fw-bold' : '' }}" href="{{ path('app_savings') }}">Savings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_alea' ? 'text-info fw-bold' : '' }}" href="{{ path('app_alea') }}">Unexpected Events & Real Cases</a>
+                </li>
             {% endif %}
-            <li class="nav-item">
-                <a class="nav-link text-white {{ (app.request.attributes.get('_route') ?? '') starts with 'app_salary_expense' ? 'text-info fw-bold' : '' }}" href="{{ path('app_salary_expense_index') }}">Income & Expenses</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white {{ app.request.attributes.get('_route') starts with 'app_savings' ? 'text-info fw-bold' : '' }}" href="{{ path('app_savings') }}">Savings</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_alea' ? 'text-info fw-bold' : '' }}" href="{{ path('app_alea') }}">Unexpected Events & Real Cases</a>
-            </li>
             <li class="nav-item">
                 <a class="nav-link text-white {{ app.request.attributes.get('_route') == 'app_contact' ? 'text-info fw-bold' : '' }}" href="{{ path('app_contact') }}">Contact</a>
             </li>

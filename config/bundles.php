@@ -16,6 +16,8 @@ return [
     Knp\Bundle\PaginatorBundle\KnpPaginatorBundle::class => ['all' => true],
     Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle::class => ['dev' => true, 'test' => true],
     Symfony\UX\Chartjs\ChartjsBundle::class => ['all' => true],
+    RichId\CsvGeneratorBundle\RichIdCsvGeneratorBundle::class => ['all' => true],
+    Nucleos\DompdfBundle\NucleosDompdfBundle::class => ['all' => true],
     DH\AuditorBundle\DHAuditorBundle::class => ['all' => true],
     Vich\UploaderBundle\VichUploaderBundle::class => ['all' => true],
 ];

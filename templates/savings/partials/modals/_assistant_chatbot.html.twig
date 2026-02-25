@@ -1,18 +1,18 @@
 <div id="smartBotRoot" class="smartbot-root" aria-live="polite">
   <button id="smartBotToggle" class="smartbot-toggle" type="button">
     <span class="smartbot-dot"></span>
-    <span>AI Coach</span>
+    <span>Savings &amp; Goals Assistant</span>
   </button>
 
   <div id="smartBotPanel" class="smartbot-panel" style="display:none;">
     <div class="smartbot-head">
       <div>
-        <div class="smartbot-title">Smart Assistant Chatbot</div>
-        <div class="smartbot-state">DB-aware + Any-topic Q&A</div>
+        <div class="smartbot-title">Savings &amp; Goals Assistant</div>
+        <div class="smartbot-state">Action Assistant</div>
       </div>
       <button id="smartBotClose" class="smartbot-close" type="button">x</button>
     </div>
-    <div class="smartbot-sub">Ask anything: your database insights, coding, writing, study, or finance questions.</div>
+    <div class="smartbot-sub">Ask questions, manage goals/accounts, and record contributions. Type <b>/help</b> to see all commands.</div>
 
     <div id="smartBotSuggestions" class="smartbot-suggestions"></div>
     <div id="smartBotMessages" class="smartbot-messages"></div>
@@ -246,12 +246,41 @@
   if (!root || !toggle || !panel || !close || !list || !suggestions || !form || !input || !micBtn || !voiceState) return;
 
   const history = [];
+  const placeholderSamples = [
+    'What goals do I have?',
+    'Create a goal called laptop target 3000 deadline 2026-09-01 priority P2',
+    'Contribute 200 TND to car',
+    'Rename goal pcc to course',
+    'Show my last 5 savings transactions',
+    'Undo last contribution',
+  ];
+  let placeholderIndex = 0;
+  let placeholderTimer = null;
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   let recognition = null;
   let isListening = false;
+  let manualStopRequested = false;
+
+  function normalizeVoiceText(text) {
+    const raw = String(text || '').trim().toLowerCase();
+    if (!raw) return '';
+    return raw
+      .replace(/\bgirls\b/g, 'goals')
+      .replace(/\bgirl\b/g, 'goal')
+      .replace(/\bsavings least\b/g, 'savings list')
+      .replace(/\bsaveings\b/g, 'savings')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
 
   function setVoiceState(text) {
     voiceState.textContent = text || '';
+  }
+
+  function rotatePlaceholder() {
+    if (document.activeElement === input || input.value.trim() !== '') return;
+    input.placeholder = placeholderSamples[placeholderIndex % placeholderSamples.length];
+    placeholderIndex += 1;
   }
 
   function pushMsg(role, text, meta = '') {
@@ -339,12 +368,13 @@
     }
 
     recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
+    recognition.lang = (navigator.language || 'en-US');
     recognition.interimResults = true;
-    recognition.continuous = false;
+    recognition.continuous = true;
 
     recognition.onstart = () => {
       isListening = true;
+      manualStopRequested = false;
       micBtn.classList.add('listening');
       setVoiceState('Listening...');
     };
@@ -356,7 +386,7 @@
       }
       transcript = transcript.trim();
       if (transcript !== '') {
-        input.value = transcript;
+        input.value = normalizeVoiceText(transcript);
       }
     };
 
@@ -370,20 +400,31 @@
     recognition.onend = () => {
       isListening = false;
       micBtn.classList.remove('listening');
-      if (input.value.trim() !== '') {
-        setVoiceState('Voice captured.');
-      } else {
-        setVoiceState('Voice input stopped.');
+      if (manualStopRequested) {
+        if (input.value.trim() !== '') {
+          setVoiceState('Voice captured.');
+        } else {
+          setVoiceState('Voice input stopped.');
+        }
+        return;
+      }
+      // Keep listening until user explicitly presses mic again.
+      try {
+        recognition.start();
+      } catch (e) {
+        setVoiceState('Voice input restarted failed. Press mic to retry.');
       }
     };
 
     micBtn.addEventListener('click', () => {
       if (!recognition) return;
       if (isListening) {
+        manualStopRequested = true;
         recognition.stop();
         return;
       }
       try {
+        manualStopRequested = false;
         recognition.start();
       } catch (e) {
         setVoiceState('Unable to start voice input.');
@@ -395,8 +436,12 @@
     const opening = panel.style.display === 'none';
     panel.style.display = opening ? 'flex' : 'none';
     if (opening && list.children.length === 0) {
-      pushMsg('bot', 'Hi. Ask me any question. I can use your savings/goals data when needed, and handle general topics too.');
+      pushMsg('bot', 'Hi. I can answer Savings & Goals questions and execute actions (CRUD + contributions). Type /help for all commands.');
       loadSuggestions();
+      rotatePlaceholder();
+      if (!placeholderTimer) {
+        placeholderTimer = window.setInterval(rotatePlaceholder, 2800);
+      }
     }
   });
   close.addEventListener('click', () => panel.style.display = 'none');
@@ -410,5 +455,6 @@
   });
 
   initVoiceInput();
+  rotatePlaceholder();
 })();
 </script>
