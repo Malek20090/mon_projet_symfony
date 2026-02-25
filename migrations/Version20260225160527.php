@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20260225062951 extends AbstractMigration
+final class Version20260225160527 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -20,6 +20,7 @@ final class Version20260225062951 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
+        $this->addSql('CREATE TABLE ai_objective_report (id INT AUTO_INCREMENT NOT NULL, objectif_id INT NOT NULL, content LONGTEXT NOT NULL, risk_score INT DEFAULT NULL, created_at DATETIME NOT NULL, INDEX IDX_62190510157D1AD4 (objectif_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('CREATE TABLE cas_relles (id INT AUTO_INCREMENT NOT NULL, user_id INT NOT NULL, imprevus_id INT DEFAULT NULL, confirmed_by_id INT DEFAULT NULL, financial_goal_id INT DEFAULT NULL, titre VARCHAR(150) NOT NULL, description LONGTEXT DEFAULT NULL, type VARCHAR(10) NOT NULL, categorie VARCHAR(40) DEFAULT NULL, montant DOUBLE PRECISION NOT NULL, solution VARCHAR(30) NOT NULL, date_effet DATE NOT NULL, resultat VARCHAR(20) DEFAULT NULL, raison_refus LONGTEXT DEFAULT NULL, confirmed_at DATETIME DEFAULT NULL COMMENT \'(DC2Type:datetime_immutable)\', justificatif_file_name VARCHAR(255) DEFAULT NULL, updated_at DATETIME DEFAULT NULL COMMENT \'(DC2Type:datetime_immutable)\', INDEX IDX_9383DCA3A76ED395 (user_id), INDEX IDX_9383DCA3AF9C32D8 (imprevus_id), INDEX IDX_9383DCA36F45385D (confirmed_by_id), INDEX IDX_9383DCA334BE5894 (financial_goal_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('CREATE TABLE cas_relles_audit (id INT UNSIGNED AUTO_INCREMENT NOT NULL, type VARCHAR(10) NOT NULL, object_id VARCHAR(255) NOT NULL, discriminator VARCHAR(255) DEFAULT NULL, transaction_hash VARCHAR(40) DEFAULT NULL, diffs JSON DEFAULT NULL, blame_id VARCHAR(255) DEFAULT NULL, blame_user VARCHAR(255) DEFAULT NULL, blame_user_fqdn VARCHAR(255) DEFAULT NULL, blame_user_firewall VARCHAR(100) DEFAULT NULL, ip VARCHAR(45) DEFAULT NULL, created_at DATETIME NOT NULL COMMENT \'(DC2Type:datetime_immutable)\', INDEX type_05b1d6f74ecb471aee099bc1d1b6c77f_idx (type), INDEX object_id_05b1d6f74ecb471aee099bc1d1b6c77f_idx (object_id), INDEX discriminator_05b1d6f74ecb471aee099bc1d1b6c77f_idx (discriminator), INDEX transaction_hash_05b1d6f74ecb471aee099bc1d1b6c77f_idx (transaction_hash), INDEX blame_id_05b1d6f74ecb471aee099bc1d1b6c77f_idx (blame_id), INDEX created_at_05b1d6f74ecb471aee099bc1d1b6c77f_idx (created_at), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('CREATE TABLE cours (id INT AUTO_INCREMENT NOT NULL, user_id INT DEFAULT NULL, titre VARCHAR(150) NOT NULL, contenu_texte LONGTEXT NOT NULL, type_media VARCHAR(10) NOT NULL, url_media VARCHAR(255) DEFAULT NULL, INDEX IDX_FDCA8C9CA76ED395 (user_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
@@ -38,6 +39,7 @@ final class Version20260225062951 extends AbstractMigration
         $this->addSql('CREATE TABLE user (id INT AUTO_INCREMENT NOT NULL, nom VARCHAR(100) DEFAULT NULL, email VARCHAR(180) NOT NULL, password VARCHAR(255) NOT NULL, roles JSON NOT NULL, date_inscription DATE DEFAULT NULL, solde_total DOUBLE PRECISION NOT NULL, image VARCHAR(255) DEFAULT NULL, face_id_credential_id VARCHAR(255) DEFAULT NULL, face_id_enabled TINYINT(1) NOT NULL, face_plus_token VARCHAR(255) DEFAULT NULL, face_plus_enabled TINYINT(1) NOT NULL, email_verified TINYINT(1) DEFAULT 0 NOT NULL, email_verification_token VARCHAR(64) DEFAULT NULL, email_verified_at DATETIME DEFAULT NULL COMMENT \'(DC2Type:datetime_immutable)\', UNIQUE INDEX UNIQ_8D93D649E7927C74 (email), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('CREATE TABLE user_notification (id INT AUTO_INCREMENT NOT NULL, user_id INT NOT NULL, title VARCHAR(160) NOT NULL, message LONGTEXT NOT NULL, status VARCHAR(20) NOT NULL, is_read TINYINT(1) NOT NULL, created_at DATETIME NOT NULL COMMENT \'(DC2Type:datetime_immutable)\', INDEX IDX_3F980AC8A76ED395 (user_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('CREATE TABLE messenger_messages (id BIGINT AUTO_INCREMENT NOT NULL, body LONGTEXT NOT NULL, headers LONGTEXT NOT NULL, queue_name VARCHAR(190) NOT NULL, created_at DATETIME NOT NULL COMMENT \'(DC2Type:datetime_immutable)\', available_at DATETIME NOT NULL COMMENT \'(DC2Type:datetime_immutable)\', delivered_at DATETIME DEFAULT NULL COMMENT \'(DC2Type:datetime_immutable)\', INDEX IDX_75EA56E0FB7336F0E3BD61CE16BA31DBBF396750 (queue_name, available_at, delivered_at, id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('ALTER TABLE ai_objective_report ADD CONSTRAINT FK_62190510157D1AD4 FOREIGN KEY (objectif_id) REFERENCES objectif (id)');
         $this->addSql('ALTER TABLE cas_relles ADD CONSTRAINT FK_9383DCA3A76ED395 FOREIGN KEY (user_id) REFERENCES user (id)');
         $this->addSql('ALTER TABLE cas_relles ADD CONSTRAINT FK_9383DCA3AF9C32D8 FOREIGN KEY (imprevus_id) REFERENCES imprevus (id)');
         $this->addSql('ALTER TABLE cas_relles ADD CONSTRAINT FK_9383DCA36F45385D FOREIGN KEY (confirmed_by_id) REFERENCES user (id)');
@@ -63,6 +65,7 @@ final class Version20260225062951 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
+        $this->addSql('ALTER TABLE ai_objective_report DROP FOREIGN KEY FK_62190510157D1AD4');
         $this->addSql('ALTER TABLE cas_relles DROP FOREIGN KEY FK_9383DCA3A76ED395');
         $this->addSql('ALTER TABLE cas_relles DROP FOREIGN KEY FK_9383DCA3AF9C32D8');
         $this->addSql('ALTER TABLE cas_relles DROP FOREIGN KEY FK_9383DCA36F45385D');
@@ -83,6 +86,7 @@ final class Version20260225062951 extends AbstractMigration
         $this->addSql('ALTER TABLE transaction DROP FOREIGN KEY FK_723705D1A76ED395');
         $this->addSql('ALTER TABLE transaction DROP FOREIGN KEY FK_723705D1F395DB7B');
         $this->addSql('ALTER TABLE user_notification DROP FOREIGN KEY FK_3F980AC8A76ED395');
+        $this->addSql('DROP TABLE ai_objective_report');
         $this->addSql('DROP TABLE cas_relles');
         $this->addSql('DROP TABLE cas_relles_audit');
         $this->addSql('DROP TABLE cours');
