@@ -556,6 +556,202 @@ class SavingsController extends AbstractController
         return (float) (round($value / $step) * $step);
     }
 
+    private function containsAssistantContributionSignal(string $message): bool
+    {
+        return preg_match('/\b(contribute|contribution|add|put|deposit|verser|ajouter|alimenter)\b/i', $message) === 1;
+    }
+
+    private function extractAssistantAmount(string $message): ?float
+    {
+        if (preg_match('/(\d+(?:[.,]\d{1,2})?)\s*(?:tnd|dt|dinar|dinars)?\b/i', $message, $m) !== 1) {
+            return null;
+        }
+
+        $amount = (float) str_replace(',', '.', (string) ($m[1] ?? '0'));
+        return $amount > 0 ? $amount : null;
+    }
+
+    private function extractAssistantGoalNameHint(string $message): ?string
+    {
+        if (preg_match('/goal\s*(?:named|name)?\s*[=:]?\s*[\'"]?([\p{L}\p{N}_\-\s]{1,80})[\'"]?/iu', $message, $m) === 1) {
+            return trim((string) ($m[1] ?? ''));
+        }
+
+        if (preg_match('/objectif\s*(?:nomm[ée]|appel[ée])?\s*[=:]?\s*[\'"]?([\p{L}\p{N}_\-\s]{1,80})[\'"]?/iu', $message, $m) === 1) {
+            return trim((string) ($m[1] ?? ''));
+        }
+
+        if (preg_match('/(?:to|for)\s+[\'"]?([\p{L}\p{N}_\-\s]{1,80})[\'"]?$/iu', trim($message), $m) === 1) {
+            return trim((string) ($m[1] ?? ''));
+        }
+
+        return null;
+    }
+
+    private function resolveAssistantGoalFromMessage(array $goals, string $message): ?array
+    {
+        $q = mb_strtolower(trim($message));
+        $hint = $this->extractAssistantGoalNameHint($message);
+        $hintLower = $hint !== null ? mb_strtolower($hint) : null;
+
+        if ($hintLower !== null && $hintLower !== '') {
+            foreach ($goals as $g) {
+                $name = mb_strtolower(trim((string) ($g['nom'] ?? '')));
+                if ($name !== '' && ($name === $hintLower || str_contains($name, $hintLower) || str_contains($hintLower, $name))) {
+                    return $g;
+                }
+            }
+        }
+
+        $best = null;
+        $bestLen = 0;
+        foreach ($goals as $g) {
+            $name = mb_strtolower(trim((string) ($g['nom'] ?? '')));
+            if ($name === '') {
+                continue;
+            }
+            if (str_contains($q, $name) && mb_strlen($name) > $bestLen) {
+                $best = $g;
+                $bestLen = mb_strlen($name);
+            }
+        }
+
+        return $best;
+    }
+
+    private function tryHandleAssistantContribution(
+        Connection $conn,
+        int $userId,
+        array $accPack,
+        string $goalAccCol,
+        string $message,
+        ValidatorInterface $validator
+    ): ?array {
+        if (!$this->containsAssistantContributionSignal($message)) {
+            return null;
+        }
+
+        $accId = (int) ($accPack['accId'] ?? 0);
+        if ($accId <= 0) {
+            return [
+                'ok' => false,
+                'reply' => "No savings account was found for your profile.",
+                'source' => 'local-action',
+                'model' => null,
+                'error' => 'NO_ACCOUNT',
+            ];
+        }
+
+        $goals = $conn->fetchAllAssociative(
+            "SELECT id, nom, montant_cible, montant_actuel
+             FROM financial_goal
+             WHERE `$goalAccCol` = :acc",
+            ['acc' => $accId]
+        );
+        if (count($goals) === 0) {
+            return [
+                'ok' => false,
+                'reply' => "You currently have no goals to contribute to.",
+                'source' => 'local-action',
+                'model' => null,
+                'error' => 'NO_GOALS',
+            ];
+        }
+
+        $amount = $this->extractAssistantAmount($message);
+        if ($amount === null) {
+            return [
+                'ok' => false,
+                'reply' => "I understood you want to contribute, but I couldn't read the amount.\nTry: \"contribute 400 TND to goal pcc\".",
+                'source' => 'local-action',
+                'model' => null,
+                'error' => 'MISSING_AMOUNT',
+            ];
+        }
+
+        $goal = $this->resolveAssistantGoalFromMessage($goals, $message);
+        if (!$goal) {
+            $names = array_map(static fn(array $g) => (string) ($g['nom'] ?? ''), array_slice($goals, 0, 6));
+            $names = array_values(array_filter($names, static fn(string $n) => trim($n) !== ''));
+            $known = count($names) ? implode(', ', $names) : 'none';
+            return [
+                'ok' => false,
+                'reply' => "I found the amount ({$amount} TND) but couldn't match the goal name.\nKnown goals: {$known}.",
+                'source' => 'local-action',
+                'model' => null,
+                'error' => 'GOAL_NOT_FOUND',
+            ];
+        }
+
+        $errs = $this->validateContribution($amount, $validator);
+        if ($errs) {
+            return [
+                'ok' => false,
+                'reply' => implode(' ', $errs),
+                'source' => 'local-action',
+                'model' => null,
+                'error' => 'INVALID_AMOUNT',
+            ];
+        }
+
+        $goalId = (int) ($goal['id'] ?? 0);
+        $before = $conn->fetchOne(
+            "SELECT montant_actuel FROM financial_goal WHERE id = :gid AND `$goalAccCol` = :acc LIMIT 1",
+            ['gid' => $goalId, 'acc' => $accId]
+        );
+
+        $this->doContributeGoal(
+            $conn,
+            $userId,
+            $accId,
+            $goalAccCol,
+            (string) $accPack['accUserCol'],
+            (string) $accPack['accBalanceCol'],
+            (string) $accPack['accPkCol'],
+            $goalId,
+            $amount
+        );
+
+        $after = $conn->fetchOne(
+            "SELECT montant_actuel FROM financial_goal WHERE id = :gid AND `$goalAccCol` = :acc LIMIT 1",
+            ['gid' => $goalId, 'acc' => $accId]
+        );
+        if ($before !== null && $after !== null && (float) $after === (float) $before) {
+            return [
+                'ok' => false,
+                'reply' => "Contribution refused: insufficient savings balance or invalid goal.",
+                'source' => 'local-action',
+                'model' => null,
+                'error' => 'CONTRIB_REFUSED',
+            ];
+        }
+
+        $newBalance = (float) $conn->fetchOne(
+            "SELECT `{$accPack['accBalanceCol']}` FROM saving_account
+             WHERE `{$accPack['accPkCol']}` = :id AND `{$accPack['accUserCol']}` = :uid LIMIT 1",
+            ['id' => $accId, 'uid' => $userId]
+        );
+
+        $target = (float) ($goal['montant_cible'] ?? 0);
+        $remaining = max(0.0, $target - (float) $after);
+        $goalName = (string) ($goal['nom'] ?? ('goal #' . $goalId));
+        $reply = sprintf(
+            "Done. Added %.2f TND to goal \"%s\".\nRemaining for this goal: %.2f TND.\nNew savings balance: %.2f TND.",
+            $amount,
+            $goalName,
+            $remaining,
+            $newBalance
+        );
+
+        return [
+            'ok' => true,
+            'reply' => $reply,
+            'source' => 'local-action',
+            'model' => null,
+            'error' => null,
+        ];
+    }
+
     private function simulateGoalTimeline(array $goalRows, float $balanceNow, float $oneTimeDeposit, float $monthlyDeposit): array
     {
         $items = [];
@@ -2603,7 +2799,8 @@ class SavingsController extends AbstractController
         Connection $conn,
         Security $security,
         Request $request,
-        SavingsAssistantService $assistantService
+        SavingsAssistantService $assistantService,
+        ValidatorInterface $validator
     ): JsonResponse {
         $payload = json_decode((string) $request->getContent(), true);
         if (!is_array($payload)) {
@@ -2624,6 +2821,31 @@ class SavingsController extends AbstractController
         }
 
         $userId = $this->resolveUserId($conn, $security, $request);
+        $accPack = $this->getOrCreateCurrentAccount($conn, $userId);
+        $goalAccCol = $this->goalAccountFkColumn($conn);
+
+        $actionResult = $this->tryHandleAssistantContribution(
+            $conn,
+            $userId,
+            $accPack,
+            $goalAccCol,
+            $message,
+            $validator
+        );
+        if ($actionResult !== null) {
+            return new JsonResponse([
+                'ok' => (bool) ($actionResult['ok'] ?? false),
+                'reply' => (string) ($actionResult['reply'] ?? ''),
+                'source' => (string) ($actionResult['source'] ?? 'local-action'),
+                'model' => null,
+                'error' => $actionResult['error'] ?? null,
+                'dbContext' => [
+                    'balanceNow' => (float) ($accPack['currentAccount'][$accPack['accBalanceCol']] ?? 0),
+                    'goalsAtRisk' => 0,
+                ],
+            ], (bool) ($actionResult['ok'] ?? false) ? 200 : 422);
+        }
+
         $ctx = $this->buildAssistantDbContext($conn, $userId);
         $result = $assistantService->chat($ctx, $message, $history);
 
