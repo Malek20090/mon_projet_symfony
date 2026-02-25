@@ -155,4 +155,30 @@ class ExpenseRepository extends ServiceEntityRepository
             $rows
         );
     }
+
+    /**
+     * Detect the dominant category if it represents more than 40% of total expenses.
+     */
+    public function detectOverspendingCategory(User $user): ?string
+    {
+        $totalsByCategory = $this->getTotalsByCategory($user);
+        if ($totalsByCategory === []) {
+            return null;
+        }
+
+        $totalExpenses = array_sum(array_map(
+            static fn (array $row): float => (float) ($row['total'] ?? 0.0),
+            $totalsByCategory
+        ));
+
+        if ($totalExpenses <= 0.0) {
+            return null;
+        }
+
+        $topCategory = (string) ($totalsByCategory[0]['category'] ?? '');
+        $topAmount = (float) ($totalsByCategory[0]['total'] ?? 0.0);
+        $share = $topAmount / $totalExpenses;
+
+        return $share > 0.40 ? $topCategory : null;
+    }
 }

@@ -80,6 +80,33 @@
       padding-right: 16px;
       white-space: nowrap;
     }
+    .savings-page .month-filter-form .month-select {
+      min-width: 150px;
+      font-weight: 700;
+      color: #1f3552;
+    }
+    .savings-page .month-filter-controls {
+      display: flex;
+      align-items: end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .savings-page .month-filter-controls .field {
+      min-width: 170px;
+      flex: 1 1 170px;
+    }
+    .savings-page .month-filter-controls .action {
+      min-width: 170px;
+      flex: 0 0 170px;
+    }
+    body.night .savings-page .month-filter-form .month-select {
+      color: #e6f6ff;
+    }
+    @media (max-width: 992px) {
+      .savings-page .month-filter-controls .action {
+        flex: 1 1 170px;
+      }
+    }
     .savings-page .recurring-engine-card {
       border-radius: 16px;
       border: 1px solid rgba(13, 110, 253, .18);
@@ -357,21 +384,25 @@
           <input type="hidden" name="revenue_sort2" value="{{ app.request.query.get('revenue_sort2', 'amount') }}">
           <input type="hidden" name="revenue_dir2" value="{{ app.request.query.get('revenue_dir2', 'DESC') }}">
           <input type="hidden" name="revenue_search" value="{{ app.request.query.get('revenue_search', '') }}">
-          <div class="col-md-5 col-lg-4">
-            <label class="form-label small mb-0">Choose month</label>
-            <select name="month" class="form-select form-select-sm">
-              {% if selectedMonth not in expenseStats.available_months %}
-                <option value="{{ selectedMonth }}" selected>{{ selectedMonth }}</option>
-              {% endif %}
-              {% for monthOption in expenseStats.available_months %}
-                <option value="{{ monthOption }}" {{ selectedMonth == monthOption ? 'selected' : '' }}>{{ monthOption }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-4 col-lg-3">
-            <button type="submit" class="btn btn-primary w-100 month-apply-btn">
-              <i class="fa-solid fa-check me-1"></i>Apply Month
-            </button>
+          <div class="col-md-8 col-lg-7">
+            <div class="month-filter-controls">
+              <div class="field">
+                <label class="form-label small mb-0">Choose month</label>
+                <select name="month" class="form-select form-select-sm month-select">
+                  {% if selectedMonth not in expenseStats.available_months %}
+                    <option value="{{ selectedMonth }}" selected>{{ selectedMonth }}</option>
+                  {% endif %}
+                  {% for monthOption in expenseStats.available_months %}
+                    <option value="{{ monthOption }}" {{ selectedMonth == monthOption ? 'selected' : '' }}>{{ monthOption }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="action">
+                <button type="submit" class="btn btn-primary w-100 month-apply-btn">
+                  <i class="fa-solid fa-check me-1"></i>Apply Month
+                </button>
+              </div>
+            </div>
           </div>
         </form>
         <div class="row g-3 mb-3">
