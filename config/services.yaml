@@ -47,6 +47,10 @@ services:
             $openAiApiKey: '%env(default:openai_api_key_default:OPENAI_API_KEY)%'
             $openAiModel: '%env(default:openai_model_default:OPENAI_MODEL)%'
 
+    App\Service\WhatIfAiNarratorService:
+        arguments:
+            $cache: '@cache.app'
+
     App\Service\FacePlusPlusService:
         arguments:
             $apiKey: '%env(string:FACEPP_API_KEY)%'

@@ -1,73 +1,107 @@
-<div class="modal" id="simModal" aria-hidden="true">
+﻿<div class="modal" id="simModal" aria-hidden="true">
   <div class="modal-card sim-modal-card">
     <div class="modal-head">
       <div class="modal-title">What-if AI Planner</div>
       <button class="close-x" type="button" data-close-modal>&times;</button>
     </div>
 
-    <div class="sub sim-sub">Run a scenario with your real savings and goals data, then get strategy-grade AI guidance.</div>
+    <div class="sub sim-sub">Run one scenario on one goal and get consequence-focused guidance.</div>
+
+    <div class="mt-16 sim-grid-2">
+      <div>
+        <label class="form-label">Goal</label>
+        <select id="simGoal" class="form-control">
+          {% set simGoals = goals is iterable ? goals : [] %}
+          {% if simGoals|length == 0 %}
+            <option value="0">No goals available</option>
+          {% else %}
+            {% for g in simGoals %}
+              {% set gid = attribute(g,'id')|default(0) %}
+              {% set gname = attribute(g,'nom')|default('Goal') %}
+              <option value="{{ gid }}">{{ gname }}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Scenario Type</label>
+        <select id="simScenario" class="form-control">
+          <option value="deposit_adjustment" selected>Deposit Adjustment</option>
+          <option value="deadline_adjustment">Deadline Adjustment</option>
+          <option value="target_adjustment">Target Adjustment</option>
+        </select>
+      </div>
+    </div>
 
     <div class="mt-16 sim-grid-2">
       <div>
         <label class="form-label">Monthly deposit (TND)</label>
-        <input class="range" id="simRange" type="range" min="0" max="5000" step="50" value="200">
-        <div class="tiny-note" style="margin-top:6px;">Value: <b><span id="simVal">200</span> TND</b></div>
+        <input class="range" id="simMonthly" type="range" min="0" max="5000" step="50" value="200">
+        <div class="tiny-note" style="margin-top:6px;">Value: <b><span id="simMonthlyVal">200</span> TND</b></div>
       </div>
       <div>
         <label class="form-label">One-time deposit (TND)</label>
-        <input class="form-control" id="simOneTime" type="number" min="0" step="10" value="0" placeholder="Optional one-time amount">
+        <input class="form-control" id="simOneTime" type="number" min="0" step="10" value="0">
       </div>
+    </div>
+
+    <div class="mt-16 sim-grid-2" id="simScenarioInputs">
+      <div id="simDeadlineWrap" style="display:none;">
+        <label class="form-label">Deadline adjustment (months)</label>
+        <input class="form-control" id="simDeadlineMonths" type="number" min="-24" max="24" step="1" value="0">
+      </div>
+      <div id="simTargetWrap" style="display:none;">
+        <label class="form-label">Target adjustment (TND)</label>
+        <input class="form-control" id="simTargetAmount" type="number" step="10" value="0">
+      </div>
+    </div>
+
+    <div class="mt-16">
+      <button class="primary-btn" type="button" id="simRun">Run simulation</button>
     </div>
 
     <div class="sim-box mt-16 sim-kpi-grid">
       <div class="sim-kpi sim-kpi-card">
-        <div class="lbl">Months to finish</div>
-        <div class="val"><span id="simMonths">-</span></div>
+        <div class="lbl">Finish date</div>
+        <div class="val"><span id="simFinishDate">-</span></div>
       </div>
       <div class="sim-kpi sim-kpi-card">
-        <div class="lbl">Remaining after now</div>
-        <div class="val"><span id="simRemaining">-</span></div>
+        <div class="lbl">Risk level</div>
+        <div class="val"><span id="simRisk">-</span></div>
       </div>
       <div class="sim-kpi sim-kpi-card">
-        <div class="lbl">Projected finish date</div>
-        <div class="val"><span id="simDate">-</span></div>
+        <div class="lbl">Feasibility score</div>
+        <div class="val"><span id="simFeasibility">-</span></div>
+      </div>
+      <div class="sim-kpi sim-kpi-card">
+        <div class="lbl">Deadline confidence</div>
+        <div class="val"><span id="simConfidence">-</span></div>
       </div>
     </div>
 
-    <div id="simInsights" class="tiny-note mt-16 sim-insights">
-      Insights will appear after running the simulation.
+    <div class="sim-box mt-16 sim-insights" id="simImpactSummary">
+      Impact Summary will appear after running simulation.
     </div>
 
-    <div id="simConflict" class="tiny-note mt-16 sim-insights" style="display:none;"></div>
-
-    <div class="mt-16 sim-ai-shell">
-      <div class="sim-ai-head">
-        <div class="sim-ai-title-wrap">
-          <div class="sim-ai-badge">📈</div>
-          <div>
-            <div class="form-label sim-ai-title">Future Timeline Projection</div>
-            <div class="sim-ai-meta">Risk zone in red, safe zone in green.</div>
-          </div>
-        </div>
-      </div>
-      <canvas id="simTimeline" height="140"></canvas>
+    <div class="sim-box mt-16 sim-insights">
+      <div class="sim-h" style="margin-top:0;">Executive Insight</div>
+      <div id="simExecutiveInsight">-</div>
+      <div class="sim-h">Why</div>
+      <div id="simWhy">-</div>
+      <div class="sim-h">Best Action</div>
+      <div id="simBestAction">-</div>
+      <div class="sim-h">Alternatives</div>
+      <ul id="simAlternatives" class="sim-ul"><li class="sim-li">-</li></ul>
+      <div class="sim-h">Next 7 days</div>
+      <div id="simNext7">-</div>
     </div>
 
-    <div class="mt-16 sim-ai-shell">
-      <div class="sim-ai-head">
-        <div class="sim-ai-title-wrap">
-          <div class="sim-ai-badge">AI</div>
-          <div>
-            <div class="form-label sim-ai-title">AI Financial Strategy</div>
-            <div id="simAiMeta" class="sim-ai-meta">Waiting for simulation run.</div>
-          </div>
-        </div>
-      </div>
-      <div id="simAiAdvice" class="tiny-note sim-ai-content">Run simulation to generate advice.</div>
-    </div>
+    <details class="sim-box mt-16">
+      <summary style="cursor:pointer; font-weight:700;">Show details</summary>
+      <div id="simDetails" style="margin-top:10px; font-size:13px; color:#38506a;">No details yet.</div>
+    </details>
 
     <div class="mt-16" style="display:flex; gap:10px; flex-wrap:wrap;">
-      <button class="primary-btn" type="button" id="simRunBtn">Run simulation</button>
       <button class="chip" type="button" data-close-modal style="border:1px solid #d8e4ef;">Close</button>
     </div>
   </div>
@@ -75,7 +109,7 @@
 
 <style>
   #simModal .sim-modal-card {
-    width: min(860px, calc(100vw - 72px));
+    width: min(900px, calc(100vw - 72px));
     max-height: calc(100vh - 56px);
     overflow-y: auto;
     margin: 28px auto;
@@ -84,134 +118,18 @@
     box-shadow: 0 20px 45px rgba(11, 30, 53, 0.12);
     background: linear-gradient(180deg, #fbfdff 0%, #f5f9ff 100%);
   }
-  #simModal {
-    align-items: flex-start;
-    overflow-y: auto;
-  }
-  #simModal .sim-sub {
-    color: #445c74;
-    font-size: 1.05rem;
-  }
-  #simModal .sim-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-  #simModal .sim-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-  #simModal .sim-kpi-card {
-    border: 1px solid #d8e5f1;
-    border-radius: 12px;
-    padding: 12px;
-    background: #ffffff;
-  }
-  #simModal .sim-kpi-card .lbl {
-    font-size: 0.9rem;
-    color: #607991;
-    margin-bottom: 5px;
-    font-weight: 600;
-  }
-  #simModal .sim-kpi-card .val {
-    font-size: 1.9rem;
-    line-height: 1.1;
-    font-weight: 800;
-    color: #142c44;
-  }
-  #simModal .sim-insights {
-    border: 1px dashed #b8d3ec;
-    border-radius: 12px;
-    padding: 12px;
-    background: rgba(237, 246, 255, 0.55);
-    color: #2e4a63;
-    line-height: 1.5;
-    text-align: left !important;
-  }
-  #simModal .sim-ai-shell {
-    border: 1px solid #c8d9ee;
-    border-radius: 14px;
-    padding: 14px;
-    background: radial-gradient(circle at top right, rgba(0, 197, 255, 0.12), transparent 45%), #ffffff;
-  }
-  #simModal .sim-ai-head {
-    margin-bottom: 8px;
-  }
-  #simModal .sim-ai-title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  #simModal .sim-ai-badge {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    color: #fff;
-    background: linear-gradient(135deg, #0ea5e9, #22c55e);
-    box-shadow: 0 6px 18px rgba(14, 165, 233, 0.3);
-  }
-  #simModal .sim-ai-title {
-    margin-bottom: 0;
-    color: #183753;
-    font-size: 1.02rem;
-    letter-spacing: 0.2px;
-  }
-  #simModal .sim-ai-meta {
-    font-size: 0.86rem;
-    color: #6683a0;
-    margin-top: 2px;
-  }
-  #simModal .sim-ai-content {
-    color: #29455f;
-    line-height: 1.6;
-    font-size: 0.97rem;
-    white-space: normal;
-    text-align: left !important;
-  }
-  #simModal .sim-ai-content .sim-h {
-    font-weight: 800;
-    color: #153a5d;
-    margin-top: 10px;
-    margin-bottom: 6px;
-    text-align: left;
-  }
-  #simModal .sim-ai-content .sim-p {
-    margin: 0 0 6px 0;
-    text-align: left;
-  }
-  #simModal .sim-ai-content .sim-ul {
-    margin: 0 0 8px 0;
-    padding-left: 20px;
-  }
-  #simModal .sim-ai-content .sim-li {
-    margin: 0 0 4px 0;
-    padding-left: 2px;
-    text-align: left;
-  }
-  #simModal #simConflict {
-    text-align: left !important;
-  }
-  @media (max-width: 840px) {
-    #simModal .sim-modal-card {
-      width: min(96vw, 96vw);
-      max-height: calc(100vh - 20px);
-      margin: 10px auto;
-      padding: 14px;
-    }
-    #simModal .sim-grid-2 {
-      grid-template-columns: 1fr;
-    }
-    #simModal .sim-kpi-grid {
-      grid-template-columns: 1fr;
-    }
-    #simModal .sim-kpi-card .val {
-      font-size: 1.55rem;
-    }
+  #simModal { align-items: flex-start; overflow-y: auto; }
+  #simModal .sim-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  #simModal .sim-kpi-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
+  #simModal .sim-kpi-card { border:1px solid #d8e5f1; border-radius:12px; padding:12px; background:#fff; }
+  #simModal .sim-kpi-card .lbl { font-size:.9rem; color:#607991; margin-bottom:5px; font-weight:600; }
+  #simModal .sim-kpi-card .val { font-size:1.7rem; line-height:1.1; font-weight:800; color:#142c44; }
+  #simModal .sim-insights { border:1px dashed #b8d3ec; border-radius:12px; padding:12px; background:rgba(237,246,255,.55); color:#2e4a63; line-height:1.5; }
+  #simModal .sim-h { font-weight:800; color:#153a5d; margin-top:10px; margin-bottom:6px; }
+  #simModal .sim-ul { margin: 0; padding-left: 20px; }
+  @media (max-width: 900px) {
+    #simModal .sim-grid-2, #simModal .sim-kpi-grid { grid-template-columns:1fr; }
+    #simModal .sim-modal-card { width:min(96vw, 96vw); margin:10px auto; }
   }
 </style>
 
@@ -220,201 +138,129 @@
   const modal = document.getElementById('simModal');
   const openBtn = document.getElementById('openSimulation');
   const closeBtns = modal ? modal.querySelectorAll('[data-close-modal]') : [];
-  const range = document.getElementById('simRange');
-  const val = document.getElementById('simVal');
+  const goal = document.getElementById('simGoal');
+  const scenario = document.getElementById('simScenario');
+  const monthly = document.getElementById('simMonthly');
+  const monthlyVal = document.getElementById('simMonthlyVal');
   const oneTime = document.getElementById('simOneTime');
-  const runBtn = document.getElementById('simRunBtn');
-  const months = document.getElementById('simMonths');
-  const remaining = document.getElementById('simRemaining');
-  const date = document.getElementById('simDate');
-  const insights = document.getElementById('simInsights');
-  const conflict = document.getElementById('simConflict');
-  const timelineCanvas = document.getElementById('simTimeline');
-  const aiMeta = document.getElementById('simAiMeta');
-  const aiAdvice = document.getElementById('simAiAdvice');
+  const deadlineWrap = document.getElementById('simDeadlineWrap');
+  const targetWrap = document.getElementById('simTargetWrap');
+  const deadlineMonths = document.getElementById('simDeadlineMonths');
+  const targetAmount = document.getElementById('simTargetAmount');
+  const runBtn = document.getElementById('simRun');
 
-  if (!modal || !openBtn || !range || !val || !oneTime || !runBtn || !months || !remaining || !date || !insights || !conflict || !timelineCanvas || !aiMeta || !aiAdvice) return;
+  const finish = document.getElementById('simFinishDate');
+  const risk = document.getElementById('simRisk');
+  const feas = document.getElementById('simFeasibility');
+  const conf = document.getElementById('simConfidence');
+  const impact = document.getElementById('simImpactSummary');
+  const execInsight = document.getElementById('simExecutiveInsight');
+  const why = document.getElementById('simWhy');
+  const best = document.getElementById('simBestAction');
+  const alts = document.getElementById('simAlternatives');
+  const next7 = document.getElementById('simNext7');
+  const details = document.getElementById('simDetails');
 
-  function openModal() {
-    modal.style.display = 'flex';
-    modal.classList.add('show');
-    modal.setAttribute('aria-hidden', 'false');
+  if (!modal || !openBtn || !goal || !scenario || !monthly || !monthlyVal || !oneTime || !deadlineWrap || !targetWrap || !deadlineMonths || !targetAmount || !runBtn || !finish || !risk || !feas || !conf || !impact || !execInsight || !why || !best || !alts || !next7 || !details) return;
+
+  const baselineMonthlyDeposit = Number(monthly.value || 0);
+
+  function openModal(){ modal.style.display='flex'; modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); }
+  function closeModal(){ modal.style.display='none'; modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
+
+  function syncMonthly(){ monthlyVal.textContent = String(monthly.value || '0'); }
+
+  function syncScenarioInputs(){
+    const t = String(scenario.value || 'deposit_adjustment');
+    deadlineWrap.style.display = (t === 'deadline_adjustment') ? '' : 'none';
+    targetWrap.style.display = (t === 'target_adjustment') ? '' : 'none';
   }
 
-  function closeModal() {
-    modal.style.display = 'none';
-    modal.classList.remove('show');
-    modal.setAttribute('aria-hidden', 'true');
+  function asDeltaMonthsText(delta){
+    if (delta === null || delta === undefined) return 'n/a';
+    const n = Number(delta);
+    if (!Number.isFinite(n) || n === 0) return 'no change';
+    return n > 0 ? `${Math.abs(n)} month(s) earlier` : `${Math.abs(n)} month(s) later`;
   }
 
-  function syncRangeValue() {
-    val.textContent = String(range.value || '0');
+  function asRequiredAdjustmentText(value){
+    const n = Number(value || 0);
+    if (!Number.isFinite(n) || n === 0) return 'No monthly adjustment needed.';
+    if (n < 0) return `You can reduce by ${Math.abs(n).toFixed(2)} TND/month and still stay safe.`;
+    return `Increase by ${n.toFixed(2)} TND/month to stay safe.`;
   }
 
-  function setLoadingState(loading) {
-    runBtn.disabled = loading;
-    runBtn.textContent = loading ? 'Calculating...' : 'Run simulation';
+  function render(res){
+    const m = res.metrics || {};
+    const a = res.advice || {};
+    const imp = res.impact_summary || {};
+
+    finish.textContent = String(m.projected_finish_date || '-');
+    risk.textContent = String(m.risk_level || '-');
+    feas.textContent = `${Number(m.feasibility_score || 0).toFixed(1)} / 100`;
+    conf.textContent = `${Number(m.deadline_confidence || 0).toFixed(1)}%`;
+
+    impact.innerHTML = `
+      <b>Impact Summary</b><br>
+      Finish date change: <b>${asDeltaMonthsText(imp.delta_months)}</b><br>
+      Required adjustment (safe): <b>${asRequiredAdjustmentText(imp.required_adjustment_tnd)}</b><br>
+      Risk level: <b>${String(m.risk_level || '-')}</b><br>
+      Feasibility: <b>${Number(m.feasibility_score || 0).toFixed(1)}/100</b> · Deadline confidence: <b>${Number(m.deadline_confidence || 0).toFixed(1)}%</b>
+    `;
+
+    execInsight.textContent = String(a.executive_insight || '-');
+    why.textContent = String(a.why || '-');
+
+    const bestTitle = a.best_action && a.best_action.title ? String(a.best_action.title) : '';
+    const bestDetails = a.best_action && a.best_action.details ? String(a.best_action.details) : '';
+    best.innerHTML = bestTitle
+      ? `<b>${bestTitle}:</b> ${bestDetails || '-'}`
+      : (bestDetails || '-');
+
+    const altList = Array.isArray(a.alternatives) ? a.alternatives : [];
+    alts.innerHTML = altList.length
+      ? altList.map((x) => {
+          const t = x && x.title ? String(x.title) : 'Alternative';
+          const d = x && x.details ? String(x.details) : '-';
+          return `<li class="sim-li"><b>${t}:</b> ${d}</li>`;
+        }).join('')
+      : '<li class="sim-li">No alternatives.</li>';
+
+    next7.textContent = String(a.next_7_days || '-');
+
+    const detailRows = [
+      ['Goal', m.goal_name || '-'],
+      ['Current saved', `${Number(m.current_saved || 0).toFixed(2)} TND`],
+      ['Target amount', `${Number(m.target_amount || 0).toFixed(2)} TND`],
+      ['Deadline', m.deadline_date || '-'],
+      ['Projected finish', m.projected_finish_date || '-'],
+      ['Months to finish', m.months_to_finish === null || m.months_to_finish === undefined ? 'n/a' : String(m.months_to_finish)],
+      ['Remaining after now', `${Number(m.remaining_after_now || 0).toFixed(2)} TND`],
+      ['Required monthly to hit deadline', `${Number(m.required_monthly_to_hit_deadline || 0).toFixed(2)} TND`],
+      ['Deadline gap', `${Number(m.deadline_gap_months || 0)} month(s)`],
+      ['Risk level', String(m.risk_level || '-')],
+      ['Feasibility score', `${Number(m.feasibility_score || 0).toFixed(1)} / 100`],
+      ['Deadline confidence', `${Number(m.deadline_confidence || 0).toFixed(1)}%`],
+      ['Required adjustment', `${Number(m.required_adjustment_tnd || 0).toFixed(2)} TND/month`],
+      ['Finish date delta', asDeltaMonthsText(imp.delta_months)],
+    ];
+    details.innerHTML = detailRows.map(([k, v]) => `<div><b>${k}:</b> ${String(v)}</div>`).join('');
   }
 
-  function escHtml(s) {
-    return String(s || '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#39;');
-  }
-
-  function renderAdvice(raw) {
-    const lines = String(raw || '').split('\n').map((x) => x.trim()).filter(Boolean);
-    if (!lines.length) return 'No advice generated.';
-
-    const html = [];
-    let inList = false;
-
-    function closeList() {
-      if (inList) {
-        html.push('</ul>');
-        inList = false;
-      }
-    }
-
-    for (const line of lines) {
-      const isHeader = /summary|risks|best plan|next 30 days|assessment|action plan|critical/i.test(line) && line.endsWith(':');
-      if (isHeader) {
-        closeList();
-        html.push(`<div class="sim-h">${escHtml(line)}</div>`);
-        continue;
-      }
-
-      if (line.startsWith('-') || line.startsWith('â€¢') || line.startsWith('•')) {
-        if (!inList) {
-          html.push('<ul class="sim-ul">');
-          inList = true;
-        }
-        html.push(`<li class="sim-li">${escHtml(line.replace(/^[-â€¢•]\s*/, ''))}</li>`);
-      } else {
-        closeList();
-        html.push(`<p class="sim-p">${escHtml(line)}</p>`);
-      }
-    }
-    closeList();
-
-    return html.join('');
-  }
-
-  function drawTimeline(data) {
-    const ctx = timelineCanvas.getContext('2d');
-    const series = Array.isArray(data.timelineSeries) ? data.timelineSeries : [];
-    if (!ctx || !series.length) return;
-
-    const w = timelineCanvas.width = timelineCanvas.clientWidth;
-    const h = timelineCanvas.height = 140;
-    ctx.clearRect(0, 0, w, h);
-
-    const pad = 26;
-    const maxY = Math.max(...series.map((p) => Number(p.remaining || 0)), 1);
-    const maxX = Math.max(...series.map((p) => Number(p.month || 0)), 1);
-
-    ctx.fillStyle = 'rgba(34, 197, 94, 0.10)';
-    ctx.fillRect(pad, pad, w - pad * 2, (h - pad * 2) * 0.45);
-    ctx.fillStyle = 'rgba(239, 68, 68, 0.10)';
-    ctx.fillRect(pad, pad + (h - pad * 2) * 0.45, w - pad * 2, (h - pad * 2) * 0.55);
-
-    ctx.beginPath();
-    ctx.strokeStyle = '#9cb4ca';
-    ctx.lineWidth = 1;
-    ctx.moveTo(pad, h - pad);
-    ctx.lineTo(w - pad, h - pad);
-    ctx.moveTo(pad, pad);
-    ctx.lineTo(pad, h - pad);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.strokeStyle = '#0ea5e9';
-    ctx.lineWidth = 2.2;
-    series.forEach((p, i) => {
-      const x = pad + ((Number(p.month || 0) / maxX) * (w - pad * 2));
-      const y = h - pad - ((Number(p.remaining || 0) / maxY) * (h - pad * 2));
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    ctx.fillStyle = '#355472';
-    ctx.font = '12px Segoe UI, Arial, sans-serif';
-    ctx.fillText('Month 0', pad, h - 8);
-    ctx.fillText(`Month ${maxX}`, w - pad - 64, h - 8);
-    ctx.fillText(`Remaining ${maxY.toFixed(0)} TND`, pad + 8, pad - 8);
-  }
-
-  function renderResult(data) {
-    const r = data.result || {};
-    months.textContent = r.monthsToFinish !== null && r.monthsToFinish !== undefined ? String(r.monthsToFinish) : '-';
-    remaining.textContent = r.remainingAfterNow !== undefined ? `${Number(r.remainingAfterNow).toFixed(2)} TND` : '-';
-    date.textContent = r.projectedFinishDate || '-';
-    const alt = Array.isArray(data.alternatives) ? data.alternatives : [];
-    const altText = alt.map((a) => {
-      const m = a.monthsToFinish === null || a.monthsToFinish === undefined ? 'n/a' : `${a.monthsToFinish}m`;
-      return `${Number(a.monthlyDeposit).toFixed(0)} TND/mo -> ${m}, risk ${a.goalsAtRisk}`;
-    }).join(' | ');
-    const riskText = (r.goalsAtRisk || 0) > 0
-      ? `<span style="color:#a94442;"><b>${r.goalsAtRisk}</b> goal(s) at deadline risk</span>`
-      : '<span style="color:#2f7d32;"><b>No deadline risk</b></span>';
-    let recText = 'No safe monthly plan found yet';
-    if (r.recommendedMonthly) {
-      const base = `${Number(r.recommendedMonthly).toFixed(0)} TND/month`;
-      if (r.recommendedMonthlyType === 'safe') {
-        recText = `${base} (safe)`;
-      } else if (r.recommendedMonthlyType === 'best_effort') {
-        const rr = Number(r.recommendedRiskAtMonthly || 0);
-        const mm = r.recommendedMonthsAtMonthly !== null && r.recommendedMonthsAtMonthly !== undefined
-          ? `${Number(r.recommendedMonthsAtMonthly)}m`
-          : 'n/a';
-        recText = `${base} (best effort: risk ${rr}, ${mm})`;
-      } else {
-        recText = base;
-      }
-    }
-    insights.innerHTML = `<b>Risk:</b> ${riskText}<br><b>Recommended monthly:</b> ${recText}<br><b>Plan options:</b> ${altText || 'n/a'}`;
-    drawTimeline(data);
-
-    const conflictPack = data.conflictAnalysis || {};
-    const cRows = Array.isArray(conflictPack.scenarios) ? conflictPack.scenarios : [];
-    if (cRows.length) {
-      const rowsHtml = cRows.map((s) => {
-        const m = s.months === null || s.months === undefined ? 'n/a' : `${s.months}m`;
-        return `<div style="margin-top:6px;"><b>${escHtml(s.code)}.</b> ${escHtml(s.title)} | <b>Drop:</b> ${escHtml(s.drop)} | <b>Result:</b> ${escHtml(m)}, risk ${escHtml(s.riskGoals)}</div>`;
-      }).join('');
-      conflict.style.display = 'block';
-      conflict.innerHTML = `<div><b>🔥 Conflict Analysis:</b> ${escHtml(conflictPack.summary || '')}</div>${rowsHtml}`;
-    } else {
-      conflict.style.display = 'none';
-      conflict.innerHTML = '';
-    }
-
-    const source = data.aiSource === 'openai'
-      ? `OpenAI${data.aiModel ? ` (${data.aiModel})` : ''}`
-      : 'Planner fallback';
-    aiMeta.textContent = `Source: ${source}`;
-    aiAdvice.innerHTML = renderAdvice(data.aiAdvice || '');
-  }
-
-  async function runSimulation() {
-    setLoadingState(true);
-    aiMeta.textContent = 'Source: running analysis...';
-    aiAdvice.textContent = 'Running strategy simulation...';
-    insights.textContent = 'Computing goal timeline and plan options...';
-    conflict.style.display = 'none';
-    conflict.innerHTML = '';
-
-    const body = {
-      monthlyDeposit: Number(range.value || 0),
-      oneTimeDeposit: Number(oneTime.value || 0),
-      runId: String(Date.now()),
-    };
-
+  async function runSimulation(){
+    runBtn.disabled = true;
+    runBtn.textContent = 'Calculating...';
     try {
+      const body = {
+        selected_goal_id: Number(goal.value || 0),
+        scenario_type: String(scenario.value || 'deposit_adjustment'),
+        monthly_deposit: Number(monthly.value || 0),
+        one_time_deposit: Number(oneTime.value || 0),
+        deadline_adjustment_months: Number(deadlineMonths.value || 0),
+        target_adjustment_amount: Number(targetAmount.value || 0),
+        baseline_monthly_deposit: baselineMonthlyDeposit,
+      };
+
       const res = await fetch(`{{ path('app_savings_what_if') }}`, {
         method: 'POST',
         headers: {
@@ -423,36 +269,27 @@
         },
         body: JSON.stringify(body),
       });
-
       const data = await res.json();
       if (!res.ok || !data || data.ok === false) {
-        throw new Error((data && data.message) ? data.message : 'Simulation failed');
+        throw new Error((data && (data.message || data.error)) ? String(data.message || data.error) : 'Simulation failed');
       }
-
-      renderResult(data);
+      render(data);
     } catch (e) {
-      months.textContent = '-';
-      remaining.textContent = '-';
-      date.textContent = '-';
-      aiMeta.textContent = 'Source: unavailable';
-      aiAdvice.textContent = e && e.message ? e.message : 'Could not run simulation.';
+      impact.textContent = e && e.message ? e.message : 'Could not run simulation.';
     } finally {
-      setLoadingState(false);
+      runBtn.disabled = false;
+      runBtn.textContent = 'Run simulation';
     }
   }
 
   openBtn.addEventListener('click', openModal);
   closeBtns.forEach((b) => b.addEventListener('click', closeModal));
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-  });
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  monthly.addEventListener('input', syncMonthly);
+  scenario.addEventListener('change', syncScenarioInputs);
+  runBtn.addEventListener('click', runSimulation);
 
-  range.addEventListener('input', syncRangeValue);
-  oneTime.addEventListener('blur', () => {
-    const n = Number(oneTime.value || 0);
-    oneTime.value = Number.isFinite(n) && n > 0 ? String(Math.round(n)) : '0';
-  });
-  runBtn.addEventListener('click', () => runSimulation());
-  syncRangeValue();
+  syncMonthly();
+  syncScenarioInputs();
 })();
 </script>
