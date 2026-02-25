@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -126,6 +127,14 @@ class CasRellesType extends AbstractType
                     new Assert\NotBlank([
                         'message' => 'La date d\'effet est obligatoire.',
                     ]),
+                ],
+            ])
+            ->add('justificatifFile', FileType::class, [
+                'label' => 'Justificatif (optionnel)',
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                    'accept' => '.pdf,.png,.jpg,.jpeg',
                 ],
             ])
         ;

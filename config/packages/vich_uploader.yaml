@@ -1,0 +1,7 @@
+vich_uploader:
+  db_driver: orm
+  mappings:
+    cas_reel_justificatif:
+      uri_prefix: /uploads/cas_reels
+      upload_destination: '%kernel.project_dir%/public/uploads/cas_reels'
+      namer: Vich\UploaderBundle\Naming\SmartUniqueNamer

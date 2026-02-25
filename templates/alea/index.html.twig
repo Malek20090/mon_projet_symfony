@@ -215,6 +215,7 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <select id="customType" class="form-select">
+                                        <option value="" selected>Auto-detect (+/-)</option>
                                         <option value="NEGATIF">Expense (-)</option>
                                         <option value="POSITIF">Gain (+)</option>
                                     </select>
@@ -222,6 +223,13 @@
                                 <div class="col-6">
                                     <input type="number" id="customAmount" class="form-control" placeholder="Montant (DT)">
                                 </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="customJustificatif" class="form-label mb-1">Justificatif (optionnel)</label>
+                                <input type="file" id="customJustificatif" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                            </div>
+                            <div class="mb-3">
+                                <textarea id="customDescription" class="form-control" rows="2" placeholder="Description libre (optionnel)"></textarea>
                             </div>
                             <button type="button" id="voiceCaseBtn" class="btn btn-outline-secondary w-100 btn-sm mb-2" onclick="startVoiceCaseInput()">
                                 <i class="fas fa-microphone me-2"></i>Parler (titre + montant + plus/moins)
@@ -542,6 +550,14 @@ function loadEvent(type, title, amount, desc) {
 
     titleElem.innerText = title;
     descElem.innerText = desc;
+    const titleInput = document.getElementById('customTitle');
+    const amountInput = document.getElementById('customAmount');
+    const typeInput = document.getElementById('customType');
+    const descInput = document.getElementById('customDescription');
+    if (titleInput) titleInput.value = title || '';
+    if (amountInput) amountInput.value = amount || '';
+    if (typeInput) typeInput.value = type || '';
+    if (descInput) descInput.value = desc || '';
 
     // Reset UI
     document.querySelectorAll('.solution-btn').forEach(btn => btn.classList.remove('btn-primary', 'btn-secondary'));
@@ -584,13 +600,28 @@ function updateBalanceColors(amount) {
 
 function addCustomEvent() {
     const title = document.getElementById('customTitle').value;
-    const type = document.getElementById('customType').value;
+    const explicitType = document.getElementById('customType').value;
     const amount = document.getElementById('customAmount').value;
+    const desc = document.getElementById('customDescription').value || 'Custom case';
+    const inferredType = inferTypeFromText((title || '') + ' ' + (desc || ''));
+    const type = explicitType || inferredType;
     if(title && amount) {
-        loadEvent(type, title, amount, "Custom case");
+        loadEvent(type, title, amount, desc);
     } else {
         alert('Veuillez remplir tous les champs.');
     }
+}
+
+function inferTypeFromText(text) {
+    const t = (text || '').toLowerCase();
+    const positive = /\b(plus|positif|gain|prime|bonus|remboursement|vente|bourse|aide|cadeau|don|commission|revenu|salaire)\b/;
+    const negative = /\b(moins|negatif|négatif|depense|dépense|facture|panne|fuite|reparation|réparation|maladie|urgence|taxe|credit|crédit)\b/;
+
+    const hasPos = positive.test(t);
+    const hasNeg = negative.test(t);
+    if (hasPos && !hasNeg) return 'POSITIF';
+    if (hasNeg && !hasPos) return 'NEGATIF';
+    return 'NEGATIF';
 }
 
 function startVoiceCaseInput() {
@@ -796,12 +827,19 @@ function confirmSubmit() {
     
     // Prepare form data
     const formData = new FormData();
-    formData.append('type', currentEvent.type);
+    const explicitType = document.getElementById('customType')?.value || '';
+    formData.append('type', explicitType);
     formData.append('titre', currentEvent.title);
     formData.append('montant', currentEvent.amount);
     formData.append('solution', selectedSolution);
+    const descriptionValue = document.getElementById('customDescription')?.value || currentEvent.desc || '';
+    formData.append('description', descriptionValue);
     if (selectedEpargneId) {
         formData.append('financial_goal_id', selectedEpargneId);
+    }
+    const justificatifInput = document.getElementById('customJustificatif');
+    if (justificatifInput && justificatifInput.files && justificatifInput.files.length > 0) {
+        formData.append('justificatif', justificatifInput.files[0]);
     }
     
     // Send request
@@ -836,6 +874,12 @@ function confirmSubmit() {
         if (data.success) {
             document.getElementById('customTitle').value = '';
             document.getElementById('customAmount').value = '';
+            const descriptionInput = document.getElementById('customDescription');
+            if (descriptionInput) descriptionInput.value = '';
+            const typeInput = document.getElementById('customType');
+            if (typeInput) typeInput.value = '';
+            const justificatifInput = document.getElementById('customJustificatif');
+            if (justificatifInput) justificatifInput.value = '';
             currentEvent = null;
             window.currentEvent = null;
             selectedSolution = null;
@@ -859,5 +903,3 @@ function confirmSubmit() {
 }
 </script>
 {% endblock %}
-
-

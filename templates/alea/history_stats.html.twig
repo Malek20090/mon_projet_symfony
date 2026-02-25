@@ -99,6 +99,41 @@
                             <i class="fas fa-calendar-plus me-1"></i>Bilan sante mensuel
                         </button>
                     {% endif %}
+                    {% if riskTypology.counts.ELECTRONIQUE|default(0) >= 2 %}
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                onclick="openGoogleCalendarSuggestion('Verification appareils electroniques', 'ELECTRONIQUE', 30)">
+                            <i class="fas fa-calendar-plus me-1"></i>Check electronique mensuel
+                        </button>
+                    {% endif %}
+                    {% if riskTypology.counts.PANNE_MAISON|default(0) >= 2 %}
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                onclick="openGoogleCalendarSuggestion('Controle plomberie/electricite maison', 'PANNE_MAISON', 30)">
+                            <i class="fas fa-calendar-plus me-1"></i>Controle maison mensuel
+                        </button>
+                    {% endif %}
+                    {% if riskTypology.counts.EDUCATION|default(0) >= 2 %}
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                onclick="openGoogleCalendarSuggestion('Planification budget education', 'EDUCATION', 30)">
+                            <i class="fas fa-calendar-plus me-1"></i>Plan budget education
+                        </button>
+                    {% endif %}
+                    {% if riskTypology.counts.FACTURES|default(0) >= 2 %}
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                onclick="openGoogleCalendarSuggestion('Revue abonnements et factures', 'FACTURES', 30)">
+                            <i class="fas fa-calendar-plus me-1"></i>Revue factures mensuelle
+                        </button>
+                    {% endif %}
+                    {% if riskTypology.counts.AUTRE|default(0) >= 2 %}
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                onclick="openGoogleCalendarSuggestion('Suivi imprevus divers', 'AUTRE', 30)">
+                            <i class="fas fa-calendar-plus me-1"></i>Suivi divers mensuel
+                        </button>
+                    {% endif %}
                 </div>
                 <h6 class="mb-2">Imprévus suggérés</h6>
                 <div>
@@ -202,11 +237,12 @@
         const solutionLabels = {{ solutionLabels|json_encode|raw }};
         const solutionValues = {{ solutionValues|json_encode|raw }};
         const riskTypologyData = {
-            labels: ['Voiture', 'Sante', 'Pannes maison', 'Education', 'Factures', 'Autres'],
+            labels: ['Voiture', 'Sante', 'Pannes maison', 'Electronique', 'Education', 'Factures', 'Autres'],
             values: [
                 {{ riskTypology.percentages.VOITURE|default(0) }},
                 {{ riskTypology.percentages.SANTE|default(0) }},
                 {{ riskTypology.percentages.PANNE_MAISON|default(0) }},
+                {{ riskTypology.percentages.ELECTRONIQUE|default(0) }},
                 {{ riskTypology.percentages.EDUCATION|default(0) }},
                 {{ riskTypology.percentages.FACTURES|default(0) }},
                 {{ riskTypology.percentages.AUTRE|default(0) }}
@@ -295,11 +331,37 @@
                 .then(d => {
                     if (d && d.success && d.url) {
                         window.open(d.url, '_blank');
+                        suggestNearbyForCategory(category);
                         return;
                     }
                     alert((d && d.message) ? d.message : 'Impossible de generer le rendez-vous.');
                 })
                 .catch(() => alert('Erreur lors de la creation du rendez-vous.'));
         };
+
+        function suggestNearbyForCategory(category) {
+            if (!navigator.geolocation) {
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(function (p) {
+                const url = '/alea/google/nearby?lat='
+                    + encodeURIComponent(p.coords.latitude)
+                    + '&lng=' + encodeURIComponent(p.coords.longitude)
+                    + '&category=' + encodeURIComponent(category || 'AUTRE');
+
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (!d || !d.success || !Array.isArray(d.places) || d.places.length === 0) {
+                            return;
+                        }
+
+                        const top = d.places.slice(0, 3).map((x, i) => `${i + 1}. ${x.name || '-'} (${x.address || '-'})`).join('\n');
+                        alert('Best places proches pour cette categorie:\n' + top);
+                    })
+                    .catch(() => {});
+            }, function () {});
+        }
     </script>
 {% endblock %}

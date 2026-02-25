@@ -98,6 +98,7 @@
                     <div class="risk-pill">Voiture: <strong>{{ riskTypology.percentages.VOITURE|default(0)|number_format(0) }}%</strong></div>
                     <div class="risk-pill">Sante: <strong>{{ riskTypology.percentages.SANTE|default(0)|number_format(0) }}%</strong></div>
                     <div class="risk-pill">Maison: <strong>{{ riskTypology.percentages.PANNE_MAISON|default(0)|number_format(0) }}%</strong></div>
+                    <div class="risk-pill">Electronique: <strong>{{ riskTypology.percentages.ELECTRONIQUE|default(0)|number_format(0) }}%</strong></div>
                     <div class="risk-pill">Education: <strong>{{ riskTypology.percentages.EDUCATION|default(0)|number_format(0) }}%</strong></div>
                     <div class="risk-pill">Factures: <strong>{{ riskTypology.percentages.FACTURES|default(0)|number_format(0) }}%</strong></div>
                     <div class="risk-pill">Autres: <strong>{{ riskTypology.percentages.AUTRE|default(0)|number_format(0) }}%</strong></div>
@@ -128,6 +129,41 @@
                                 <i class="fas fa-calendar-plus me-1"></i>Bilan sante mensuel
                             </button>
                         {% endif %}
+                        {% if riskTypology.counts.ELECTRONIQUE|default(0) >= 2 %}
+                            <button type="button"
+                                    class="btn btn-outline-primary btn-sm"
+                                    onclick="openGoogleCalendarSuggestion('Verification appareils electroniques', 'ELECTRONIQUE', 30)">
+                                <i class="fas fa-calendar-plus me-1"></i>Check electronique mensuel
+                            </button>
+                        {% endif %}
+                        {% if riskTypology.counts.PANNE_MAISON|default(0) >= 2 %}
+                            <button type="button"
+                                    class="btn btn-outline-primary btn-sm"
+                                    onclick="openGoogleCalendarSuggestion('Controle plomberie/electricite maison', 'PANNE_MAISON', 30)">
+                                <i class="fas fa-calendar-plus me-1"></i>Controle maison mensuel
+                            </button>
+                        {% endif %}
+                        {% if riskTypology.counts.EDUCATION|default(0) >= 2 %}
+                            <button type="button"
+                                    class="btn btn-outline-primary btn-sm"
+                                    onclick="openGoogleCalendarSuggestion('Planification budget education', 'EDUCATION', 30)">
+                                <i class="fas fa-calendar-plus me-1"></i>Plan budget education
+                            </button>
+                        {% endif %}
+                        {% if riskTypology.counts.FACTURES|default(0) >= 2 %}
+                            <button type="button"
+                                    class="btn btn-outline-primary btn-sm"
+                                    onclick="openGoogleCalendarSuggestion('Revue abonnements et factures', 'FACTURES', 30)">
+                                <i class="fas fa-calendar-plus me-1"></i>Revue factures mensuelle
+                            </button>
+                        {% endif %}
+                        {% if riskTypology.counts.AUTRE|default(0) >= 2 %}
+                            <button type="button"
+                                    class="btn btn-outline-primary btn-sm"
+                                    onclick="openGoogleCalendarSuggestion('Suivi imprevus divers', 'AUTRE', 30)">
+                                <i class="fas fa-calendar-plus me-1"></i>Suivi divers mensuel
+                            </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -147,9 +183,11 @@
                         <th>Date</th>
                         <th>Title</th>
                         <th>Type</th>
+                        <th>Categorie</th>
                         <th>Amount</th>
                         <th>Solution</th>
                         <th>Status</th>
+                        <th>Justificatif</th>
                         <th>Treated by</th>
                         <th>Treated at</th>
                         <th>Refusal reason</th>
@@ -167,6 +205,9 @@
                                     <span class="badge bg-danger">Expense</span>
                                 {% endif %}
                             </td>
+                            <td>
+                                <span class="badge bg-info text-dark">{{ c.categorie ?: 'AUTRE' }}</span>
+                            </td>
                             <td class="fw-bold {% if c.type == 'POSITIF' %}text-success{% else %}text-danger{% endif %}">
                                 {% if c.type == 'POSITIF' %}+{% else %}-{% endif %}{{ c.montant|number_format(2, ',', ' ') }} DT
                             </td>
@@ -178,6 +219,15 @@
                                     <span class="badge bg-danger">Rejected</span>
                                 {% else %}
                                     <span class="badge bg-warning text-dark">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if c.justificatifFileName %}
+                                    <a href="{{ asset('uploads/cas_reels/' ~ c.justificatifFileName) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-file-alt me-1"></i>Voir
+                                    </a>
+                                {% else %}
+                                    -
                                 {% endif %}
                             </td>
                             <td>{{ c.confirmedBy ? (c.confirmedBy.nom ?: c.confirmedBy.email) : '-' }}</td>
@@ -231,11 +281,37 @@ function openGoogleCalendarSuggestion(title, category, days) {
         .then(d => {
             if (d && d.success && d.url) {
                 window.open(d.url, '_blank');
+                suggestNearbyForCategory(category);
                 return;
             }
             alert((d && d.message) ? d.message : 'Impossible de generer le rendez-vous.');
         })
         .catch(() => alert('Erreur lors de la creation du rendez-vous.'));
+}
+
+function suggestNearbyForCategory(category) {
+    if (!navigator.geolocation) {
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(function (p) {
+        const url = '/alea/google/nearby?lat='
+            + encodeURIComponent(p.coords.latitude)
+            + '&lng=' + encodeURIComponent(p.coords.longitude)
+            + '&category=' + encodeURIComponent(category || 'AUTRE');
+
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(d => {
+                if (!d || !d.success || !Array.isArray(d.places) || d.places.length === 0) {
+                    return;
+                }
+
+                const top = d.places.slice(0, 3).map((x, i) => `${i + 1}. ${x.name || '-'} (${x.address || '-'})`).join('\n');
+                alert('Best places proches pour cette categorie:\n' + top);
+            })
+            .catch(() => {});
+    }, function () {});
 }
 </script>
 {% endblock %}

@@ -3,6 +3,7 @@
         var t = ((window.currentEvent && window.currentEvent.title) || '').toLowerCase();
         if (/voiture|moteur|essuie|batterie|pneu|auto/.test(t)) return 'VOITURE';
         if (/urgence|medicament|consultation|analyse|sante/.test(t)) return 'SANTE';
+        if (/telephone|tel|mobile|ordinateur|pc|laptop|ecran|tv|console|electro/.test(t)) return 'ELECTRONIQUE';
         if (/machine|frigo|telephone|chaudiere|panne/.test(t)) return 'PANNE_MAISON';
         if (/scolarite|ecole|universite|frais scolaire/.test(t)) return 'EDUCATION';
         return 'AUTRE';
@@ -36,14 +37,16 @@
         }
 
         var title = window.currentEvent.title || 'Rappel';
-        var url = '/alea/google/calendar-link?title=' + encodeURIComponent('Rappel: ' + title) + '&category=' + encodeURIComponent(categoryFromCurrentEvent()) + '&days=7';
+        var category = categoryFromCurrentEvent();
+        var url = '/alea/google/calendar-link?title=' + encodeURIComponent('Rappel mensuel: ' + title) + '&category=' + encodeURIComponent(category) + '&days=30';
         setStatus('Creating calendar link...');
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.json(); })
             .then(function (d) {
                 if (d.success && d.url) {
                     window.open(d.url, '_blank');
-                    setStatus('Calendar link generated.');
+                    setStatus('Calendar link generated. Searching best nearby places...');
+                    window.findNearbyServices();
                     return;
                 }
                 setStatus('Calendar failed.');

@@ -70,9 +70,6 @@ class DashboardController extends AbstractController
             'scales' => [
                 'y' => [
                     'beginAtZero' => true,
-                    'ticks' => [
-                        'callback' => '(value) => value + " TND"',
-                    ],
                 ],
             ],
         ]);

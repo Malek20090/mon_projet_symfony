@@ -9,7 +9,7 @@ class RiskAnalyzerService
     /**
      * @var string[]
      */
-    private const CATEGORIES = ['VOITURE', 'PANNE_MAISON', 'SANTE', 'EDUCATION', 'FACTURES', 'AUTRE'];
+    private const CATEGORIES = ['VOITURE', 'PANNE_MAISON', 'ELECTRONIQUE', 'SANTE', 'EDUCATION', 'FACTURES', 'AUTRE'];
 
     /**
      * @param CasRelles[] $cases
@@ -64,7 +64,6 @@ class RiskAnalyzerService
                 $recentNegativeCount++;
             }
 
-            // Newer events should impact the risk model more.
             $weight = max(0.20, 1.0 - ($days / 180.0));
             $weightedFrequency += (10.0 * $weight);
             $weightedSeverity += (($amount / 20.0) * $weight);
@@ -84,6 +83,7 @@ class RiskAnalyzerService
         $labels = [
             'VOITURE' => 'automobiles',
             'PANNE_MAISON' => 'de pannes maison',
+            'ELECTRONIQUE' => 'electroniques',
             'SANTE' => 'de sante',
             'EDUCATION' => 'd education',
             'FACTURES' => 'de factures et charges',
@@ -132,7 +132,10 @@ class RiskAnalyzerService
         if (preg_match('/panne moteur|essuie|essuie-glace|batterie|pneu|voiture|auto|garage|carburant|essence|accident|frein/u', $text)) {
             return 'VOITURE';
         }
-        if (preg_match('/maison|logement|loyer|toit|plomberie|electricite|fuite|salle de bain|wc|canalisation|machine [aÃ ] laver|frigo|chaudiere|electromenager|panne/u', $text)) {
+        if (preg_match('/telephone|pc|ordinateur|laptop|chargeur|ecran|tv|television|console|electro|mobile/u', $text)) {
+            return 'ELECTRONIQUE';
+        }
+        if (preg_match('/maison|logement|loyer|toit|plomberie|electricite|fuite|salle de bain|wc|canalisation|machine .* laver|frigo|chaudiere|electromenager|panne/u', $text)) {
             return 'PANNE_MAISON';
         }
         if (preg_match('/urgence|medicament|consultation|analyse|sante|hopital|pharmacie|soin|maladie|malade|grippe|fievre/u', $text)) {
@@ -173,6 +176,15 @@ class RiskAnalyzerService
             $tips[] = sprintf('Les cas sante/maladie se repetent (%d). Fais un bilan/controle chaque mois et prevois %d DT.', $healthCount, $healthBudget);
         } elseif ($healthCount === 1) {
             $tips[] = 'Tu as eu un cas sante. Si ca revient, mets en place un controle mensuel.';
+        }
+
+        $elecCount = (int) ($counts['ELECTRONIQUE'] ?? 0);
+        if ($elecCount >= 2) {
+            $elecAvg = ((float) ($amounts['ELECTRONIQUE'] ?? 0.0)) / max(1, $elecCount);
+            $elecBudget = (int) (round(max(40.0, min(220.0, $elecAvg * 0.35)) / 10) * 10);
+            $tips[] = sprintf('Les pannes electroniques se repetent (%d). Prevois %d DT/mois et fais une verification preventive.', $elecCount, $elecBudget);
+        } elseif ($elecCount === 1) {
+            $tips[] = 'Tu as eu un incident electronique: pense a la maintenance et a une extension de garantie.';
         }
 
         $educationCount = (int) ($counts['EDUCATION'] ?? 0);
@@ -225,6 +237,13 @@ class RiskAnalyzerService
             $suggestions[] = 'Panne chauffe-eau';
         }
 
+        $elec = max((int) ($recentCounts['ELECTRONIQUE'] ?? 0), (int) floor(((int) ($allCounts['ELECTRONIQUE'] ?? 0)) / 2));
+        if ($elec >= 1) {
+            $suggestions[] = 'Panne telephone portable';
+            $suggestions[] = 'Ecran ordinateur casse';
+            $suggestions[] = 'Chargeur ou batterie defectueux';
+        }
+
         $health = max((int) ($recentCounts['SANTE'] ?? 0), (int) floor(((int) ($allCounts['SANTE'] ?? 0)) / 2));
         if ($health >= 1) {
             $suggestions[] = 'Urgence sante';
@@ -268,6 +287,11 @@ class RiskAnalyzerService
             $ops[] = 'Opportunite: extension de garantie electromenager';
         }
 
+        $elec = max((int) ($recentCounts['ELECTRONIQUE'] ?? 0), (int) floor(((int) ($allCounts['ELECTRONIQUE'] ?? 0)) / 2));
+        if ($elec >= 1) {
+            $ops[] = 'Opportunite: contrat maintenance electronique ou extension de garantie';
+        }
+
         $health = max((int) ($recentCounts['SANTE'] ?? 0), (int) floor(((int) ($allCounts['SANTE'] ?? 0)) / 2));
         if ($health >= 1) {
             $ops[] = 'Opportunite: pack prevention sante et pharmacie';
@@ -301,3 +325,4 @@ class RiskAnalyzerService
         return max(0, (int) $caseDate->diff($now)->format('%a'));
     }
 }
+

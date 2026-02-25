@@ -24,7 +24,7 @@ class AleaGoogleController extends AbstractController
         $end = $start->modify('+1 hour');
 
         $details = sprintf('Categorie: %s. Rappel automatique genere depuis le module imprevus.', $category);
-        $url = $calendarService->generateEventUrl($title, $details, $start, $end);
+        $url = $calendarService->generateEventUrl($title, $details, $start, $end, 'RRULE:FREQ=MONTHLY;INTERVAL=1');
 
         return $this->json([
             'success' => true,
@@ -52,7 +52,10 @@ class AleaGoogleController extends AbstractController
             'VOITURE' => 'garage automobile',
             'SANTE' => 'pharmacie hopital',
             'PANNE_MAISON' => 'reparation electromenager',
+            'ELECTRONIQUE' => 'reparation telephone ordinateur electronique',
             'EDUCATION' => 'ecole librairie papeterie',
+            'FACTURES' => 'banque agence paiement facture service client',
+            'AUTRE' => 'service urgence',
             default => 'service urgence',
         };
 

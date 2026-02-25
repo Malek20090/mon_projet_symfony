@@ -6,8 +6,11 @@ use App\Repository\CasRellesRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use App\Entity\FinancialGoal;
+use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ORM\Entity(repositoryClass: CasRellesRepository::class)]
+#[Vich\Uploadable]
 class CasRelles
 {
     public const TYPE_POSITIF = 'POSITIF';
@@ -39,6 +42,9 @@ public const SOLUTION_OBJECTIF = 'OBJECTIF';
     #[ORM\Column(length: 10)]
     private ?string $type = null;
 
+    #[ORM\Column(length: 40, nullable: true)]
+    private ?string $categorie = null;
+
     #[ORM\Column]
     private ?float $montant = null;
 
@@ -60,6 +66,15 @@ public const SOLUTION_OBJECTIF = 'OBJECTIF';
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $confirmedAt = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $justificatifFileName = null;
+
+    #[Vich\UploadableField(mapping: 'cas_reel_justificatif', fileNameProperty: 'justificatifFileName')]
+    private ?File $justificatifFile = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $updatedAt = null;
 #[ORM\ManyToOne]
 #[ORM\JoinColumn(nullable: true)]
 private ?FinancialGoal $financialGoal = null;
@@ -131,6 +146,17 @@ public function setFinancialGoal(?FinancialGoal $financialGoal): static
     public function setType(?string $type): static
     {
         $this->type = $type;
+        return $this;
+    }
+
+    public function getCategorie(): ?string
+    {
+        return $this->categorie;
+    }
+
+    public function setCategorie(?string $categorie): static
+    {
+        $this->categorie = $categorie;
         return $this;
     }
 
@@ -208,6 +234,43 @@ public function setFinancialGoal(?FinancialGoal $financialGoal): static
     public function setConfirmedAt(?\DateTimeImmutable $confirmedAt): static
     {
         $this->confirmedAt = $confirmedAt;
+        return $this;
+    }
+
+    public function getJustificatifFileName(): ?string
+    {
+        return $this->justificatifFileName;
+    }
+
+    public function setJustificatifFileName(?string $justificatifFileName): static
+    {
+        $this->justificatifFileName = $justificatifFileName;
+        return $this;
+    }
+
+    public function getJustificatifFile(): ?File
+    {
+        return $this->justificatifFile;
+    }
+
+    public function setJustificatifFile(?File $justificatifFile): static
+    {
+        $this->justificatifFile = $justificatifFile;
+        if ($justificatifFile !== null) {
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): static
+    {
+        $this->updatedAt = $updatedAt;
         return $this;
     }
 }

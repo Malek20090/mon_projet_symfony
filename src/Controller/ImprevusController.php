@@ -6,6 +6,7 @@ use App\Entity\CasRelles;
 use App\Entity\Imprevus;
 use App\Entity\User;
 use App\Entity\UserNotification;
+use App\Service\CaseTextAiClassifierService;
 use App\Service\CasDecisionAiService;
 use App\Service\RiskAnalyzerService;
 use App\Service\SecurityFundService;
@@ -18,9 +19,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Workflow\Registry;
 
@@ -111,18 +115,27 @@ class ImprevusController extends AbstractController
     public function submitCas(
         Request $req,
         EntityManagerInterface $em,
-        FinancialGoalRepository $financialGoalRepository
+        FinancialGoalRepository $financialGoalRepository,
+        CaseTextAiClassifierService $caseTextAiClassifier
     ): Response
     {
         try {
-            $type = $req->request->get('type');
+            $type = strtoupper(trim((string) $req->request->get('type', '')));
             $titre = $req->request->get('titre');
+            $description = trim((string) $req->request->get('description', ''));
             $montant = (float)$req->request->get('montant');
             $solution = $req->request->get('solution');
+
+            $classification = $caseTextAiClassifier->classify((string) $titre, $description);
+            if (!in_array($type, [CasRelles::TYPE_POSITIF, CasRelles::TYPE_NEGATIF], true)) {
+                $type = (string) $classification['type'];
+            }
 
             $cas = new CasRelles();
             $cas->setTitre($titre);
             $cas->setType($type);
+            $cas->setCategorie((string) $classification['category']);
+            $cas->setDescription($description !== '' ? $description : null);
             $cas->setMontant($montant);
             $cas->setSolution($solution);
             $cas->setDateEffet(new \DateTime());
@@ -181,6 +194,11 @@ class ImprevusController extends AbstractController
                 }
             }
 
+            $justificatif = $req->files->get('justificatif');
+            if ($justificatif instanceof UploadedFile) {
+                $cas->setJustificatifFile($justificatif);
+            }
+
             $em->persist($cas);
             $em->flush();
 
@@ -191,7 +209,7 @@ class ImprevusController extends AbstractController
         } catch (\Exception $e) {
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur: ' . $e->getMessage()
+                'message' => 'Erreur lors de la creation de la demande.'
             ]);
         }
     }
@@ -483,7 +501,8 @@ class ImprevusController extends AbstractController
         EntityManagerInterface $em,
         SecurityFundService $securityFundService,
         Registry $registry,
-        CasDecisionAiService $casDecisionAiService
+        CasDecisionAiService $casDecisionAiService,
+        MailerInterface $mailer
     ): Response
     {
         if ($req->isMethod('POST')) {
@@ -580,6 +599,10 @@ class ImprevusController extends AbstractController
 
             if ($action === 'reject') {
                 $this->createInternalNotification($cas, false, (string) $cas->getRaisonRefus(), $em);
+            }
+
+            if ($action === 'accept' || $action === 'reject') {
+                $this->sendDecisionEmail($cas, $action === 'accept', $mailer);
             }
 
             return $this->redirectToRoute('admin_casrelles_list');
@@ -1000,6 +1023,75 @@ class ImprevusController extends AbstractController
         $em->flush();
     }
 
+    private function sendDecisionEmail(CasRelles $cas, bool $accepted, MailerInterface $mailer): void
+    {
+        $user = $cas->getUser();
+        if (!$user || trim($user->getEmail()) === '') {
+            return;
+        }
+
+        $category = (string) ($cas->getCategorie() ?? 'AUTRE');
+        $advice = $this->buildSmartDecisionAdvice($category, $accepted);
+        $subject = $accepted
+            ? 'Decision sur votre demande: ACCEPTEE'
+            : 'Decision sur votre demande: REFUSEE';
+
+        $decisionLine = $accepted
+            ? 'Votre demande a ete acceptee.'
+            : 'Votre demande a ete refusee.';
+
+        $reasonLine = (!$accepted && $cas->getRaisonRefus())
+            ? "\nRaison: " . $cas->getRaisonRefus()
+            : '';
+
+        $content = sprintf(
+            "Bonjour %s,\n\n%s\n\nTitre: %s\nMontant: %s DT\nType: %s\nCategorie detectee: %s%s\n\nConseil intelligent: %s\n\nDecide$",
+            (string) ($user->getNom() ?: $user->getEmail()),
+            $decisionLine,
+            (string) $cas->getTitre(),
+            number_format((float) $cas->getMontant(), 2, ',', ' '),
+            (string) $cas->getType(),
+            $category,
+            $reasonLine,
+            $advice
+        );
+
+        try {
+            $mailer->send(
+                (new Email())
+                    ->from('rimajelassi81@gmail.com')
+                    ->to($user->getEmail())
+                    ->subject($subject)
+                    ->text($content)
+            );
+        } catch (\Throwable) {
+            // Do not block admin process when mail transport fails.
+        }
+    }
+
+    private function buildSmartDecisionAdvice(string $category, bool $accepted): string
+    {
+        if ($accepted) {
+            return match ($category) {
+                'VOITURE' => 'Planifie un entretien voiture mensuel pour limiter les pannes.',
+                'PANNE_MAISON' => 'Prevoyez une verification preventive plomberie/electricite ce mois.',
+                'SANTE' => 'Maintiens un budget prevention sante et un suivi regulier.',
+                'EDUCATION' => 'Anticipe les frais education avec une enveloppe mensuelle dediee.',
+                'FACTURES' => 'Automatise une reserve mensuelle pour les charges fixes.',
+                default => 'Continue le suivi mensuel de tes cas pour renforcer ta resilience.',
+            };
+        }
+
+        return match ($category) {
+            'VOITURE' => 'Alternative: reduire le cout via un garage partenaire ou planifier un entretien cible.',
+            'PANNE_MAISON' => 'Alternative: comparer plusieurs devis avant depense.',
+            'SANTE' => 'Alternative: prioriser les soins urgents et etaler le reste.',
+            'EDUCATION' => 'Alternative: chercher une aide/bonification ou echelonnement.',
+            'FACTURES' => 'Alternative: renegocier ou lisser les factures a venir.',
+            default => 'Alternative: revoir la solution choisie (fonds, objectif ou famille).',
+        };
+    }
+
     /**
      * @param CasRelles[] $cas
      * @return array{
@@ -1074,4 +1166,3 @@ class ImprevusController extends AbstractController
         ];
     }
 }
-
