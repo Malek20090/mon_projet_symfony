@@ -312,21 +312,27 @@
           }
         </style>
 
-        <div class="stats-charts-grid">
-          <div class="stats-chart-card">
-            <h6 class="stats-chart-title">Histogram (sum by {{ stat_by|default('type') }})</h6>
-            <div class="stats-chart-wrap">
-              {{ render_chart(bar_chart, {'style': 'height:100%; width:100%;'}) }}
+        {% if tx_stats.total|default(0) > 0 %}
+          <div class="stats-charts-grid">
+            <div class="stats-chart-card">
+              <h6 class="stats-chart-title">Histogram (sum by {{ stat_by|default('type') }})</h6>
+              <div class="stats-chart-wrap">
+                {{ render_chart(bar_chart, {'style': 'height:100%; width:100%;'}) }}
+              </div>
             </div>
-          </div>
 
-          <div class="stats-chart-card">
-            <h6 class="stats-chart-title">Circle chart</h6>
-            <div class="stats-chart-wrap stats-chart-wrap--pie">
-              {{ render_chart(pie_chart, {'style': 'height:100%; width:100%;'}) }}
+            <div class="stats-chart-card">
+              <h6 class="stats-chart-title">Circle chart</h6>
+              <div class="stats-chart-wrap stats-chart-wrap--pie">
+                {{ render_chart(pie_chart, {'style': 'height:100%; width:100%;'}) }}
+              </div>
             </div>
           </div>
-        </div>
+        {% else %}
+          <div class="alert alert-info mb-0">
+            No savings transactions were found for this account yet. Add a deposit or goal contribution to generate stats.
+          </div>
+        {% endif %}
 
       </div>
 

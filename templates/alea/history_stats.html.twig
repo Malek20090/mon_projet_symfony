@@ -206,162 +206,206 @@
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const statusData = {
-            labels: ['Pending', 'Validated', 'Rejected'],
-            values: [
-                {{ stats.statusCounts.EN_ATTENTE|default(0) }},
-                {{ stats.statusCounts.VALIDE|default(0) }},
-                {{ stats.statusCounts.REFUSE|default(0) }}
-            ]
-        };
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script type="module">
+        let aleaStatsChartsInitialized = false;
 
-        const typeData = {
-            labels: ['Gains', 'Expenses'],
-            values: [
-                {{ stats.typeCounts.POSITIF|default(0) }},
-                {{ stats.typeCounts.NEGATIF|default(0) }}
-            ]
-        };
+        const ensureChartCtor = async () => {
+            try {
+                const mod = await import('chart.js');
+                if (mod.Chart && Array.isArray(mod.registerables)) {
+                    mod.Chart.register(...mod.registerables);
+                    return mod.Chart;
+                }
+            } catch (e) {}
 
-        const amountData = {
-            labels: ['Total Gains', 'Total Expenses', 'Net'],
-            values: [
-                {{ stats.totalPositif|default(0) }},
-                {{ stats.totalNegatif|default(0) }},
-                {{ stats.totalNet|default(0) }}
-            ]
-        };
-
-        const solutionLabels = {{ solutionLabels|json_encode|raw }};
-        const solutionValues = {{ solutionValues|json_encode|raw }};
-        const riskTypologyData = {
-            labels: ['Voiture', 'Sante', 'Pannes maison', 'Electronique', 'Education', 'Factures', 'Autres'],
-            values: [
-                {{ riskTypology.percentages.VOITURE|default(0) }},
-                {{ riskTypology.percentages.SANTE|default(0) }},
-                {{ riskTypology.percentages.PANNE_MAISON|default(0) }},
-                {{ riskTypology.percentages.ELECTRONIQUE|default(0) }},
-                {{ riskTypology.percentages.EDUCATION|default(0) }},
-                {{ riskTypology.percentages.FACTURES|default(0) }},
-                {{ riskTypology.percentages.AUTRE|default(0) }}
-            ]
-        };
-
-        new Chart(document.getElementById('statusChart'), {
-            type: 'doughnut',
-            data: {
-                labels: statusData.labels,
-                datasets: [{
-                    data: statusData.values,
-                    backgroundColor: ['#f59f00', '#198754', '#dc3545']
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-        });
-
-        new Chart(document.getElementById('typeChart'), {
-            type: 'pie',
-            data: {
-                labels: typeData.labels,
-                datasets: [{
-                    data: typeData.values,
-                    backgroundColor: ['#20c997', '#ff6b6b']
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-        });
-
-        new Chart(document.getElementById('amountChart'), {
-            type: 'bar',
-            data: {
-                labels: amountData.labels,
-                datasets: [{
-                    label: 'DT',
-                    data: amountData.values,
-                    backgroundColor: ['#198754', '#dc3545', '#0d6efd']
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
+            if (typeof window.Chart !== 'undefined') {
+                return window.Chart;
             }
-        });
 
-        if (solutionLabels.length) {
-            new Chart(document.getElementById('solutionChart'), {
+            return null;
+        };
+
+        const initAleaStatsCharts = async () => {
+            if (aleaStatsChartsInitialized) {
+                return;
+            }
+
+            const ChartCtor = await ensureChartCtor();
+            if (!ChartCtor) {
+                return;
+            }
+            aleaStatsChartsInitialized = true;
+
+            const statusData = {
+                labels: ['Pending', 'Validated', 'Rejected'],
+                values: [
+                    {{ stats.statusCounts.EN_ATTENTE|default(0) }},
+                    {{ stats.statusCounts.VALIDE|default(0) }},
+                    {{ stats.statusCounts.REFUSE|default(0) }}
+                ]
+            };
+
+            const typeData = {
+                labels: ['Gains', 'Expenses'],
+                values: [
+                    {{ stats.typeCounts.POSITIF|default(0) }},
+                    {{ stats.typeCounts.NEGATIF|default(0) }}
+                ]
+            };
+
+            const amountData = {
+                labels: ['Total Gains', 'Total Expenses', 'Net'],
+                values: [
+                    {{ stats.totalPositif|default(0) }},
+                    {{ stats.totalNegatif|default(0) }},
+                    {{ stats.totalNet|default(0) }}
+                ]
+            };
+
+            const solutionLabels = {{ solutionLabels|json_encode|raw }};
+            const solutionValues = {{ solutionValues|json_encode|raw }};
+            const riskTypologyData = {
+                labels: ['Voiture', 'Sante', 'Pannes maison', 'Electronique', 'Education', 'Factures', 'Autres'],
+                values: [
+                    {{ riskTypology.percentages.VOITURE|default(0) }},
+                    {{ riskTypology.percentages.SANTE|default(0) }},
+                    {{ riskTypology.percentages.PANNE_MAISON|default(0) }},
+                    {{ riskTypology.percentages.ELECTRONIQUE|default(0) }},
+                    {{ riskTypology.percentages.EDUCATION|default(0) }},
+                    {{ riskTypology.percentages.FACTURES|default(0) }},
+                    {{ riskTypology.percentages.AUTRE|default(0) }}
+                ]
+            };
+
+            const renderChart = (canvasId, config) => {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) {
+                    return null;
+                }
+
+                return new ChartCtor(canvas, config);
+            };
+
+            renderChart('statusChart', {
+                type: 'doughnut',
+                data: {
+                    labels: statusData.labels,
+                    datasets: [{
+                        data: statusData.values,
+                        backgroundColor: ['#f59f00', '#198754', '#dc3545']
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            renderChart('typeChart', {
+                type: 'pie',
+                data: {
+                    labels: typeData.labels,
+                    datasets: [{
+                        data: typeData.values,
+                        backgroundColor: ['#20c997', '#ff6b6b']
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            renderChart('amountChart', {
                 type: 'bar',
                 data: {
-                    labels: solutionLabels,
+                    labels: amountData.labels,
                     datasets: [{
-                        label: 'Count',
-                        data: solutionValues,
-                        backgroundColor: '#0d6efd'
+                        label: 'DT',
+                        data: amountData.values,
+                        backgroundColor: ['#198754', '#dc3545', '#0d6efd']
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                    scales: { y: { beginAtZero: true } }
                 }
             });
-        }
 
-        new Chart(document.getElementById('riskTypologyChart'), {
-            type: 'doughnut',
-            data: {
-                labels: riskTypologyData.labels,
-                datasets: [{
-                    data: riskTypologyData.values,
-                    backgroundColor: ['#0d6efd', '#20c997', '#f59f00', '#8b5cf6', '#0ea5e9', '#6c757d']
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-        });
-        window.openGoogleCalendarSuggestion = function (title, category, days) {
-            const url = '/alea/google/calendar-link?title='
-                + encodeURIComponent(title)
-                + '&category=' + encodeURIComponent(category)
-                + '&days=' + encodeURIComponent(days || 30);
-
-            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(r => r.json())
-                .then(d => {
-                    if (d && d.success && d.url) {
-                        window.open(d.url, '_blank');
-                        suggestNearbyForCategory(category);
-                        return;
+            if (Array.isArray(solutionLabels) && solutionLabels.length) {
+                renderChart('solutionChart', {
+                    type: 'bar',
+                    data: {
+                        labels: solutionLabels,
+                        datasets: [{
+                            label: 'Count',
+                            data: solutionValues,
+                            backgroundColor: '#0d6efd'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
                     }
-                    alert((d && d.message) ? d.message : 'Impossible de generer le rendez-vous.');
-                })
-                .catch(() => alert('Erreur lors de la creation du rendez-vous.'));
-        };
-
-        function suggestNearbyForCategory(category) {
-            if (!navigator.geolocation) {
-                return;
+                });
             }
 
-            navigator.geolocation.getCurrentPosition(function (p) {
-                const url = '/alea/google/nearby?lat='
-                    + encodeURIComponent(p.coords.latitude)
-                    + '&lng=' + encodeURIComponent(p.coords.longitude)
-                    + '&category=' + encodeURIComponent(category || 'AUTRE');
+            renderChart('riskTypologyChart', {
+                type: 'doughnut',
+                data: {
+                    labels: riskTypologyData.labels,
+                    datasets: [{
+                        data: riskTypologyData.values,
+                        backgroundColor: ['#0d6efd', '#20c997', '#f59f00', '#8b5cf6', '#0ea5e9', '#6c757d', '#adb5bd']
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            window.openGoogleCalendarSuggestion = function (title, category, days) {
+                const url = '/alea/google/calendar-link?title='
+                    + encodeURIComponent(title)
+                    + '&category=' + encodeURIComponent(category)
+                    + '&days=' + encodeURIComponent(days || 30);
 
                 fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(r => r.json())
-                    .then(d => {
-                        if (!d || !d.success || !Array.isArray(d.places) || d.places.length === 0) {
+                    .then((r) => r.json())
+                    .then((d) => {
+                        if (d && d.success && d.url) {
+                            window.open(d.url, '_blank');
+                            suggestNearbyForCategory(category);
                             return;
                         }
-
-                        const top = d.places.slice(0, 3).map((x, i) => `${i + 1}. ${x.name || '-'} (${x.address || '-'})`).join('\n');
-                        alert('Best places proches pour cette categorie:\n' + top);
+                        alert((d && d.message) ? d.message : 'Impossible de generer le rendez-vous.');
                     })
-                    .catch(() => {});
-            }, function () {});
-        }
+                    .catch(() => alert('Erreur lors de la creation du rendez-vous.'));
+            };
+
+            function suggestNearbyForCategory(category) {
+                if (!navigator.geolocation) {
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(function (p) {
+                    const url = '/alea/google/nearby?lat='
+                        + encodeURIComponent(p.coords.latitude)
+                        + '&lng=' + encodeURIComponent(p.coords.longitude)
+                        + '&category=' + encodeURIComponent(category || 'AUTRE');
+
+                    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then((r) => r.json())
+                        .then((d) => {
+                            if (!d || !d.success || !Array.isArray(d.places) || d.places.length === 0) {
+                                return;
+                            }
+
+                            const top = d.places.slice(0, 3).map((x, i) => `${i + 1}. ${x.name || '-'} (${x.address || '-'})`).join('\n');
+                            alert('Best places proches pour cette categorie:\n' + top);
+                        })
+                        .catch(() => {});
+                }, function () {});
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', initAleaStatsCharts);
+        document.addEventListener('turbo:load', initAleaStatsCharts);
+        initAleaStatsCharts();
     </script>
 {% endblock %}

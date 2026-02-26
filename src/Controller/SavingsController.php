@@ -1425,7 +1425,11 @@ class SavingsController extends AbstractController
             'src' => 'SAVINGS'
         ];
 
-        $whereTx = "WHERE user_id = :uid AND module_source = :src";
+        $whereTx = "WHERE user_id = :uid
+            AND (
+                module_source = :src
+                OR UPPER(type) IN ('EPARGNE', 'SAVING', 'GOAL_CONTRIB', 'GOAL_REFUND')
+            )";
 
         if ($tx_range === 'today') {
             $whereTx .= " AND DATE(`date`) = CURDATE() ";
@@ -2340,7 +2344,11 @@ class SavingsController extends AbstractController
         $rows = $conn->fetchAllAssociative(
             "SELECT id, type, montant, `date`, description
              FROM `transaction`
-             WHERE user_id = :uid AND module_source = :src
+             WHERE user_id = :uid
+               AND (
+                 module_source = :src
+                 OR UPPER(type) IN ('EPARGNE', 'SAVING', 'GOAL_CONTRIB', 'GOAL_REFUND')
+               )
              $dateWhere
              $searchWhere
              ORDER BY $orderBy",
@@ -2672,7 +2680,11 @@ class SavingsController extends AbstractController
         $rows = $conn->fetchAllAssociative(
             "SELECT id, type, montant, `date`, description
              FROM `transaction`
-             WHERE user_id = :uid AND module_source = :src
+             WHERE user_id = :uid
+               AND (
+                 module_source = :src
+                 OR UPPER(type) IN ('EPARGNE', 'SAVING', 'GOAL_CONTRIB', 'GOAL_REFUND')
+               )
              $dateWhere
              $searchWhere
              ORDER BY $orderBy",

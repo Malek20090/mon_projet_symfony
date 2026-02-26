@@ -177,7 +177,7 @@
 
     <!-- Main content -->
     <section class="container py-5">
-        <div class="row g-4 mb-5">
+            <div class="row g-4 mb-5">
                 <div class="col-md-4">
                     <div class="bg-white rounded p-4 shadow-sm text-center border-bottom border-primary border-3">
                         <i class="fas fa-university text-primary fa-2x mb-2"></i>
@@ -200,6 +200,19 @@
                     </div>
                 </div>
             </div>
+
+            {% if refusalPopup %}
+                <div class="alert alert-danger d-flex justify-content-between align-items-start shadow-sm mb-4" role="alert">
+                    <div>
+                        <strong><i class="fas fa-bell me-2"></i>{{ refusalPopup.title|default('Notification de refus') }}</strong>
+                        <div class="mt-1">{{ refusalPopup.message|default('Votre demande a ete refusee.') }}</div>
+                        {% if refusalPopup.createdAt %}
+                            <small class="text-muted d-block mt-1">Traitee le : {{ refusalPopup.createdAt|date('d/m/Y H:i') }}</small>
+                        {% endif %}
+                    </div>
+                    <a href="{{ path('imprevu_history') }}" class="btn btn-sm btn-outline-danger ms-3">Voir historique</a>
+                </div>
+            {% endif %}
 
             <div class="row g-5">
                 <!-- Left Panel -->
@@ -513,25 +526,50 @@ window.currentEvent = null;
 let selectedSolution = null;
 let selectedEpargneId = null;
 const refusalPopup = {{ refusalPopup ? {
+    id: refusalPopup.id,
     title: refusalPopup.title,
     message: refusalPopup.message,
     createdAt: refusalPopup.createdAt ? refusalPopup.createdAt|date('d/m/Y H:i') : ''
 }|json_encode|raw : 'null' }};
+const refusalPopupReadUrl = {{ refusalPopup ? path('app_alea_notification_read', {id: refusalPopup.id})|json_encode|raw : 'null' }};
 
-document.addEventListener('DOMContentLoaded', function () {
-    if (!refusalPopup) return;
+function markRefusalPopupAsRead() {
+    if (!refusalPopupReadUrl) {
+        return;
+    }
+
+    fetch(refusalPopupReadUrl, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    }).catch(() => {});
+}
+
+function showRefusalPopupIfAny() {
+    if (!refusalPopup || window.__refusalPopupShown) {
+        return;
+    }
+
     const titleEl = document.getElementById('refusalNotifTitle');
     const msgEl = document.getElementById('refusalNotifMessage');
     const dateEl = document.getElementById('refusalNotifDate');
-    if (!titleEl || !msgEl || !dateEl) return;
+    const modalEl = document.getElementById('refusalNotificationModal');
+    if (!titleEl || !msgEl || !dateEl || !modalEl || typeof bootstrap === 'undefined') {
+        return;
+    }
 
+    window.__refusalPopupShown = true;
     titleEl.textContent = refusalPopup.title || 'Demande refusee';
     msgEl.textContent = refusalPopup.message || '';
     dateEl.textContent = refusalPopup.createdAt ? ('Traitee le : ' + refusalPopup.createdAt) : '';
 
-    const popupModal = new bootstrap.Modal(document.getElementById('refusalNotificationModal'));
+    modalEl.addEventListener('shown.bs.modal', markRefusalPopupAsRead, { once: true });
+    const popupModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     popupModal.show();
-});
+}
+
+document.addEventListener('DOMContentLoaded', showRefusalPopupIfAny);
+document.addEventListener('turbo:load', showRefusalPopupIfAny);
+setTimeout(showRefusalPopupIfAny, 0);
 
 function loadEvent(type, title, amount, desc) {
     const panel = document.getElementById('decisionPanel');

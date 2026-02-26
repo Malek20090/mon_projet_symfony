@@ -17,10 +17,7 @@ use App\Service\RecurringPatternService;
 use App\Service\FinancialMonitoringService;
 use App\Service\SalaryExpenseAiService;
 use App\Service\FinancialAlertMailerService;
-<<<<<<< HEAD
 use App\Service\PdfShiftService;
-=======
->>>>>>> da0c78c827199d08486ab3b1d3cbb74d12cc98bd
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -334,7 +331,6 @@ class SalaryExpenseController extends AbstractController
 
             $entityManager->flush();
             $financialMonitoringService->evaluateAndNotify($user, true);
-            $expenseAnomalyMonitorService->handleNewExpense($expense);
 
             $this->addFlash('success', 'Revenu ajoute et solde mis a jour.');
 
@@ -378,6 +374,7 @@ class SalaryExpenseController extends AbstractController
 
             $entityManager->flush();
             $financialMonitoringService->evaluateAndNotify($user, true);
+            $expenseAnomalyMonitorService->handleNewExpense($expense);
 
             $this->addFlash('success', 'Depense ajoutee et solde mis a jour.');
 
