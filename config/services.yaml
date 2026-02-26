@@ -7,6 +7,9 @@ parameters:
     user_images_directory: '%kernel.project_dir%/public/uploads/users'
     google_ai_api_key_default: ''
     google_ai_model_default: 'gemini-2.5-flash'
+    groq_api_key_default: ''
+    groq_model_default: 'llama-3.1-8b-instant'
+    groq_api_url_default: 'https://api.groq.com/openai/v1/chat/completions'
     openai_api_key_default: ''
     openai_model_default: 'gpt-4o-mini'
     pdfshift_api_key_default: ''
@@ -38,8 +41,9 @@ services:
 
     App\Service\SalaryExpenseAiService:
         arguments:
-            $googleAiApiKey: '%env(default:google_ai_api_key_default:GOOGLE_AI_API_KEY)%'
-            $googleAiModel: '%env(default:google_ai_model_default:GOOGLE_AI_MODEL)%'
+            $groqApiKey: '%env(default:groq_api_key_default:GROQ_API_KEY)%'
+            $groqModel: '%env(default:groq_model_default:GROQ_MODEL)%'
+            $groqApiUrl: '%env(default:groq_api_url_default:GROQ_API_URL)%'
 
     App\Service\CasDecisionAiService:
         arguments:
