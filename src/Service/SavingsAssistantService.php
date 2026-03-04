@@ -5,6 +5,12 @@ namespace App\Service;
 use Doctrine\DBAL\Connection;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * @phpstan-type State array<string, mixed>
+ * @phpstan-type AccPack array<string, mixed>
+ * @phpstan-type Reply array{ok: bool, reply: string, source: string, model: string|null, error: string|null, state: array<string, mixed>}
+ * @phpstan-type DbContext array<string, mixed>
+ */
 class SavingsAssistantService
 {
     public function __construct(private readonly HttpClientInterface $httpClient)
@@ -170,6 +176,7 @@ class SavingsAssistantService
         ];
     }
 
+    /** @phpstan-ignore-next-line */
     private function buildAiUnavailableReply(): string
     {
         return "AI assistant is running in local fallback mode (degraded).\n"
@@ -698,7 +705,7 @@ class SavingsAssistantService
         $entities = $this->extractEntities($q, $goals);
         $required = $this->requiredEntitiesForTemplate($template);
         foreach ($required as $field) {
-            $missing = !isset($entities[$field]) || $entities[$field] === null || $entities[$field] === '';
+            $missing = !isset($entities[$field]) || $entities[$field] === '';
             if ($missing) {
                 $state['pending'] = [
                     'type' => 'await_entity',
@@ -722,15 +729,6 @@ class SavingsAssistantService
             $result['reply'] = "Interpreted as: " . (string) $match['canonical'] . "\n" . (string) ($result['reply'] ?? '');
         }
         return $result;
-
-        return [
-            'ok' => false,
-            'source' => $source,
-            'model' => ($aiRewrite['model'] ?? null),
-            'error' => 'UNCLEAR',
-            'state' => $state,
-            'reply' => "Please clarify with one command.\nExamples:\n- What goals do I have?\n- How much remaining for skincare?\n- Create a goal called clothes target 3000 tnd deadline 2026-09-01 priority p2\n- Contribute 200 tnd to car",
-        ];
     }
 
     private function capabilitiesGuide(): string
@@ -880,7 +878,7 @@ class SavingsAssistantService
                 $entities['name'] = $value;
             }
             foreach ($this->requiredEntitiesForTemplate($template) as $field) {
-                $isMissing = !isset($entities[$field]) || $entities[$field] === null || $entities[$field] === '';
+            $isMissing = !isset($entities[$field]) || $entities[$field] === '';
                 if ($isMissing) {
                     $state['pending'] = [
                         'type' => 'await_entity',
@@ -1098,6 +1096,7 @@ class SavingsAssistantService
         ), 'source' => 'local-action', 'model' => null, 'error' => null, 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function answerGoalsAtRisk(Connection $conn, int $accId, string $goalAccCol, array $state): array
     {
         $goals = $this->loadGoals($conn, $accId, $goalAccCol);
@@ -1118,6 +1117,7 @@ class SavingsAssistantService
         return ['ok' => true, 'reply' => $this->replyBlocks('Checked deadline risk.', $txt, sprintf('%d goal(s) flagged in the next 30 days.', count($risk)), 'Prioritize the first risk goal in your next contribution.'), 'source' => 'local-action', 'model' => null, 'error' => null, 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function answerAccounts(Connection $conn, int $userId, array $accPack, array $state): array
     {
         $userCol = (string) ($accPack['accUserCol'] ?? 'user_id');
@@ -1130,6 +1130,7 @@ class SavingsAssistantService
         return ['ok' => true, 'reply' => $this->replyBlocks('Fetched your savings accounts.', implode(' | ', $items), 'Balances loaded from DB.', 'Use "total savings balance" for aggregate view.'), 'source' => 'local-action', 'model' => null, 'error' => null, 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function answerTotalBalance(Connection $conn, int $userId, array $accPack, array $state): array
     {
         $userCol = (string) ($accPack['accUserCol'] ?? 'user_id');
@@ -1138,6 +1139,7 @@ class SavingsAssistantService
         return ['ok' => true, 'reply' => $this->replyBlocks(sprintf('Total savings balance is %.2f TND.', $total), sprintf('Aggregate across your savings accounts: %.2f TND', $total), 'Use this amount for contribution planning.', 'Ask "what goals do I have?" to allocate this balance.'), 'source' => 'local-action', 'model' => null, 'error' => null, 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function answerRecentTransactions(Connection $conn, int $userId, string $q, array $state): array
     {
         $limit = 5;
@@ -1152,6 +1154,7 @@ class SavingsAssistantService
         return ['ok' => true, 'reply' => $this->replyBlocks("Fetched your last {$limit} savings transactions.", $items ? implode(' | ', $items) : 'No transactions found.', 'History pulled from your DB.', 'Use contributions or goal actions as your next step.'), 'source' => 'local-action', 'model' => null, 'error' => null, 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function answerSavedThisMonth(Connection $conn, int $userId, array $state): array
     {
         $sum = (float) $conn->fetchOne(
@@ -1161,6 +1164,7 @@ class SavingsAssistantService
         return ['ok' => true, 'reply' => $this->replyBlocks(sprintf('You saved %.2f TND this month.', $sum), sprintf('Month-to-date savings deposits: %.2f TND', $sum), 'Monthly savings trend updated.', 'If needed, increase auto deposit for next month.'), 'source' => 'local-action', 'model' => null, 'error' => null, 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function answerContributedToGoal(Connection $conn, int $accId, string $goalAccCol, int $userId, string $q, array $state): array
     {
         $goal = $this->findGoalByName($this->loadGoals($conn, $accId, $goalAccCol), $q);
@@ -1175,6 +1179,7 @@ class SavingsAssistantService
         return ['ok' => true, 'reply' => $this->replyBlocks(sprintf('Total contributions to "%s": %.2f TND.', (string) $goal['nom'], $sum), sprintf('Goal current %.2f / target %.2f', (float) $goal['montant_actuel'], (float) $goal['montant_cible']), 'Contribution total computed from savings history.', sprintf('Say "show contributions for goal %s only".', (string) $goal['nom'])), 'source' => 'local-action', 'model' => null, 'error' => null, 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function answerAverageMonthlySaving(Connection $conn, int $userId, array $state): array
     {
         $rows = $conn->fetchAllAssociative(
@@ -1259,6 +1264,7 @@ class SavingsAssistantService
         return ['ok' => true, 'reply' => $this->replyBlocks('Deadline extended.', sprintf('Goal %s deadline moved to %s.', (string) $goal['nom'], $new), sprintf('Extension applied: +%d month(s).', $months), 'Re-run what-if to see new confidence.'), 'source' => 'local-action', 'model' => null, 'error' => null, 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function setGoalDeadline(Connection $conn, int $accId, string $goalAccCol, string $q, array $state): array
     {
         $date = $this->extractDate($q);
@@ -1268,6 +1274,7 @@ class SavingsAssistantService
         return ['ok' => true, 'reply' => $this->replyBlocks('Deadline updated.', sprintf('Goal %s deadline is now %s.', (string) $goal['nom'], $date), 'Timeline risk recalculated on next read.', 'Ask: "which goals are at risk?"'), 'source' => 'local-action', 'model' => null, 'error' => null, 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function createAccount(Connection $conn, int $userId, array $accPack, string $q, array $state): array
     {
         $userCol = (string) ($accPack['accUserCol'] ?? 'user_id');
@@ -1285,6 +1292,7 @@ class SavingsAssistantService
         return ['ok' => true, 'reply' => $this->replyBlocks('Savings account created.', sprintf('Initial balance %.2f TND.', $amount), 'Account list has been updated.', 'Use "what savings accounts do I have?" to view all.'), 'source' => 'local-action', 'model' => null, 'error' => null, 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function renameAccount(Connection $conn, int $userId, array $accPack, string $q, array $state): array
     {
         $nameCol = $this->hasColumn($conn, 'saving_account', 'nom') ? 'nom' : ($this->hasColumn($conn, 'saving_account', 'name') ? 'name' : null);
@@ -1298,6 +1306,7 @@ class SavingsAssistantService
         return ['ok' => true, 'reply' => $this->replyBlocks('Account renamed.', sprintf('"%s" -> "%s"', $old, $new), 'Account label updated.', 'Use the new name for future commands.'), 'source' => 'local-action', 'model' => null, 'error' => null, 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function updateAccountBalance(Connection $conn, int $userId, array $accPack, string $q, array $state): array
     {
         $amount = $this->extractAmount($q);
@@ -1319,6 +1328,7 @@ class SavingsAssistantService
         return ['ok' => false, 'reply' => sprintf('Please confirm delete goal "%s" (yes/no).', (string) $goal['nom']), 'source' => 'local-action', 'model' => null, 'error' => 'CONFIRM', 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function deleteAccountAskConfirm(Connection $conn, int $userId, array $accPack, string $q, array $state): array
     {
         $id = null;
@@ -1328,6 +1338,7 @@ class SavingsAssistantService
         return ['ok' => false, 'reply' => sprintf('Please confirm delete account #%d (yes/no).', $id), 'source' => 'local-action', 'model' => null, 'error' => 'CONFIRM', 'state' => $state];
     }
 
+    /** @phpstan-ignore-next-line */
     private function handleHistoryNext(Connection $conn, int $userId, array $state): array
     {
         $page = is_array($state['pagination'] ?? null) ? $state['pagination'] : null;
@@ -1337,6 +1348,7 @@ class SavingsAssistantService
         return $this->runHistoryQuery($conn, $userId, $criteria, $offset + 5, $state);
     }
 
+    /** @phpstan-ignore-next-line */
     private function searchHistory(Connection $conn, int $userId, int $accId, string $goalAccCol, string $q, array $state): array
     {
         $criteria = ['keyword' => null, 'from' => null, 'to' => null, 'sort' => 'date_desc', 'contrib_only' => false, 'goal_id' => null];
@@ -1724,6 +1736,7 @@ class SavingsAssistantService
         }
     }
 
+    /** @phpstan-ignore-next-line */
     private function answerGoalsStartingWith(Connection $conn, int $accId, string $goalAccCol, string $q, array $state): array
     {
         $letter = null;

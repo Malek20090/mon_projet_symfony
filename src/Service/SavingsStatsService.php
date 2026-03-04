@@ -68,14 +68,17 @@ class SavingsStatsService
             $dayKey = $dt ? substr($dt, 0, 10) : 'Unknown';
             $monthKey = $dt ? substr($dt, 0, 7) : 'Unknown';
 
-            $key = match ($statBy) {
-                'type' => $type !== '' ? $type : 'Unknown',
-                'day' => $dayKey,
-                'month' => $monthKey,
-                'amount_bucket' => $bucket($m),
-                'description' => trim($desc) !== '' ? trim($desc) : 'No description',
-                default => 'Unknown',
-            };
+            if ($statBy === 'type') {
+                $key = $type !== '' ? $type : 'Unknown';
+            } elseif ($statBy === 'day') {
+                $key = $dayKey;
+            } elseif ($statBy === 'month') {
+                $key = $monthKey;
+            } elseif ($statBy === 'amount_bucket') {
+                $key = $bucket($m);
+            } else {
+                $key = trim($desc) !== '' ? trim($desc) : 'No description';
+            }
 
             if (!isset($statMap[$key])) {
                 $statMap[$key] = 0.0;

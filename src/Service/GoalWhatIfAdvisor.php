@@ -409,12 +409,12 @@ final class GoalWhatIfAdvisor
         $bestKey = 'split';
         if ($requiredAdjustment > 0.0 && $requiredAdjustment <= $maxReasonableIncrease) {
             $bestKey = 'monthly';
-        } elseif (($candidates['one_time']['reasonable'] ?? false) === true) {
+        } elseif ($candidates['one_time']['reasonable'] === true) {
             $bestKey = 'one_time';
         } elseif (
             isset($candidates['deadline']) &&
             (
-                (int) ($candidates['deadline']['extend_by'] ?? 999) <= self::MAX_REASONABLE_DEADLINE_EXTENSION ||
+                (int) $candidates['deadline']['extend_by'] <= self::MAX_REASONABLE_DEADLINE_EXTENSION ||
                 $requiredTooHigh ||
                 $scenarioType === 'deadline_adjustment'
             )
@@ -425,25 +425,26 @@ final class GoalWhatIfAdvisor
         if (!isset($candidates[$bestKey])) {
             $bestKey = 'split';
         }
+        assert(isset($candidates[$bestKey]));
         $bestRaw = $candidates[$bestKey];
         unset($candidates[$bestKey]);
 
-        usort($candidates, static fn(array $a, array $b): int => ((float) ($a['practicality'] ?? 999999.0)) <=> ((float) ($b['practicality'] ?? 999999.0)));
+        usort($candidates, static fn(array $a, array $b): int => ((float) $a['practicality']) <=> ((float) $b['practicality']));
         $alternatives = [];
         foreach (array_slice($candidates, 0, 2) as $alt) {
             $alternatives[] = [
-                'title' => (string) ($alt['title'] ?? 'Alternative'),
-                'details' => (string) ($alt['details'] ?? '-'),
+                'title' => (string) $alt['title'],
+                'details' => (string) $alt['details'],
             ];
         }
 
         return [
             'best_action' => [
-                'title' => (string) ($bestRaw['title'] ?? 'Best action'),
-                'details' => (string) ($bestRaw['details'] ?? '-'),
+                'title' => (string) $bestRaw['title'],
+                'details' => (string) $bestRaw['details'],
             ],
             'alternatives' => $alternatives,
-            'next_7_days' => (string) ($bestRaw['next_7_days'] ?? 'Set one automation and rerun simulation in 7 days.'),
+            'next_7_days' => (string) $bestRaw['next_7_days'],
         ];
     }
 

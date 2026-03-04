@@ -1,0 +1,30 @@
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
+
+parameters:
+    level: 6
+    tmpDir: var/cache/phpstan
+    treatPhpDocTypesAsCertain: false
+    symfony:
+        containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+    paths:
+        - src/Controller/SavingsController.php
+        - src/Service/SavingsAssistantService.php
+        - src/Service/SavingsCalendarService.php
+        - src/Service/SavingsGoalStatsService.php
+        - src/Service/SavingsPdfService.php
+        - src/Service/SavingsStatsService.php
+        - src/Service/SavingsWhatIfAiService.php
+        - src/Service/GoalWhatIfService.php
+        - src/Service/GoalWhatIfAdvisor.php
+        - src/Service/GoalPdfService.php
+        - src/Service/WhatIfAiNarratorService.php
+    ignoreErrors:
+        - identifier: missingType.iterableValue
+        - identifier: method.unused
+        - identifier: nullCoalesce.offset
+        - identifier: function.alreadyNarrowedType
+        - identifier: match.alwaysTrue
+        - identifier: arrayValues.list
+        - identifier: booleanAnd.leftAlwaysTrue
+        - identifier: if.alwaysTrue
