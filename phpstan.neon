@@ -1,0 +1,13 @@
+parameters:
+    level: 5
+    paths:
+        - src/Entity/User.php
+        - src/Entity/Transaction.php
+        - tests/Entity
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        - identifier: property.unusedType
+          path: src/Entity/User.php
+        - identifier: property.unusedType
+          path: src/Entity/Transaction.php
+    tmpDir: var/cache/phpstan

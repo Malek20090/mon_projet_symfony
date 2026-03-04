@@ -8,6 +8,9 @@ use App\Repository\ExpenseRepository;
 use App\Repository\RevenueRepository;
 use App\Repository\TransactionRepository;
 use App\Service\SalaryExpenseAiService;
+use App\Repository\UserBehaviorProfileRepository;
+use App\Service\UserBehaviorAiNarratorService;
+use App\Service\UserBehaviorScoringService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Doctrine\ORM\EntityManagerInterface;
@@ -44,7 +47,10 @@ class SalaryController extends AbstractController
         TransactionRepository $transactionRepository,
         RevenueRepository $revenueRepository,
         ExpenseRepository $expenseRepository,
-        SalaryExpenseAiService $salaryExpenseAiService
+        SalaryExpenseAiService $salaryExpenseAiService,
+        UserBehaviorScoringService $behaviorScoringService,
+        UserBehaviorAiNarratorService $behaviorAiNarratorService,
+        UserBehaviorProfileRepository $userBehaviorProfileRepository
     ): Response {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -95,11 +101,54 @@ class SalaryController extends AbstractController
         ));
         $aiInsights = $salaryExpenseAiService->buildInsights($revenues, $expenses);
 
+        try {
+            $existingBehaviorProfile = $userBehaviorProfileRepository->findOneByUser($user);
+            $behaviorSnapshot = $behaviorScoringService->buildSnapshot(
+                $user,
+                $transactions,
+                $existingBehaviorProfile
+            );
+
+            if ($existingBehaviorProfile === null) {
+                $em->persist($behaviorSnapshot['entity']);
+            }
+            $em->flush();
+        } catch (\Throwable) {
+            $behaviorSnapshot = $behaviorScoringService->buildSnapshot($user, $transactions);
+        }
+
+        $narrationContext = [
+            'score' => $behaviorSnapshot['entity']->getScore(),
+            'profile_type' => $behaviorSnapshot['entity']->getProfileType(),
+            'strengths' => $behaviorSnapshot['entity']->getStrengths(),
+            'weaknesses' => $behaviorSnapshot['entity']->getWeaknesses(),
+            'next_actions' => $behaviorSnapshot['entity']->getNextActions(),
+            'metrics' => $behaviorSnapshot['metrics'],
+            'week_tracking' => $behaviorSnapshot['week_tracking'],
+            'score_delta' => $behaviorSnapshot['score_delta'],
+        ];
+
+        $behaviorAiNarration = $behaviorAiNarratorService->narrate($narrationContext);
+        if (!$behaviorAiNarration['ok']) {
+            $behaviorAiNarration = [
+                'ok' => true,
+                'source' => 'local',
+                'text' => $behaviorAiNarratorService->buildLocalFallback($narrationContext),
+                'model' => null,
+                'error' => $behaviorAiNarration['error'],
+            ];
+        }
+
         return $this->render('salary/profile.html.twig', [
             'user' => $user,
             'form' => $form->createView(),
             'transactions' => $transactions,
             'aiInsights' => $aiInsights,
+            'behavior_profile' => $behaviorSnapshot['entity'],
+            'behavior_metrics' => $behaviorSnapshot['metrics'],
+            'behavior_week_tracking' => $behaviorSnapshot['week_tracking'],
+            'behavior_score_delta' => $behaviorSnapshot['score_delta'],
+            'behavior_ai_narration' => $behaviorAiNarration,
         ]);
     }
 

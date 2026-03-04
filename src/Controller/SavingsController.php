@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Dto\SavingsTransactionCsvRow;
 use App\Entity\FinancialGoal;
 use App\Entity\SavingAccount;
+use App\Repository\FinancialGoalRepository;
 use App\Service\SavingsCalendarService;
 use App\Service\SavingsPdfService;
 use App\Service\SavingsAssistantService;
@@ -1242,6 +1243,7 @@ class SavingsController extends AbstractController
         Security $security,
         Request $request,
         PaginatorInterface $paginator,
+        FinancialGoalRepository $financialGoalRepository,
         SavingsGoalStatsService $savingsGoalStatsService,
         SavingsStatsService $savingsStatsService,
         ChartBuilderInterface $chartBuilder
@@ -1276,40 +1278,7 @@ class SavingsController extends AbstractController
             'id_desc','id_asc',
         ], 'deadline_asc');
 
-        $orderBy = match ($sort) {
-            'deadline_desc' => "date_limite DESC",
-            'priority_desc' => "priorite DESC",
-            'priority_asc'  => "priorite ASC",
-            'progress_desc' => "(CASE WHEN montant_cible > 0 THEN (montant_actuel / montant_cible) ELSE 0 END) DESC",
-            'progress_asc'  => "(CASE WHEN montant_cible > 0 THEN (montant_actuel / montant_cible) ELSE 0 END) ASC",
-            'name_asc'      => "nom ASC",
-            'name_desc'     => "nom DESC",
-            'id_asc'        => "id ASC",
-            'id_desc'       => "id DESC",
-            default         => "date_limite ASC",
-        };
-
-        $params = ['acc' => $accId];
-        $where = "WHERE `$goalAccCol` = :acc";
-
-        if ($q !== '') {
-            $where .= " AND (
-                nom LIKE :q
-                OR CAST(priorite AS CHAR) LIKE :q
-                OR CAST(montant_cible AS CHAR) LIKE :q
-                OR CAST(montant_actuel AS CHAR) LIKE :q
-                OR CAST(date_limite AS CHAR) LIKE :q
-            )";
-            $params['q'] = '%' . $q . '%';
-        }
-
-        $goalsRaw = ($accId > 0) ? $conn->fetchAllAssociative(
-            "SELECT id, nom, montant_cible, montant_actuel, date_limite, priorite
-             FROM financial_goal
-             $where
-             ORDER BY $orderBy",
-            $params
-        ) : [];
+        $goalsRaw = $financialGoalRepository->findDashboardRowsByAccountId($accId, $q, $sort);
 
         // ----------------------------
         // Stats (goals)
