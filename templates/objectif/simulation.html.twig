@@ -10,10 +10,13 @@
       <h2>🔮 Monte Carlo Simulation</h2>
       <p><strong>Objectif :</strong> {{ objectif.name }}</p>
 
+
+
+      {# Statistics Section #}
       <div style="margin-top:20px; font-size:18px;">
 
         <p>🎯 <strong>Probability of Success:</strong>
-          <span style="font-weight:bold; color:
+          <span style="font-weight: bold; color:
             {% if result.probability > 70 %}
               #16a34a
             {% elseif result.probability > 40 %}
@@ -26,10 +29,23 @@
           </span>
         </p>
 
-        <p>📈 <strong>Best Case:</strong> ${{ result.bestCase }}</p>
-        <p>📉 <strong>Worst Case:</strong> ${{ result.worstCase }}</p>
+        <p>📈 <strong>Best Case:</strong> ${{ result.bestCase|number_format(2) }}</p>
+        <p>📉 <strong>Worst Case:</strong> ${{ result.worstCase|number_format(2) }}</p>
+        <p>🎯 <strong>Target Amount:</strong> ${{ result.target|number_format(2) }}</p>
 
       </div>
+            {# Chart Section #}
+      {% if histogram is defined and histogram.labels is not empty %}
+        <div style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+          <canvas id="monteCarloChart" style="width:100%;height:360px;"></canvas>
+        </div>
+
+        {# Target indicator legend #}
+        <div style="margin-bottom: 20px; padding: 10px; background: rgba(255,99,132,0.1); border-left: 3px solid rgba(255,99,132,1); border-radius: 4px;">
+          <span style="color: rgba(255,99,132,1); font-weight: bold;">Target:</span>
+          ${{ result.target|number_format(0) }} (shown as red line on chart)
+        </div>
+      {% endif %}
 
       <div style="margin-top:20px;">
         <a href="{{ path('objectif_index') }}" class="ghost-btn">
@@ -40,4 +56,89 @@
     </div>
   </div>
 </section>
+{% endblock %}
+
+{% block javascripts %}
+  {{ parent() }}
+  {% if histogram is defined and histogram.labels is not empty %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+      (function () {
+        const labels = {{ histogram.labels|json_encode|raw }};
+        const frequencies = {{ histogram.frequencies|json_encode|raw }};
+        const targetBinIndex = {{ histogram.targetBinIndex|default(0) }};
+        const targetAmount = {{ result.target|default(0) }};
+
+        const canvas = document.getElementById('monteCarloChart');
+        if (!canvas || typeof Chart === 'undefined') {
+          return;
+        }
+
+        const maxFrequency = frequencies.length ? Math.max(...frequencies) : 0;
+        const targetLineData = new Array(frequencies.length).fill(null);
+        if (targetBinIndex >= 0 && targetBinIndex < targetLineData.length) {
+          targetLineData[targetBinIndex] = Math.max(1, Math.ceil(maxFrequency * 1.1));
+        }
+
+        new Chart(canvas, {
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                type: 'bar',
+                label: 'Frequency',
+                data: frequencies,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                order: 2
+              },
+              {
+                type: 'line',
+                label: 'Target: $' + Number(targetAmount).toFixed(0),
+                data: targetLineData,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderWidth: 3,
+                pointRadius: 8,
+                pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                fill: false,
+                tension: 0,
+                order: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top'
+              },
+              title: {
+                display: true,
+                text: 'Monte Carlo Simulation - Distribution of Final Values'
+              }
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: 'Value Range ($)'
+                }
+              },
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Frequency (Count)'
+                }
+              }
+            }
+          }
+        });
+      })();
+    </script>
+  {% endif %}
 {% endblock %}

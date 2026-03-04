@@ -1,159 +1,230 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile | Decide$</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: #eef2f8;
-            color: #0f172a;
-        }
-        .profile-wrap {
-            max-width: 1180px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-        .card-clean {
-            background: #fff;
-            border: 1px solid #e5eaf1;
-            border-radius: 16px;
-            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
-        }
-        .profile-head {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-        }
-        .profile-user {
-            display: flex;
-            gap: 0.9rem;
-            align-items: center;
-        }
-        .profile-avatar {
-            width: 74px;
-            height: 74px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #dbe5ff;
-            box-shadow: 0 6px 16px rgba(31, 69, 173, 0.2);
-        }
-        .tx-badge {
-            padding: 0.25rem 0.65rem;
-            border-radius: 999px;
-            font-size: 0.78rem;
-            font-weight: 700;
-        }
-        .tx-saving { background: #dcfce7; color: #166534; }
-        .tx-expense { background: #fee2e2; color: #b91c1c; }
-        .tx-invest { background: #dbeafe; color: #1d4ed8; }
-    </style>
-</head>
-<body>
-<div class="profile-wrap">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">My Salary Profile</h1>
-        <a href="{{ path('salary_dashboard') }}" class="btn btn-outline-primary rounded-pill px-4">
-            <i class="fas fa-arrow-left me-2"></i>Back to dashboard
-        </a>
+{% extends 'base_pages.html.twig' %}
+{% block title %}My Salary Profile | Decide${% endblock %}
+{% block body_class %}salary-profile-page{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+.salary-profile-page{min-height:100vh;background:radial-gradient(circle at 8% 10%,rgba(30,104,255,.34),transparent 38%),radial-gradient(circle at 86% 18%,rgba(0,176,255,.23),transparent 32%),linear-gradient(140deg,#041126 0%,#071d3b 46%,#0a2550 100%);color:#e9f3ff}
+.salary-shell{padding:2.2rem 0 3rem}.salary-title{font-size:clamp(2rem,4vw,3.2rem);font-weight:800;color:#f4f9ff}.salary-back-btn{border-radius:12px;border:1px solid rgba(145,198,255,.5);background:rgba(10,31,70,.4);color:#deeeff;padding:.7rem 1.2rem}
+.grid-main{display:grid;grid-template-columns:2fr 1fr;gap:1rem}.card-glass{background:linear-gradient(140deg,rgba(250,252,255,.95),rgba(228,238,255,.93));color:#122849;border:1px solid rgba(255,255,255,.4);box-shadow:0 10px 28px rgba(2,17,45,.35);border-radius:20px}
+.profile-card{padding:1.4rem}.profile-head{display:flex;justify-content:space-between;gap:1rem;align-items:center}.profile-user{display:flex;align-items:center;gap:.8rem}.avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid rgba(31,102,226,.2)}
+.name{margin:0;font-size:1.9rem;font-weight:800;color:#0b2347}.mail{margin:.1rem 0 0;color:#415978}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}.form-grid .form-control,.form-grid .form-select{border-radius:10px;border:1px solid #c4d6f0}
+.save-btn{margin-top:.85rem;border:0;border-radius:999px;font-weight:700;padding:.7rem 1.2rem;background:linear-gradient(120deg,#0e59f3,#0a8bff);color:#fff}
+.geo-line{margin-top:.35rem;display:flex;gap:.45rem;flex-wrap:wrap;align-items:center}
+.geo-pill{display:inline-flex;align-items:center;gap:.3rem;border-radius:999px;padding:.2rem .55rem;font-size:.74rem;font-weight:800;border:1px solid #c5daf8;background:#edf5ff;color:#1a4a86}
+.geo-pill-risk{background:#ffe7ea;border-color:#ffc7cf;color:#982233}
+.side{background:linear-gradient(150deg,rgba(22,70,152,.97),rgba(8,38,88,.95));color:#e9f5ff;border-radius:20px;border:1px solid rgba(109,170,255,.32);padding:1.2rem}.amount{font-size:2.6rem;font-weight:900}.chip{margin-top:.8rem;border-radius:14px;padding:.75rem;background:linear-gradient(140deg,rgba(16,90,192,.95),rgba(18,169,255,.8))}
+.grid-w{margin-top:1rem;display:grid;grid-template-columns:1.15fr 1fr .8fr;gap:1rem}.w-dark,.w-light{border-radius:16px;box-shadow:0 8px 20px rgba(3,17,46,.25);padding:1rem}.w-dark{background:linear-gradient(150deg,rgba(10,51,124,.96),rgba(8,28,72,.93));color:#dcecff}.w-light{background:linear-gradient(140deg,rgba(250,252,255,.95),rgba(225,236,255,.93));color:#132847}
+.w-title{margin:0;font-size:1.45rem;font-weight:800}.chart-wrap{height:220px}.insight{margin-top:.8rem;border-top:1px solid #d2deef;padding-top:.8rem;font-weight:700}.table-card{margin-top:1rem;border-radius:18px;background:linear-gradient(140deg,rgba(246,250,255,.96),rgba(224,235,255,.93));color:#122849;box-shadow:0 10px 22px rgba(5,19,49,.25)}
+.head-tools{padding:1rem 1rem 0;display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap}.tx-pill{display:inline-block;border-radius:999px;padding:.18rem .65rem;font-size:.77rem;font-weight:800}.p-exp{color:#9f2a35;background:#ffd7dc}.p-sav{color:#115f47;background:#cbf2e3}.p-inv{color:#214f97;background:#d6e6ff}
+.export-btn{border-radius:12px;font-weight:700}
+.behavior-card{margin-top:1rem;border-radius:20px;background:linear-gradient(150deg,rgba(252,254,255,.97),rgba(227,239,255,.95));border:1px solid rgba(167,198,242,.6);box-shadow:0 14px 32px rgba(8,27,63,.24);padding:1.1rem}
+.behavior-head{display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap}
+.behavior-grid{margin-top:.9rem;display:grid;grid-template-columns:230px 1fr;gap:1rem}
+.score-ring{--size:190px;--thickness:14px;--score:50;width:var(--size);height:var(--size);position:relative;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#0d6efd calc(var(--score)*1%),#94c8ff 0)}
+.score-ring::before{content:'';position:absolute;inset:var(--thickness);background:#f3f8ff;border-radius:50%}
+.score-content{position:relative;text-align:center}
+.score-value{display:block;font-size:2.15rem;font-weight:900;color:#0e2f5d;line-height:1}
+.score-label{font-size:.8rem;color:#57749b;font-weight:700}
+.profile-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .65rem;border-radius:999px;font-size:.78rem;font-weight:800}
+.chip-risk{background:#ffe3e6;color:#962231}.chip-ok{background:#d8f9eb;color:#0e6b4f}.chip-info{background:#e3eeff;color:#1d4f9a}
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.metric-tile{background:#f7fbff;border:1px solid #d5e6ff;border-radius:14px;padding:.65rem}
+.metric-top{display:flex;justify-content:space-between;font-size:.85rem;font-weight:700;color:#1a3f74}
+.metric-track{margin-top:.38rem;height:8px;border-radius:999px;background:#dfeeff;overflow:hidden}
+.metric-fill{height:100%;background:linear-gradient(90deg,#147bff,#14c6ff);border-radius:inherit;transform-origin:left;animation:growBar .9s ease both}
+.week-grid{margin-top:.6rem;display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.week-box{background:#f5f9ff;border:1px solid #d8e8ff;padding:.58rem .66rem;border-radius:12px}
+.coach-grid{margin-top:.75rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem}
+.coach-item{background:linear-gradient(145deg,#f8fcff,#eaf3ff);border:1px solid #d5e7ff;border-radius:12px;padding:.6rem .65rem;font-size:.87rem}
+.coach-item strong{color:#0f4fa3}
+.ai-note{margin-top:.75rem;background:#0f2342;color:#d9e8ff;border-radius:14px;padding:.85rem;border:1px solid rgba(130,180,255,.4)}
+.ai-note pre{margin:0;white-space:pre-wrap;font-family:inherit;font-size:.9rem;line-height:1.45}
+.tx-header{display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap;padding:1rem 1rem .25rem}
+.tx-stats{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap}
+.tx-stat{background:#eaf2ff;color:#1d4e92;border:1px solid #c8dcff;border-radius:999px;padding:.26rem .62rem;font-size:.76rem;font-weight:800}
+.tx-controls{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;padding:0 1rem .6rem}
+.tx-controls .form-select,.tx-controls .form-control{max-width:190px;border-radius:10px;border:1px solid #cadbf4}
+.table-card .table{margin-bottom:0}
+.table-card thead th{position:sticky;top:0;background:#f1f7ff;font-size:.81rem;text-transform:uppercase;letter-spacing:.02em;border-bottom:1px solid #d5e2f2}
+.table-card tbody tr{animation:slideFadeIn .35s ease both}
+.table-card tbody tr:hover{background:#edf5ff}
+.amt-neg{font-weight:800;color:#ad1f33}.amt-pos{font-weight:800;color:#116c4e}
+.nearby-results{margin-top:.65rem;display:grid;gap:.45rem;max-height:170px;overflow:auto}
+.nearby-item{background:rgba(255,255,255,.12);border:1px solid rgba(140,185,245,.35);padding:.5rem .55rem;border-radius:10px}
+.nearby-item .n{font-weight:700}
+.nearby-item .m{font-size:.83rem;opacity:.92}
+.salary-back-btn,.save-btn,.export-btn,.w-dark,.w-light,.card-glass,.side,.table-card,.nearby-item{transition:transform .28s ease,box-shadow .28s ease,opacity .28s ease,filter .28s ease}
+.salary-back-btn:hover,.save-btn:hover,.export-btn:hover{transform:translateY(-2px) scale(1.05);filter:brightness(1.06)}
+.w-dark:hover,.w-light:hover,.card-glass:hover,.side:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 14px 30px rgba(4,19,49,.35)}
+.table-card:hover{transform:scale(1.01);box-shadow:0 14px 30px rgba(4,19,49,.30)}
+.nearby-item:hover{transform:scale(1.03);box-shadow:0 8px 18px rgba(9,26,58,.35)}
+.salary-shell .salary-title,.salary-shell .grid-main>*,.salary-shell .grid-w>*,.salary-shell .table-card{opacity:0;transform:translateY(16px)}
+.salary-shell.is-ready .salary-title,.salary-shell.is-ready .grid-main>*,.salary-shell.is-ready .grid-w>*,.salary-shell.is-ready .table-card{opacity:1;transform:translateY(0)}
+.salary-shell.is-ready .salary-title{transition:all .45s ease .02s}
+.salary-shell.is-ready .grid-main> :nth-child(1){transition:all .45s ease .08s}
+.salary-shell.is-ready .grid-main> :nth-child(2){transition:all .45s ease .14s}
+.salary-shell.is-ready .grid-w> :nth-child(1){transition:all .45s ease .20s}
+.salary-shell.is-ready .grid-w> :nth-child(2){transition:all .45s ease .26s}
+.salary-shell.is-ready .grid-w> :nth-child(3){transition:all .45s ease .32s}
+.salary-shell.is-ready .table-card{transition:all .45s ease .38s}
+.nearby-item{animation:slideFadeIn .35s ease both}
+@keyframes slideFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes growBar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (max-width:1200px){.grid-main,.grid-w{grid-template-columns:1fr}.profile-head{flex-direction:column;align-items:flex-start}}
+@media (max-width:992px){.behavior-grid{grid-template-columns:1fr}.metrics-grid{grid-template-columns:1fr}.coach-grid{grid-template-columns:1fr}}
+@media (max-width:768px){.form-grid{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="salary-shell" id="salaryShell"><div class="container">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3"><h1 class="salary-title">My Salary Profile</h1><div class="d-flex gap-2"><a href="{{ path('app_reclamation_index') }}" class="btn salary-back-btn"><i class="fas fa-comment-dots me-2"></i>Reclamations</a><a href="{{ path('salary_dashboard') }}" class="btn salary-back-btn"><i class="fas fa-arrow-left me-2"></i>Back to dashboard</a></div></div>
+{% for message in app.flashes('success') %}<div class="alert alert-success mt-2">{{ message }}</div>{% endfor %}
+
+<div class="grid-main">
+<div class="card-glass profile-card">
+<div class="profile-head">
+<div class="profile-user"><img src="{{ asset(user.image ? 'uploads/users/' ~ user.image : 'uploads/users/chat1.png') }}" class="avatar" alt="Profile"><div><p class="name">{{ user.nom ?: 'My profile' }}</p><p class="mail">{{ user.email }}</p><div class="geo-line"><span class="geo-pill"><i class="fas fa-globe"></i>{{ user.geoCountryName ?: user.geoCountryCode ?: 'Country unknown' }}</span><span class="geo-pill"><i class="fas fa-location-dot"></i>{{ user.geoRegionName ?: 'Region unknown' }}{% if user.geoCityName %} / {{ user.geoCityName }}{% endif %}</span>{% if user.geoDetectedIp %}<span class="geo-pill"><i class="fas fa-network-wired"></i>{{ user.geoDetectedIp }}</span>{% endif %}{% if user.geoVpnSuspected %}<span class="geo-pill geo-pill-risk"><i class="fas fa-triangle-exclamation"></i>VPN/Proxy detected</span>{% endif %}</div></div></div>
+<div><div><i class="fas fa-wallet me-1"></i><span id="headBalanceTarget">{{ user.soldeTotal|number_format(2, '.', ' ') }} TND</span></div><div id="headRateInfo">Base: TND</div></div>
+</div>
+{{ form_start(form) }}<div class="form-grid">{{ form_row(form.nom) }}{{ form_row(form.email) }}{{ form_row(form.plainPassword) }}{{ form_row(form.image) }}</div><button type="submit" class="save-btn"><i class="fas fa-floppy-disk me-2"></i>Save profile</button>{{ form_end(form) }}
+</div>
+<div class="side">
+<div class="d-flex justify-content-between align-items-center"><strong>Live Balance</strong><select id="targetCurrency" class="form-select form-select-sm" style="width:120px"><option value="USD" selected>USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="TND">TND</option></select></div>
+<div class="d-flex align-items-center gap-2 mt-2"><div class="amount" id="sideAmount">{{ user.soldeTotal|number_format(2, '.', ' ') }}</div><span id="sideCurrency" class="badge text-bg-info">USD</span></div>
+<div id="rateValue">-</div><div class="chip">API currency sync + AI widgets</div><div class="small mt-2" id="apiStatus"></div>
+</div></div>
+
+<div class="grid-w">
+<div class="w-dark"><div class="d-flex justify-content-between"><h3 class="w-title">Recent Transactions</h3><small>Trend</small></div><div class="chart-wrap"><canvas id="txChart"></canvas></div></div>
+<div class="w-light"><div class="d-flex justify-content-between align-items-center"><h3 class="w-title">AI Spending Insights</h3><select id="insightCurrency" class="form-select form-select-sm" style="width:100px"><option value="TND" selected>TND</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div><div class="mt-3"><div><strong>Total expense:</strong> <span id="metricExpense">0</span></div><div><strong>Saving ratio:</strong> <span id="metricRatio">0%</span></div></div><div id="insightMsg" class="insight">No data yet.</div></div>
+<div class="w-dark"><h3 class="w-title">Converter</h3><input id="convAmount" class="form-control mt-2" type="number" step="0.01" value="1"><div class="d-flex gap-2 mt-2"><select id="convFrom" class="form-select"><option value="USD">USD</option><option value="EUR">EUR</option><option value="TND">TND</option></select><select id="convTo" class="form-select"><option value="EUR">EUR</option><option value="USD">USD</option><option value="TND">TND</option></select></div><button id="convertBtn" class="btn btn-info w-100 mt-2">Convert</button><div id="convResult" class="mt-2 fw-bold"></div><button id="findAtmBtn" class="btn btn-outline-light w-100 mt-3"><i class="fas fa-map-marker-alt me-2"></i>Nearby distributors</button><div id="atmStatus" class="small mt-2"></div><div id="atmResults" class="nearby-results"></div></div>
+</div>
+
+<div class="behavior-card">
+    <div class="behavior-head">
+        <h3 class="w-title mb-0"><i class="fas fa-brain me-2"></i>AI Behavior Profile</h3>
+        <div class="d-flex gap-2">
+            <span class="profile-chip {{ behavior_score_delta >= 0 ? 'chip-ok' : 'chip-risk' }}">
+                Trend {{ behavior_score_delta >= 0 ? '+' : '' }}{{ behavior_score_delta }}
+            </span>
+            {% if behavior_ai_narration.source == 'openai' %}
+                <span class="profile-chip chip-ok">OpenAI</span>
+            {% else %}
+                <span class="profile-chip chip-info">Local fallback</span>
+            {% endif %}
+        </div>
     </div>
 
-    <div class="card-clean p-4 mb-4">
-        <div class="profile-head">
-            <div class="profile-user">
-                <img src="{{ asset(user.image ? 'uploads/users/' ~ user.image : 'uploads/users/chat1.png') }}" alt="Profile image" class="profile-avatar">
-                <div>
-                    <h2 class="h5 mb-1">{{ user.nom ?: 'User' }}</h2>
-                    <div class="text-muted">{{ user.email }}</div>
+    <div class="behavior-grid">
+        <div class="d-flex flex-column align-items-center">
+            <div class="score-ring" style="--score: {{ behavior_profile.score }};">
+                <div class="score-content">
+                    <span class="score-value">{{ behavior_profile.score }}</span>
+                    <span class="score-label">/100 score</span>
                 </div>
             </div>
-            <div class="text-muted">
-                <i class="fas fa-wallet me-2"></i>Balance:
-                <strong class="text-dark">{{ user.soldeTotal|number_format(2, '.', ' ') }} TND</strong>
-            </div>
+            <div class="profile-chip chip-info mt-2">{{ behavior_profile.profileType }}</div>
         </div>
 
-        {% for label, messages in app.flashes %}
-            {% for message in messages %}
-                <div class="alert alert-{{ label == 'error' ? 'danger' : label }} mb-3">{{ message }}</div>
-            {% endfor %}
-        {% endfor %}
+        <div>
+            <div class="metrics-grid">
+                <div class="metric-tile">
+                    <div class="metric-top"><span>Regularity</span><strong>{{ behavior_metrics.regularity }}/100</strong></div>
+                    <div class="metric-track"><div class="metric-fill" style="width: {{ behavior_metrics.regularity }}%;"></div></div>
+                </div>
+                <div class="metric-tile">
+                    <div class="metric-top"><span>Impulsivity Control</span><strong>{{ behavior_metrics.impulsivity_control }}/100</strong></div>
+                    <div class="metric-track"><div class="metric-fill" style="width: {{ behavior_metrics.impulsivity_control }}%;"></div></div>
+                </div>
+                <div class="metric-tile">
+                    <div class="metric-top"><span>Saving Discipline</span><strong>{{ behavior_metrics.saving_discipline }}/100</strong></div>
+                    <div class="metric-track"><div class="metric-fill" style="width: {{ behavior_metrics.saving_discipline }}%;"></div></div>
+                </div>
+                <div class="metric-tile">
+                    <div class="metric-top"><span>Monthly Stability</span><strong>{{ behavior_metrics.monthly_stability }}/100</strong></div>
+                    <div class="metric-track"><div class="metric-fill" style="width: {{ behavior_metrics.monthly_stability }}%;"></div></div>
+                </div>
+            </div>
 
-        {{ form_start(form, {'attr': {'class': 'row g-3'}}) }}
-            <div class="col-md-6">
-                {{ form_label(form.nom) }}
-                {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(form.nom) }}
+            <div class="week-grid">
+                <div class="week-box"><strong>Current week</strong><div>{{ behavior_week_tracking.current_week_expense|number_format(2, '.', ' ') }} TND</div></div>
+                <div class="week-box"><strong>Previous week</strong><div>{{ behavior_week_tracking.previous_week_expense|number_format(2, '.', ' ') }} TND</div></div>
             </div>
-            <div class="col-md-6">
-                {{ form_label(form.email) }}
-                {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(form.email) }}
-            </div>
-            <div class="col-md-6">
-                {{ form_label(form.plainPassword) }}
-                {{ form_widget(form.plainPassword, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(form.plainPassword) }}
-            </div>
-            <div class="col-md-6">
-                {{ form_label(form.image) }}
-                {{ form_widget(form.image, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(form.image) }}
-            </div>
-            <div class="col-12">
-                <button class="btn btn-primary rounded-pill px-4" type="submit">
-                    <i class="fas fa-floppy-disk me-2"></i>Save profile
-                </button>
-            </div>
-        {{ form_end(form) }}
-    </div>
 
-    <div class="card-clean p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="h5 mb-0">My Transactions</h3>
-            <span class="text-muted">Total: {{ transactions|length }}</span>
-        </div>
-
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Type</th>
-                        <th>Amount</th>
-                        <th>Date</th>
-                        <th>Description</th>
-                        <th>Source</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for tx in transactions %}
-                    <tr>
-                        <td>{{ tx.id }}</td>
-                        <td>
-                            {% set typeClass = tx.type == 'SAVING' ? 'tx-saving' : (tx.type == 'EXPENSE' ? 'tx-expense' : 'tx-invest') %}
-                            <span class="tx-badge {{ typeClass }}">{{ tx.type }}</span>
-                        </td>
-                        <td class="fw-semibold">{{ tx.montant|number_format(2, '.', ' ') }} TND</td>
-                        <td>{{ tx.date ? tx.date|date('d/m/Y') : '-' }}</td>
-                        <td>{{ tx.description ?: '-' }}</td>
-                        <td>{{ tx.moduleSource ?: '-' }}</td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-4">No transactions available.</td>
-                    </tr>
+            <div class="coach-grid">
+                {% for action in behavior_profile.nextActions %}
+                    <div class="coach-item"><strong>Action {{ loop.index }}</strong><div>{{ action }}</div></div>
                 {% endfor %}
-                </tbody>
-            </table>
+            </div>
+
+            <div class="ai-note">
+                {% if behavior_ai_narration.model %}
+                    <div class="small mb-1">Model: {{ behavior_ai_narration.model }}</div>
+                {% endif %}
+                <pre>{{ behavior_ai_narration.text }}</pre>
+            </div>
         </div>
     </div>
 </div>
-</body>
-</html>
 
+<div class="table-card">
+    <div class="tx-header">
+        <h2 class="h3 mb-0">My Transactions</h2>
+        <div class="tx-stats">
+            <span class="tx-stat">Records: <span id="txCount">{{ transactions|length }}</span></span>
+            <a href="{{ path('salary_profile_export_pdf') }}" class="btn btn-danger btn-sm export-btn"><i class="fas fa-file-pdf me-1"></i>Download PDF</a>
+            <a href="{{ path('salary_profile_export_csv') }}" class="btn btn-success btn-sm export-btn"><i class="fas fa-file-csv me-1"></i>Download CSV</a>
+        </div>
+    </div>
+    <div class="tx-controls">
+        <select id="txSort" class="form-select form-select-sm">
+            <option value="date_desc">Newest</option>
+            <option value="date_asc">Oldest</option>
+            <option value="amount_desc">Amount desc</option>
+            <option value="amount_asc">Amount asc</option>
+        </select>
+        <input id="txSearch" class="form-control form-control-sm" placeholder="Search by type or description">
+    </div>
+    <div class="table-responsive px-3 pb-3">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr><th>#</th><th>Type</th><th>Amount</th><th>Date</th><th>Description</th><th>Converted</th></tr>
+            </thead>
+            <tbody id="txBody"></tbody>
+        </table>
+    </div>
+</div>
+
+</div></section>
+{% endblock %}
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+const base='TND';
+const balance=Number({{ user.soldeTotal|default(0)|number_format(2, '.', '') }});
+const ai={{ aiInsights|json_encode|raw }};
+const tx=[{% for t in transactions %}{id:{{ t.id }},type:'{{ t.type|e('js') }}',amount:Number({{ t.montant|number_format(2, '.', '') }}),date:'{{ t.date ? t.date|date('Y-m-d') : '' }}',description:'{{ (t.description ?? '')|e('js') }}'},{% endfor %}];
+const e={target:document.getElementById('targetCurrency'),head:document.getElementById('headBalanceTarget'),rateTxt:document.getElementById('headRateInfo'),sideAmt:document.getElementById('sideAmount'),sideCur:document.getElementById('sideCurrency'),rateVal:document.getElementById('rateValue'),api:document.getElementById('apiStatus'),insCur:document.getElementById('insightCurrency'),mExp:document.getElementById('metricExpense'),mRatio:document.getElementById('metricRatio'),insMsg:document.getElementById('insightMsg'),sort:document.getElementById('txSort'),search:document.getElementById('txSearch'),body:document.getElementById('txBody'),txCount:document.getElementById('txCount'),cAmount:document.getElementById('convAmount'),cFrom:document.getElementById('convFrom'),cTo:document.getElementById('convTo'),cBtn:document.getElementById('convertBtn'),cRes:document.getElementById('convResult'),atmBtn:document.getElementById('findAtmBtn'),atmStatus:document.getElementById('atmStatus'),atmResults:document.getElementById('atmResults')};
+let rate=1,target=e.target.value;
+const pill={EXPENSE:'p-exp',SAVING:'p-sav',INVESTMENT:'p-inv'};
+const fmt=(v,c)=>Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+c;
+function refresh(){const conv=balance*rate;e.head.textContent=fmt(conv,target);e.rateTxt.textContent=`1 ${base} = ${rate.toFixed(4)} ${target}`;e.sideAmt.textContent=conv.toFixed(2);e.sideCur.textContent=target;e.rateVal.textContent=e.rateTxt.textContent;}
+function renderTable(){const q=(e.search.value||'').toLowerCase().trim();const s=e.sort.value;const rows=[...tx].filter(t=>!q||t.type.toLowerCase().includes(q)||(t.description||'').toLowerCase().includes(q)).sort((a,b)=>s==='date_desc'?(b.date||'').localeCompare(a.date||''):s==='date_asc'?(a.date||'').localeCompare(b.date||''):s==='amount_desc'?b.amount-a.amount:a.amount-b.amount);if(e.txCount)e.txCount.textContent=rows.length;e.body.innerHTML=rows.map((t,i)=>`<tr><td>${i+1}</td><td><span class="tx-pill ${pill[t.type]||'p-inv'}">${t.type}</span></td><td class="${t.type==='EXPENSE'?'amt-neg':'amt-pos'}">${fmt(t.amount,base)}</td><td>${t.date||'-'}</td><td>${t.description||'-'}</td><td>${fmt(t.amount*rate,target)}</td></tr>`).join('');if(!rows.length)e.body.innerHTML='<tr><td colspan="6" class="text-center text-muted">No transactions found.</td></tr>';}
+function insights(){let r=1,c=e.insCur.value;if(c===target)r=rate;else if(c===base)r=1;const expBase=Number(ai.total_expenses||0);const ratio=Number(ai.savings_rate||0);e.mExp.textContent=fmt(expBase*r,c);e.mRatio.textContent=ratio.toFixed(2)+'%';const summary=(ai.ai_summary||'').trim();const recs=Array.isArray(ai.recommendations)?ai.recommendations:[];e.insMsg.textContent=summary!==''?summary:(recs[0]||'No AI insight available yet.');}
+async function loadResume(cur){const url=`{{ path('api_devise_user_resume', {'id': user.id}) }}?to=${encodeURIComponent(cur)}&limit=200`;try{const r=await fetch(url,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error();const d=await r.json();if(!d.success||!d.rate)throw new Error();rate=Number(d.rate);target=d.target_currency||cur;e.api.textContent='Live API sync active';refresh();renderTable();insights();}catch(_){target=cur;if(cur===base)rate=1;e.api.textContent='API unavailable, local fallback active';refresh();renderTable();insights();}}
+async function convert(){const amount=Number(e.cAmount.value||0);if(amount<=0){e.cRes.textContent='Enter an amount > 0.';return;}const url=`{{ path('api_devise_taux') }}?from=${encodeURIComponent(e.cFrom.value)}&to=${encodeURIComponent(e.cTo.value)}&amount=${encodeURIComponent(amount)}`;try{const r=await fetch(url,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error();const d=await r.json();if(!d.success)throw new Error();e.cRes.textContent=`${fmt(d.amount,d.from)} = ${fmt(d.converted_amount,d.to)}`;}catch(_){e.cRes.textContent='Conversion unavailable right now.';}}
+async function loadAtm(lat,lng){const url=`{{ path('api_salary_nearby_distributors') }}?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&radius=4500`;const r=await fetch(url,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error();const d=await r.json();if(!d.success)throw new Error(d.message||'error');const items=Array.isArray(d.places)?d.places:[];e.atmResults.innerHTML=items.map(p=>`<div class="nearby-item"><div class="n">${p.name||'Distributor'}</div><div class="m">${p.address||'No address'} - ${Number(p.distance_km||0).toFixed(2)} km</div></div>`).join('');if(!items.length)e.atmResults.innerHTML='<div class="small text-light">No nearby distributors found.</div>';e.atmStatus.textContent=`Source: ${d.source||'api'} | ${d.message||''}`;}
+function findAtm(){if(!navigator.geolocation){e.atmStatus.textContent='Geolocation is not supported by this browser.';return;}e.atmStatus.textContent='Locating...';e.atmResults.innerHTML='';navigator.geolocation.getCurrentPosition(async(pos)=>{try{await loadAtm(pos.coords.latitude,pos.coords.longitude);}catch(_){e.atmStatus.textContent='Unable to load nearby distributors.';}},()=>{e.atmStatus.textContent='Location permission denied or unavailable.';},{enableHighAccuracy:true,timeout:12000,maximumAge:60000});}
+function chart(){const sorted=[...tx].sort((a,b)=>(a.date||'').localeCompare(b.date||''));new Chart(document.getElementById('txChart'),{type:'line',data:{labels:sorted.map(t=>t.date||'#'),datasets:[{data:sorted.map(t=>t.amount),tension:.35,fill:true,borderWidth:3,borderColor:'#49b6ff',backgroundColor:'rgba(73,182,255,.22)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#d0e5ff'},grid:{color:'rgba(137,186,255,.18)'}},y:{ticks:{color:'#d0e5ff'},grid:{color:'rgba(137,186,255,.2)'}}}}});}
+[e.sort,e.search].forEach(x=>x.addEventListener(x===e.search?'input':'change',renderTable));e.target.addEventListener('change',ev=>loadResume(ev.target.value));e.insCur.addEventListener('change',insights);e.cBtn.addEventListener('click',convert);
+e.atmBtn.addEventListener('click',findAtm);
+chart();refresh();renderTable();insights();loadResume(e.target.value);
+setTimeout(()=>{const shell=document.getElementById('salaryShell');if(shell){shell.classList.add('is-ready');}},50);
+})();
+</script>
+{% endblock %}

@@ -100,14 +100,25 @@ class GoogleMapsService
     {
         $profile = $this->buildOsmProfile($query);
         $q = $this->buildOsmOverpassQuery($profile['clauses'], $lat, $lng, $radius);
+        $elements = [];
 
-        $resp = $this->httpClient->request('POST', 'https://overpass-api.de/api/interpreter', [
-            'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
-            'body' => ['data' => $q],
-            'timeout' => 18,
-        ]);
-        $data = $resp->toArray(false);
-        $elements = is_array($data['elements'] ?? null) ? $data['elements'] : [];
+        try {
+            $resp = $this->httpClient->request('POST', 'https://overpass-api.de/api/interpreter', [
+                'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
+                'body' => ['data' => $q],
+                'timeout' => 18,
+            ]);
+
+            $raw = $resp->getContent(false);
+            $data = json_decode($raw, true);
+            if (!is_array($data)) {
+                throw new \RuntimeException('OSM Overpass returned non-JSON response.');
+            }
+            $elements = is_array($data['elements'] ?? null) ? $data['elements'] : [];
+        } catch (\Throwable) {
+            // Fallback: Nominatim bounded search around current location.
+            $elements = $this->findNearbyFromNominatim($query, $lat, $lng, $radius);
+        }
 
         $keywords = $profile['keywords'];
         $mapped = [];
@@ -151,6 +162,25 @@ class GoogleMapsService
     private function buildOsmProfile(string $query): array
     {
         $q = mb_strtolower($query);
+
+        if (
+            str_contains($q, 'atm')
+            || str_contains($q, 'distributeur')
+            || str_contains($q, 'guichet')
+            || str_contains($q, 'banque')
+            || str_contains($q, 'bank')
+            || str_contains($q, 'cash')
+        ) {
+            return [
+                'clauses' => [
+                    'node["amenity"="atm"]',
+                    'node["amenity"="bank"]',
+                    'way["amenity"="atm"]',
+                    'way["amenity"="bank"]',
+                ],
+                'keywords' => ['atm', 'bank', 'banque', 'distributeur', 'guichet', 'cash'],
+            ];
+        }
 
         if (str_contains($q, 'garage') || str_contains($q, 'automobile') || str_contains($q, 'voiture')) {
             return [
@@ -236,7 +266,63 @@ class GoogleMapsService
             $parts[] = sprintf('%s(around:%d,%F,%F);', $clause, $radius, $lat, $lng);
         }
 
-        return sprintf('[out:json][timeout:25];(%s);out center 30;', implode('', $parts));
+        // Keep syntax broadly compatible with public Overpass instances.
+        return sprintf('[out:json][timeout:25];(%s);out center;', implode('', $parts));
+    }
+
+    /**
+     * Nominatim fallback when Overpass is unavailable/non-JSON.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private function findNearbyFromNominatim(string $query, float $lat, float $lng, int $radius): array
+    {
+        $delta = max(0.02, min(0.15, $radius / 111000)); // approx deg range
+        $viewbox = sprintf(
+            '%F,%F,%F,%F',
+            $lng - $delta,
+            $lat + $delta,
+            $lng + $delta,
+            $lat - $delta
+        );
+
+        $resp = $this->httpClient->request('GET', 'https://nominatim.openstreetmap.org/search', [
+            'query' => [
+                'format' => 'jsonv2',
+                'q' => $query,
+                'limit' => 20,
+                'bounded' => 1,
+                'viewbox' => $viewbox,
+                'addressdetails' => 1,
+            ],
+            'headers' => [
+                'User-Agent' => 'DecideApp/1.0',
+            ],
+            'timeout' => 15,
+        ]);
+
+        $data = $resp->toArray(false);
+        if (!is_array($data)) {
+            return [];
+        }
+
+        $elements = [];
+        foreach ($data as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $elements[] = [
+                'lat' => (float) ($row['lat'] ?? 0),
+                'lon' => (float) ($row['lon'] ?? 0),
+                'tags' => [
+                    'name' => (string) ($row['name'] ?? $row['display_name'] ?? ''),
+                    'description' => (string) ($row['display_name'] ?? ''),
+                    'amenity' => (string) ($row['type'] ?? ''),
+                ],
+            ];
+        }
+
+        return $elements;
     }
 
     /**

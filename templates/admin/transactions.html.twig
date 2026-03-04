@@ -14,9 +14,10 @@
         {% set savingCount = 0 %}
         {% set investmentCount = 0 %}
         {% for transaction in transactions %}
-            {% if transaction.type == 'EXPENSE' %}{% set expenseCount = expenseCount + 1 %}{% endif %}
-            {% if transaction.type == 'SAVING' %}{% set savingCount = savingCount + 1 %}{% endif %}
-            {% if transaction.type == 'INVESTMENT' %}{% set investmentCount = investmentCount + 1 %}{% endif %}
+            {% set txType = (transaction.type ?? '')|upper %}
+            {% if txType == 'EXPENSE' %}{% set expenseCount = expenseCount + 1 %}{% endif %}
+            {% if txType in ['SAVING', 'SAVINGS', 'REVENUE'] %}{% set savingCount = savingCount + 1 %}{% endif %}
+            {% if txType == 'INVESTMENT' %}{% set investmentCount = investmentCount + 1 %}{% endif %}
         {% endfor %}
 
         <div class="tx-kpi-grid">
@@ -52,6 +53,7 @@
                 <option value="">All types</option>
                 <option value="EXPENSE" {{ app.request.get('type') == 'EXPENSE' ? 'selected' : '' }}>Expense</option>
                 <option value="SAVING" {{ app.request.get('type') == 'SAVING' ? 'selected' : '' }}>Saving</option>
+                <option value="SAVINGS" {{ app.request.get('type') == 'SAVINGS' ? 'selected' : '' }}>Savings (legacy)</option>
                 <option value="INVESTMENT" {{ app.request.get('type') == 'INVESTMENT' ? 'selected' : '' }}>Investment</option>
             </select>
 
@@ -143,30 +145,45 @@
 
                 <tbody>
                 {% for transaction in transactions %}
+                    {% set rawType = (transaction.type ?? '')|upper %}
+                    {% if rawType in ['SAVING', 'SAVINGS', 'REVENUE', 'EPARGNE', 'ÉPARGNE'] %}
+                        {% set displayType = 'EPARGNE' %}
+                        {% set typeClass = 'saving' %}
+                    {% elseif rawType == 'EXPENSE' %}
+                        {% set displayType = 'EXPENSE' %}
+                        {% set typeClass = 'expense' %}
+                    {% elseif rawType == 'INVESTMENT' %}
+                        {% set displayType = 'INVESTMENT' %}
+                        {% set typeClass = 'investment' %}
+                    {% else %}
+                        {% set displayType = rawType %}
+                        {% set typeClass = rawType|lower %}
+                    {% endif %}
+                    {% set sourceLabel = (transaction.moduleSource ?: '-')|replace({'_':' '}) %}
                     <tr>
-                        <td>{{ transaction.id }}</td>
+                        <td>{{ ((transactions.getCurrentPageNumber() - 1) * transactions.getItemNumberPerPage()) + loop.index }}</td>
 
                         <td>
-                            <strong>{{ transaction.user.nom }}</strong><br>
-                            <small class="text-muted">{{ transaction.user.email }}</small>
+                            <strong>{{ transaction.user.nom ?: transaction.user.email }}</strong><br>
+                            <small class="text-muted">{{ transaction.user.email ?: '-' }}</small>
                         </td>
 
                         <td>
-                            <span class="tx-pill {{ transaction.type|lower }}">
-                                {{ transaction.type }}
+                            <span class="tx-pill {{ typeClass }}">
+                                {{ displayType }}
                             </span>
                         </td>
 
-                        <td class="{{ transaction.type == 'EXPENSE' ? 'tx-amount-negative' : 'tx-amount-positive' }}">
-                            <strong>{{ transaction.montant }} DT</strong>
+                        <td class="{{ typeClass in ['expense', 'investment'] ? 'tx-amount-negative' : 'tx-amount-positive' }}">
+                            <strong>{{ transaction.montant|number_format(2, '.', ' ') }} DT</strong>
                         </td>
 
                         <td>{{ transaction.date|date('d/m/Y') }}</td>
                         <td>{{ transaction.description ?: '-' }}</td>
-                        <td>{{ transaction.moduleSource ?: '-' }}</td>
+                        <td>{{ sourceLabel|title }}</td>
 
                         <td class="tx-balance">
-                            {{ transaction.user.soldeTotal }} DT
+                            {{ transaction.user.soldeTotal|number_format(2, '.', ' ') }} DT
                         </td>
 
                         <td class="tx-actions-cell">

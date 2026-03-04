@@ -14,8 +14,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Service\AiObjectiveAdvisorService;
 use App\Entity\AiObjectiveReport;
 use App\Service\MonteCarloSimulationService;
-use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
-use Symfony\UX\Chartjs\Model\Chart;
 
 class ObjectifController extends AbstractController
 {
@@ -261,9 +259,84 @@ public function simulation(
 
     $result = $simulationService->simulate($objectif);
 
+    // Calculate histogram bins from simulation values
+    $histogramData = $this->calculateHistogramBins($result['values'], $result['target']);
+
     return $this->render('objectif/simulation.html.twig', [
         'objectif' => $objectif,
-        'result' => $result
+        'result' => $result,
+        'histogram' => $histogramData,
     ]);
+}
+
+/**
+ * Calculate histogram bins from simulation values
+ * 
+ * @param array $values Array of final simulation results
+ * @param float $target Target value for the objective
+ * @return array Array with labels, frequencies, and targetBinIndex
+ */
+private function calculateHistogramBins(array $values, float $target): array
+{
+    if (empty($values)) {
+        return [
+            'labels' => [],
+            'frequencies' => [],
+            'targetBinIndex' => 0,
+        ];
+    }
+
+    $min = min($values);
+    $max = max($values);
+    
+    // Use fixed number of bins for histogram
+    $numBins = 15;
+    
+    // Calculate bin width
+    $range = $max - $min;
+    $binWidth = $range > 0 ? $range / $numBins : 1;
+    
+    // Ensure bin width is meaningful
+    if ($binWidth < 1) {
+        $binWidth = 1;
+    }
+    
+    // Initialize bins
+    $bins = array_fill(0, $numBins, 0);
+    $binLabels = [];
+    
+    // Create bin labels and populate bins
+    for ($i = 0; $i < $numBins; $i++) {
+        $binStart = $min + ($i * $binWidth);
+        $binEnd = $binStart + $binWidth;
+        
+        // Format labels nicely
+        $binLabels[] = number_format($binStart, 0) . '-' . number_format($binEnd, 0);
+    }
+    
+    // Populate bins with values
+    foreach ($values as $value) {
+        $binIndex = floor(($value - $min) / $binWidth);
+        // Handle edge case where value equals max
+        if ($binIndex >= $numBins) {
+            $binIndex = $numBins - 1;
+        }
+        $bins[$binIndex]++;
+    }
+    
+    // Find which bin contains the target value
+    $targetBinIndex = 0;
+    if ($target >= $min && $target <= $max) {
+        $targetBinIndex = floor(($target - $min) / $binWidth);
+        if ($targetBinIndex >= $numBins) {
+            $targetBinIndex = $numBins - 1;
+        }
+    }
+    
+    return [
+        'labels' => $binLabels,
+        'frequencies' => $bins,
+        'targetBinIndex' => $targetBinIndex,
+    ];
 }
 }

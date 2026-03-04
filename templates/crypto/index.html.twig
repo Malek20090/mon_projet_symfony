@@ -142,4 +142,150 @@
     </div>
   </div>
 </section>
+
+<!-- ================= AI CHAT ================= -->
+
+<style>
+.ai-btn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: #111;
+  color: white;
+  border-radius: 50%;
+  width: 65px;
+  height: 65px;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 3000;
+}
+
+.ai-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 2999;
+}
+
+.ai-modal {
+  display: none;
+  position: fixed;
+  bottom: 110px;
+  right: 25px;
+  width: 380px;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  z-index: 3000;
+}
+
+.ai-modal-content {
+  padding: 15px;
+}
+
+.chat-messages {
+  height: 230px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.chat-input-row input {
+  flex: 1;
+  padding: 6px;
+}
+</style>
+
+<button id="ai-chat-btn" class="ai-btn">💬</button>
+
+<div id="ai-overlay" class="ai-overlay"></div>
+
+<div id="ai-chat-modal" class="ai-modal">
+  <div class="ai-modal-content">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <strong>AI Investment Assistant</strong>
+      <button id="close-ai">✖</button>
+    </div>
+
+    <div id="chat-messages" class="chat-messages"></div>
+
+    <form id="chat-form">
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Example: invest 500 in btc" required>
+        <button type="submit">Send</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+const btn = document.getElementById('ai-chat-btn');
+const modal = document.getElementById('ai-chat-modal');
+const overlay = document.getElementById('ai-overlay');
+const closeBtn = document.getElementById('close-ai');
+const form = document.getElementById('chat-form');
+const input = document.getElementById('chat-input');
+const messages = document.getElementById('chat-messages');
+
+btn.addEventListener('click', () => {
+  modal.style.display = 'block';
+  overlay.style.display = 'block';
+});
+
+closeBtn.addEventListener('click', closeChat);
+overlay.addEventListener('click', closeChat);
+
+function closeChat() {
+  modal.style.display = 'none';
+  overlay.style.display = 'none';
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const message = input.value.trim();
+  if (!message) return;
+
+  messages.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+  input.value = '';
+
+  try {
+    const response = await fetch('/chat-investment', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ message })
+    });
+
+    if (!response.ok) {
+        throw new Error('HTTP error ' + response.status);
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      messages.innerHTML += `<div style="color:green;">✅ Investment created: ${data.amount}$ in ${data.crypto}</div>`;
+    } else {
+      messages.innerHTML += `<div style="color:red;">❌ ${data.error}</div>`;
+    }
+
+    messages.scrollTop = messages.scrollHeight;
+
+  } catch (error) {
+    console.error(error);
+    messages.innerHTML += `<div style="color:red;">❌ ${error.message}</div>`;
+  }
+});
+});
+</script>
 {% endblock %}

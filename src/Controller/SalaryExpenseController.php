@@ -17,6 +17,9 @@ use App\Service\RecurringPatternService;
 use App\Service\FinancialMonitoringService;
 use App\Service\SalaryExpenseAiService;
 use App\Service\FinancialAlertMailerService;
+use App\Service\PdfShiftService;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -65,15 +68,12 @@ class SalaryExpenseController extends AbstractController
             : ((\DateTimeImmutable::createFromFormat('m-Y', $totalsMonthExpenseRaw) ?: new \DateTimeImmutable())->format('Y-m'));
 
         $revenues = $revenueRepository->findBy(['user' => $user], ['receivedAt' => 'DESC']);
-        $expenses = $expenseRepository->findBy(['user' => $user], ['expenseDate' => 'DESC']);
+        $expenses = $expenseRepository->findForUser($user, ['expenseDate' => 'DESC', 'id' => 'DESC']);
         $revenues = array_values(array_filter(
             $revenues,
             static fn (Revenue $revenue): bool => $revenue->getUser()->getId() === $user->getId()
         ));
-        $expenses = array_values(array_filter(
-            $expenses,
-            static fn (Expense $expense): bool => $expense->getUser()?->getId() === $user->getId()
-        ));
+        $expenses = array_values($expenses);
         $expenseStats = $expenseStatisticsService->build($expenses, $selectedMonth);
         $monthlyAdvice = $salaryExpenseAiService->buildMonthlyExpenseAdvice(
             $expenseStats['months'],
@@ -330,7 +330,6 @@ class SalaryExpenseController extends AbstractController
 
             $entityManager->flush();
             $financialMonitoringService->evaluateAndNotify($user, true);
-            $expenseAnomalyMonitorService->handleNewExpense($expense);
 
             $this->addFlash('success', 'Revenu ajoute et solde mis a jour.');
 
@@ -374,6 +373,7 @@ class SalaryExpenseController extends AbstractController
 
             $entityManager->flush();
             $financialMonitoringService->evaluateAndNotify($user, true);
+            $expenseAnomalyMonitorService->handleNewExpense($expense);
 
             $this->addFlash('success', 'Depense ajoutee et solde mis a jour.');
 
@@ -683,5 +683,136 @@ class SalaryExpenseController extends AbstractController
         $suggestion = $suggestionService->suggest($user, $description, $amount);
 
         return $this->json($suggestion);
+    }
+
+    #[Route('/expenses/pdf', name: 'expenses_pdf', methods: ['GET'])]
+    public function exportExpensesPdf(Request $request, ExpenseRepository $expenseRepository, PdfShiftService $pdfShiftService): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        $expenses = array_values($expenseRepository->findForUser($user, ['expenseDate' => 'DESC', 'id' => 'DESC']));
+
+        $expenseSearch = trim((string) $request->query->get('expense_search', ''));
+        if ($expenseSearch !== '') {
+            $expenses = array_values(array_filter(
+                $expenses,
+                static function (Expense $expense) use ($expenseSearch): bool {
+                    $category = (string) $expense->getCategory();
+                    $description = (string) ($expense->getDescription() ?? '');
+
+                    return stripos($category, $expenseSearch) !== false || stripos($description, $expenseSearch) !== false;
+                }
+            ));
+        }
+
+        $expenseSort1 = (string) $request->query->get('expense_sort1', 'expenseDate');
+        $expenseDir1 = strtoupper((string) $request->query->get('expense_dir1', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
+        $expenseSort2 = (string) $request->query->get('expense_sort2', 'amount');
+        $expenseDir2 = strtoupper((string) $request->query->get('expense_dir2', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
+        $expenseAllowedSorts = ['id', 'amount', 'category', 'expenseDate'];
+
+        if (!in_array($expenseSort1, $expenseAllowedSorts, true)) {
+            $expenseSort1 = 'expenseDate';
+        }
+        if (!in_array($expenseSort2, $expenseAllowedSorts, true)) {
+            $expenseSort2 = 'amount';
+        }
+
+        $compareValues = static function (mixed $a, mixed $b, string $direction): int {
+            if ($a instanceof \DateTimeInterface) {
+                $a = $a->getTimestamp();
+            }
+            if ($b instanceof \DateTimeInterface) {
+                $b = $b->getTimestamp();
+            }
+            if ($a === null && $b === null) {
+                return 0;
+            }
+            if ($a === null) {
+                return $direction === 'ASC' ? -1 : 1;
+            }
+            if ($b === null) {
+                return $direction === 'ASC' ? 1 : -1;
+            }
+
+            $result = is_numeric($a) && is_numeric($b)
+                ? ($a <=> $b)
+                : strcasecmp((string) $a, (string) $b);
+
+            return $direction === 'ASC' ? $result : -$result;
+        };
+
+        usort($expenses, static function (Expense $a, Expense $b) use ($expenseSort1, $expenseDir1, $expenseSort2, $expenseDir2, $compareValues): int {
+            $firstA = match ($expenseSort1) {
+                'id' => $a->getId(),
+                'amount' => $a->getAmount(),
+                'category' => $a->getCategory(),
+                default => $a->getExpenseDate(),
+            };
+            $firstB = match ($expenseSort1) {
+                'id' => $b->getId(),
+                'amount' => $b->getAmount(),
+                'category' => $b->getCategory(),
+                default => $b->getExpenseDate(),
+            };
+            $firstResult = $compareValues($firstA, $firstB, $expenseDir1);
+            if ($firstResult !== 0) {
+                return $firstResult;
+            }
+
+            $secondA = match ($expenseSort2) {
+                'id' => $a->getId(),
+                'amount' => $a->getAmount(),
+                'category' => $a->getCategory(),
+                default => $a->getExpenseDate(),
+            };
+            $secondB = match ($expenseSort2) {
+                'id' => $b->getId(),
+                'amount' => $b->getAmount(),
+                'category' => $b->getCategory(),
+                default => $b->getExpenseDate(),
+            };
+
+            return $compareValues($secondA, $secondB, $expenseDir2);
+        });
+
+        $totalExpenses = array_sum(array_map(static fn (Expense $expense): float => (float) $expense->getAmount(), $expenses));
+
+        $html = $this->renderView('salary_expense/expenses_pdf.html.twig', [
+            'expenses' => $expenses,
+            'totalExpenses' => $totalExpenses,
+            'generatedAt' => new \DateTimeImmutable(),
+            'search' => $expenseSearch,
+        ]);
+
+        try {
+            $pdfContent = $pdfShiftService->convertHtmlToPdf($html);
+        } catch (\Throwable $exception) {
+            // Fallback to local PDF rendering if external API is unavailable.
+            $pdfContent = $this->renderPdfWithDompdf($html);
+            $this->addFlash('warning', 'PDFShift unavailable, generated with local fallback.');
+        }
+
+        return new Response($pdfContent, Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="expenses_table.pdf"',
+        ]);
+    }
+
+    private function renderPdfWithDompdf(string $html): string
+    {
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->setIsRemoteEnabled(true);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return $dompdf->output();
     }
 }

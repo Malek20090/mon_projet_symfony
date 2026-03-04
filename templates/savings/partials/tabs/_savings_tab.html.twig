@@ -312,21 +312,27 @@
           }
         </style>
 
-        <div class="stats-charts-grid">
-          <div class="stats-chart-card">
-            <h6 class="stats-chart-title">Histogram (sum by {{ stat_by|default('type') }})</h6>
-            <div class="stats-chart-wrap">
-              {{ render_chart(bar_chart, {'style': 'height:100%; width:100%;'}) }}
+        {% if tx_stats.total|default(0) > 0 %}
+          <div class="stats-charts-grid">
+            <div class="stats-chart-card">
+              <h6 class="stats-chart-title">Histogram (sum by {{ stat_by|default('type') }})</h6>
+              <div class="stats-chart-wrap">
+                <canvas id="savingsStatsBarChart"></canvas>
+              </div>
             </div>
-          </div>
 
-          <div class="stats-chart-card">
-            <h6 class="stats-chart-title">Circle chart</h6>
-            <div class="stats-chart-wrap stats-chart-wrap--pie">
-              {{ render_chart(pie_chart, {'style': 'height:100%; width:100%;'}) }}
+            <div class="stats-chart-card">
+              <h6 class="stats-chart-title">Circle chart</h6>
+              <div class="stats-chart-wrap stats-chart-wrap--pie">
+                <canvas id="savingsStatsPieChart"></canvas>
+              </div>
             </div>
           </div>
-        </div>
+        {% else %}
+          <div class="alert alert-info mb-0">
+            No savings transactions were found for this account yet. Add a deposit or goal contribution to generate stats.
+          </div>
+        {% endif %}
 
       </div>
 
@@ -350,6 +356,89 @@
       window.dispatchEvent(new Event('resize'));
       setTimeout(() => window.dispatchEvent(new Event('resize')), 120);
     });
+  })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    const modal = document.getElementById('statsModal');
+    if (!modal) return;
+
+    const labels = {{ stat_labels|default([])|json_encode|raw }};
+    const values = {{ stat_values|default([])|json_encode|raw }};
+    let barChart = null;
+    let pieChart = null;
+
+    const palette = [
+      '#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6',
+      '#14b8a6', '#84cc16', '#f97316', '#06b6d4', '#a855f7'
+    ];
+
+    function renderCharts() {
+      if (!Array.isArray(labels) || !Array.isArray(values) || labels.length === 0) {
+        return;
+      }
+
+      const barCanvas = document.getElementById('savingsStatsBarChart');
+      const pieCanvas = document.getElementById('savingsStatsPieChart');
+      if (!barCanvas || !pieCanvas || typeof Chart === 'undefined') {
+        return;
+      }
+
+      if (barChart) {
+        barChart.destroy();
+      }
+      if (pieChart) {
+        pieChart.destroy();
+      }
+
+      barChart = new Chart(barCanvas, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Total (TND)',
+            data: values,
+            backgroundColor: 'rgba(14, 165, 233, 0.55)',
+            borderColor: 'rgba(14, 165, 233, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+
+      pieChart = new Chart(pieCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: labels.map((_, idx) => palette[idx % palette.length])
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    modal.addEventListener('shown.bs.modal', function () {
+      setTimeout(renderCharts, 50);
+    });
+
+    if (modal.classList.contains('show')) {
+      renderCharts();
+    }
   })();
 </script>
 

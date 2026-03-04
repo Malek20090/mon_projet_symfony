@@ -1,0 +1,90 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="page-header-card">
+        <div>
+            <h1>Reclamations</h1>
+            <p class="mb-0">Review user complaints and provide responses.</p>
+        </div>
+        <form method="get" class="d-flex gap-2">
+            <select name="status" class="form-select form-select-sm">
+                <option value="">All statuses</option>
+                {% for s in statuses %}
+                    <option value="{{ s }}" {{ status == s ? 'selected' : '' }}>{{ s }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-sm btn-primary">Filter</button>
+        </form>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+
+    {% if blocked_alert_count|default(0) > 0 %}
+        <div class="alert alert-danger">
+            <strong>Security alert:</strong> {{ blocked_alert_count }} reclamation(s) blocked for bad words need admin review.
+            <ul class="mb-0 mt-2">
+                {% for alert in blocked_alert_items|default([]) %}
+                    <li>
+                        #{{ alert.id }} - {{ alert.user ? (alert.user.nom ?: alert.user.email) : 'Unknown user' }} - {{ alert.subject }} ({{ alert.createdAt|date('Y-m-d H:i') }})
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <div class="card-custom">
+        {% if reclamations is empty %}
+            <p class="text-muted mb-0">No reclamations found.</p>
+        {% else %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>User</th>
+                        <th>Subject</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                        <th>Admin Response</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in reclamations %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.user ? (item.user.nom ?: item.user.email) : '-' }}</td>
+                            <td>{{ item.subject }}</td>
+                            <td>{{ item.message }}</td>
+                            {% set badgeClass = item.status == 'RESOLVED' ? 'text-bg-success' : (item.status == 'REJECTED' ? 'text-bg-danger' : (item.status == 'IN_PROGRESS' ? 'text-bg-info' : (item.status == 'BLOCKED_BAD_WORDS' ? 'text-bg-dark' : 'text-bg-secondary'))) %}
+                            <td><span class="badge {{ badgeClass }}">{{ item.status }}</span></td>
+                            <td>{{ item.adminResponse ?: '-' }}</td>
+                            <td>{{ item.createdAt|date('Y-m-d H:i') }}</td>
+                            <td>
+                                <form method="post" action="{{ path('admin_reclamation_respond', {id: item.id}) }}" class="d-grid gap-2">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('reclamation_respond_' ~ item.id) }}">
+                                    <select name="status" class="form-select form-select-sm">
+                                        {% for s in statuses %}
+                                            <option value="{{ s }}" {{ item.status == s ? 'selected' : '' }}>{{ s }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <textarea name="admin_response" class="form-control form-control-sm" rows="2" placeholder="Admin response">{{ item.adminResponse }}</textarea>
+                                    <button class="btn btn-sm btn-primary">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

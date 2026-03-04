@@ -11,6 +11,7 @@ use App\Service\CoursPdfService;
 use App\Service\StatsStorageService;
 use App\Repository\CoursRepository;
 use App\Repository\QuizRepository;
+use App\Service\StudentProfileAiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -271,7 +272,8 @@ class StudentController extends AbstractController
         SluggerInterface $slugger,
         UserPasswordHasherInterface $passwordHasher,
         CoursRepository $coursRepository,
-        QuizRepository $quizRepository
+        QuizRepository $quizRepository,
+        StudentProfileAiService $studentProfileAiService
     ): Response {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -308,13 +310,18 @@ class StudentController extends AbstractController
             return $this->redirectToRoute('student_profile');
         }
 
+        $courses = $coursRepository->findBy([], ['id' => 'DESC']);
+        $quizzes = $quizRepository->findBy([], ['id' => 'DESC']);
+        $aiInsights = $studentProfileAiService->buildInsights($courses, $quizzes);
+
         return $this->render('student/profile.html.twig', [
             'user' => $user,
             'form' => $form->createView(),
-            'coursesCount' => $coursRepository->count([]),
-            'quizzesCount' => $quizRepository->count([]),
-            'latestCourses' => $coursRepository->findBy([], ['id' => 'DESC'], 4),
-            'latestQuizzes' => $quizRepository->findBy([], ['id' => 'DESC'], 4),
+            'coursesCount' => count($courses),
+            'quizzesCount' => count($quizzes),
+            'latestCourses' => array_slice($courses, 0, 6),
+            'latestQuizzes' => array_slice($quizzes, 0, 6),
+            'aiInsights' => $aiInsights,
         ]);
     }
 

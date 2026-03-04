@@ -1398,6 +1398,8 @@ body.admin-body {
 .tx-pill.expense { background: #dc2626; }
 .tx-pill.saving { background: #16a34a; }
 .tx-pill.investment { background: #2563eb; }
+.tx-pill.epargne { background: #16a34a; }
+.tx-pill.revenue { background: #16a34a; }
 
 .tx-amount-positive {
     color: #16a34a;

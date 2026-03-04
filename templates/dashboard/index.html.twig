@@ -33,8 +33,8 @@
                     <h5 class="mb-0">Monthly Revenues</h5>
                 </div>
                 <div class="card-body">
-                    <div style="height: 360px;">
-                        {{ render_chart(monthlyRevenueChart, {'style': 'height:360px'}) }}
+                    <div style="height: 360px; position: relative;">
+                        <canvas id="monthlyRevenueChartCanvas"></canvas>
                     </div>
                 </div>
             </div>
@@ -48,8 +48,8 @@
                     <h5 class="mb-0">Expense Categories</h5>
                 </div>
                 <div class="card-body">
-                    <div style="height: 360px;">
-                        {{ render_chart(expenseCategoryChart, {'style': 'height:360px'}) }}
+                    <div style="height: 360px; position: relative;">
+                        <canvas id="expenseCategoryChartCanvas"></canvas>
                     </div>
                 </div>
             </div>
@@ -57,4 +57,82 @@
         {% endif %}
     </div>
 </section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        (function () {
+            const monthlyRows = {{ dashboardData.monthly_revenues|json_encode|raw }};
+            const expenseRows = {{ dashboardData.expense_categories|json_encode|raw }};
+
+            const revenueLabels = monthlyRows.map(row => row.month || '');
+            const revenueValues = monthlyRows.map(row => Number(row.total || 0));
+
+            const expenseLabels = expenseRows.map(row => row.category || 'Other');
+            const expenseValues = expenseRows.map(row => Number(row.total || 0));
+
+            const revenueCanvas = document.getElementById('monthlyRevenueChartCanvas');
+            const expenseCanvas = document.getElementById('expenseCategoryChartCanvas');
+
+            if (revenueCanvas) {
+                if (revenueLabels.length === 0) {
+                    const wrap = revenueCanvas.parentElement;
+                    if (wrap) {
+                        wrap.innerHTML = '<div class="h-100 d-flex align-items-center justify-content-center text-muted">No revenue data available yet.</div>';
+                    }
+                } else {
+                    new Chart(revenueCanvas, {
+                        type: 'bar',
+                        data: {
+                            labels: revenueLabels,
+                            datasets: [{
+                                label: 'Monthly Revenues (TND)',
+                                data: revenueValues,
+                                backgroundColor: 'rgba(13, 110, 253, 0.70)',
+                                borderColor: 'rgba(13, 110, 253, 1)',
+                                borderWidth: 1,
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: true } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+            }
+
+            if (expenseCanvas) {
+                if (expenseLabels.length === 0) {
+                    const wrap = expenseCanvas.parentElement;
+                    if (wrap) {
+                        wrap.innerHTML = '<div class="h-100 d-flex align-items-center justify-content-center text-muted">No expense data available yet.</div>';
+                    }
+                } else {
+                    new Chart(expenseCanvas, {
+                        type: 'pie',
+                        data: {
+                            labels: expenseLabels,
+                            datasets: [{
+                                label: 'Expenses by Category',
+                                data: expenseValues,
+                                backgroundColor: ['#0d6efd', '#20c997', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14', '#198754', '#0dcaf0'],
+                                borderColor: '#ffffff',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'bottom' } }
+                        }
+                    });
+                }
+            }
+        })();
+    </script>
 {% endblock %}

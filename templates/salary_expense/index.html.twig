@@ -578,6 +578,11 @@
                     <i class="fa-solid fa-chart-pie me-2"></i>Expense chart
                   </a>
                 </div>
+                <div class="col-auto">
+                  <a href="{{ path('app_salary_expense_expenses_pdf', app.request.query.all|merge({'tab': 'expenses'})) }}" class="btn btn-outline-danger px-3 py-2">
+                    <i class="fa-solid fa-file-pdf me-2"></i>Export PDF
+                  </a>
+                </div>
               </div>
               <div class="row g-2 align-items-end">
                 <div class="col-auto flex-grow-1">

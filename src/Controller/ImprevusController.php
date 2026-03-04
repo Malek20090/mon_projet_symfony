@@ -69,11 +69,6 @@ class ImprevusController extends AbstractController
                 ['user' => $user, 'status' => 'REFUSE', 'isRead' => false],
                 ['createdAt' => 'DESC']
             );
-
-            if ($refusalPopup) {
-                $refusalPopup->setIsRead(true);
-                $em->flush();
-            }
         }
 
         $objectifChoices = [];
@@ -109,6 +104,26 @@ class ImprevusController extends AbstractController
             'refusalPopup' => $refusalPopup,
             'aiRiskInsights' => $riskInsights,
         ]);
+    }
+
+    #[Route('/alea/notification/{id}/read', name: 'app_alea_notification_read', methods: ['POST'])]
+    public function markAleaNotificationRead(UserNotification $notification, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        if ($notification->getUser()?->getId() !== $user->getId()) {
+            return $this->json(['success' => false, 'message' => 'Forbidden'], 403);
+        }
+
+        if (!$notification->isRead()) {
+            $notification->setIsRead(true);
+            $em->flush();
+        }
+
+        return $this->json(['success' => true]);
     }
 
     #[Route('/alea/submit', name: 'app_alea_submit', methods: ['POST'])]

@@ -108,40 +108,54 @@ Objective Data:
 $summary
 ";
 }
-  private function askAi(string $prompt): string
+private function askAi(string $prompt): string
 {
-    $apiKey = $_ENV['GOOGLE_AI_API_KEY'];
+    $apiKey = $_ENV['GROQ_API_KEY'] ?? null;
+
+    if (!$apiKey) {
+        return 'Groq API key not configured';
+    }
 
     $response = $this->client->request(
         'POST',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey,
+        'https://api.groq.com/openai/v1/chat/completions',
         [
             'headers' => [
+                'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ],
             'json' => [
-                'contents' => [
+                'model' => 'llama-3.1-8b-instant',
+                'messages' => [
                     [
-                        'parts' => [
-                            [
-                                'text' => $prompt
-                            ]
-                        ]
+                        'role' => 'system',
+                        'content' => 'You are a professional crypto investment advisor.'
+                    ],
+                    [
+                        'role' => 'user',
+                        'content' => $prompt
                     ]
-                ]
+                ],
+                'temperature' => 0.7
             ]
         ]
     );
 
     $data = $response->toArray(false);
 
-    return $data['candidates'][0]['content']['parts'][0]['text'] ?? 'No response';
-}    private function extractRiskScore(string $response): ?int
-    {
-        if (preg_match('/Risk Score:\s*(\d+)/i', $response, $matches)) {
-            return (int) $matches[1];
-        }
-
-        return null;
+    if (isset($data['error'])) {
+        return 'Groq error: ' . $data['error']['message'];
     }
+
+    return $data['choices'][0]['message']['content'] ?? 'No response';
+}
+
+private function extractRiskScore(string $response): ?int
+{
+    if (preg_match('/Risk Score:\s*(\d+)/i', $response, $matches)) {
+        return (int) $matches[1];
+    }
+
+    return null;
+}
 }

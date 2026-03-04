@@ -44,9 +44,10 @@ window.addEventListener('load', () => {
 
         <div class="login-right">
             <div class="login-card">
-
-                <h2>Sign In</h2>
-                <p class="subtitle">Welcome to your secure space</p>
+                <div class="card-top">
+                    <h2>Sign In</h2>
+                    <p class="subtitle">Welcome to your secure space</p>
+                </div>
 
                 {% for message in app.flashes('success') %}
                     <div class="alert alert-success mb-3" role="alert">{{ message }}</div>
@@ -65,7 +66,9 @@ window.addEventListener('load', () => {
                     </div>
                 {% endif %}
 
-                <form method="post" action="{{ path('app_login_form') }}">
+                <div class="auth-section">
+                    <div class="section-label">Account access</div>
+                    <form method="post" action="{{ path('app_login') }}">
                     <div class="input-group">
                         <label>Email address</label>
                         <div class="input-wrapper">
@@ -112,9 +115,12 @@ window.addEventListener('load', () => {
                     <button type="submit" class="btn-login">Sign In</button>
 
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-                </form>
+                    </form>
+                </div>
 
-                <div class="social-auth">
+                <div class="auth-section">
+                    <div class="section-label">Continue with</div>
+                    <div class="social-auth">
                     <a href="{{ path('app_connect_google') }}" class="social-btn social-google">
                         <i class="fab fa-google"></i>
                         <span>Continue with Google</span>
@@ -123,27 +129,35 @@ window.addEventListener('load', () => {
                         <i class="fab fa-facebook-f"></i>
                         <span>Continue with Facebook</span>
                     </a>
+                    </div>
                 </div>
 
                 <div class="divider">
                     <span>or use biometric sign-in</span>
                 </div>
 
-                <div class="biometric-stack">
-                    <div class="auth-box">
-                        <button type="button" id="faceid-login-btn" class="auth-btn auth-btn-dark">Sign in with Face ID</button>
-                        <div id="faceid-login-status" class="auth-status"></div>
-                    </div>
+                <div class="auth-section biometric-wrap">
+                    <button type="button" id="biometric-toggle-btn" class="biometric-toggle-btn" aria-expanded="false" aria-controls="biometric-panel">
+                        <span><i class="fas fa-fingerprint me-2"></i>Connexion biométrique</span>
+                        <i class="fas fa-chevron-down toggle-icon"></i>
+                    </button>
 
-                    <div class="auth-box">
-                        <video id="facepp-login-video" class="facepp-video" autoplay playsinline muted></video>
-                        <canvas id="facepp-login-canvas" style="display:none;"></canvas>
-                        <div class="facepp-actions">
-                            <button type="button" id="facepp-login-start-btn" class="auth-btn auth-btn-dark">Open camera</button>
-                            <button type="button" id="facepp-login-btn" class="auth-btn auth-btn-dark">Capture and sign in</button>
-                            <button type="button" id="facepp-login-stop-btn" class="auth-btn auth-btn-dark">Stop camera</button>
+                    <div id="biometric-panel" class="biometric-panel" hidden>
+                        <div class="auth-box">
+                            <button type="button" id="faceid-login-btn" class="auth-btn auth-btn-dark">Sign in with Face ID</button>
+                            <div id="faceid-login-status" class="auth-status"></div>
                         </div>
-                        <div id="facepp-login-status" class="auth-status"></div>
+
+                        <div class="auth-box">
+                            <video id="facepp-login-video" class="facepp-video" autoplay playsinline muted></video>
+                            <canvas id="facepp-login-canvas" style="display:none;"></canvas>
+                            <div class="facepp-actions">
+                                <button type="button" id="facepp-login-start-btn" class="auth-btn auth-btn-dark">Open camera</button>
+                                <button type="button" id="facepp-login-btn" class="auth-btn auth-btn-dark">Capture and sign in</button>
+                                <button type="button" id="facepp-login-stop-btn" class="auth-btn auth-btn-dark">Stop camera</button>
+                            </div>
+                            <div id="facepp-login-status" class="auth-status"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -151,14 +165,15 @@ window.addEventListener('load', () => {
                     <span>new here?</span>
                 </div>
 
-                <div class="footer-links">
-                    New to the platform?
-                    <a href="{{ path('app_register') }}">Create an account</a>
-                </div>
-
-                <div class="ssl-info">
-                    <i class="fas fa-shield-alt"></i>
-                    Secure sign-in SSL 256-bit
+                <div class="auth-section footer-cta">
+                    <div class="footer-links">
+                        New to the platform?
+                        <a href="{{ path('app_register') }}">Create an account</a>
+                    </div>
+                    <div class="ssl-info">
+                        <i class="fas fa-shield-alt"></i>
+                        Secure sign-in SSL 256-bit
+                    </div>
                 </div>
 
             </div>
@@ -169,6 +184,24 @@ window.addEventListener('load', () => {
 
 <script src="{{ asset('js/theme-toggle.js') }}"></script>
 <script>
+    (() => {
+        const wrap = document.querySelector('.biometric-wrap');
+        const btn = document.getElementById('biometric-toggle-btn');
+        const panel = document.getElementById('biometric-panel');
+        if (!wrap || !btn || !panel) {
+            return;
+        }
+
+        btn.addEventListener('click', () => {
+            const isOpen = wrap.classList.toggle('is-open');
+            panel.hidden = !isOpen;
+            btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            if (isOpen) {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    })();
+
     (() => {
         const btn = document.getElementById('faceid-login-btn');
         const status = document.getElementById('faceid-login-status');

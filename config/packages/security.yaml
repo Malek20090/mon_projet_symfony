@@ -19,8 +19,8 @@ security:
       user_checker: App\Security\UserChecker
 
       form_login:
-        login_path: app_login_form
-        check_path: app_login_form
+        login_path: app_login
+        check_path: app_login
         success_handler: App\Security\LoginSuccessHandler
 
       logout:
@@ -35,6 +35,11 @@ security:
     - { path: ^/auth/faceid, roles: PUBLIC_ACCESS }
     - { path: ^/auth/facepp, roles: PUBLIC_ACCESS }
     - { path: ^/health/facepp, roles: PUBLIC_ACCESS }
+    - { path: ^/api/devise/taux, roles: PUBLIC_ACCESS }
+    - { path: ^/api/devise, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/api/salary, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/reclamations, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/admin/reclamations, roles: ROLE_ADMIN }
 
     # Admin area
     - { path: ^/admin, roles: ROLE_ADMIN }

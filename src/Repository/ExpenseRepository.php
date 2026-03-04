@@ -21,6 +21,29 @@ class ExpenseRepository extends ServiceEntityRepository
     }
 
     /**
+     * Return expenses for a user, including legacy rows where expense.user is null
+     * but linked revenue belongs to the user.
+     *
+     * @return Expense[]
+     */
+    public function findForUser(User $user, array $orderBy = ['expenseDate' => 'DESC', 'id' => 'DESC']): array
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->leftJoin('e.revenue', 'r')
+            ->addSelect('r')
+            ->andWhere('(e.user = :user OR (e.user IS NULL AND r.user = :user))')
+            ->setParameter('user', $user);
+
+        foreach ($orderBy as $field => $direction) {
+            $field = in_array($field, self::ALLOWED_ORDER_FIELDS, true) ? $field : 'expenseDate';
+            $dir = strtoupper((string) $direction) === 'ASC' ? 'ASC' : 'DESC';
+            $qb->addOrderBy('e.' . $field, $dir);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
      * Sort expenses by two criteria.
      *
      * @param string $firstOrderBy  First field (id, amount, category, expenseDate, description)
@@ -132,28 +155,28 @@ class ExpenseRepository extends ServiceEntityRepository
      */
     public function getTotalsByCategory(?User $user = null): array
     {
-        $conn = $this->getEntityManager()->getConnection();
-        $sql = <<<SQL
-            SELECT e.category AS category, SUM(e.amount) AS total
-            FROM expense e
-        SQL;
+        $qb = $this->createQueryBuilder('e')
+            ->select('COALESCE(NULLIF(TRIM(e.category), \'\'), :fallback) AS category')
+            ->addSelect('SUM(e.amount) AS total')
+            ->leftJoin('e.revenue', 'r')
+            ->setParameter('fallback', 'Other')
+            ->groupBy('category')
+            ->orderBy('total', 'DESC');
 
-        $params = [];
         if ($user !== null) {
-            $sql .= ' WHERE e.user_id = :userId';
-            $params['userId'] = $user->getId();
+            $qb->andWhere('(e.user = :user OR (e.user IS NULL AND r.user = :user))')
+                ->setParameter('user', $user);
         }
 
-        $sql .= ' GROUP BY e.category ORDER BY total DESC';
-        $rows = $conn->executeQuery($sql, $params)->fetchAllAssociative();
+        $rows = $qb->getQuery()->getArrayResult();
 
-        return array_map(
+        return array_values(array_map(
             static fn (array $row): array => [
-                'category' => (string) $row['category'],
-                'total' => (float) $row['total'],
+                'category' => (string) ($row['category'] ?? 'Other'),
+                'total' => (float) ($row['total'] ?? 0.0),
             ],
             $rows
-        );
+        ));
     }
 
     /**

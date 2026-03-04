@@ -25,18 +25,18 @@ class SecurityController extends AbstractController
     private const FACEBOOK_OAUTH_STATE_SESSION_KEY = 'facebook_oauth_state';
 
     #[Route('/login', name: 'app_login')]
-    public function loginPromo(): Response
-    {
-        return $this->render('security/login_promo.html.twig');
-    }
-
-    #[Route('/login/form', name: 'app_login_form')]
-    public function loginForm(AuthenticationUtils $authenticationUtils): Response
+    public function login(AuthenticationUtils $authenticationUtils): Response
     {
         return $this->render('security/login.html.twig', [
             'last_username' => $authenticationUtils->getLastUsername(),
             'error' => $authenticationUtils->getLastAuthenticationError(),
         ]);
+    }
+
+    #[Route('/login/form', name: 'app_login_form')]
+    public function loginForm(): Response
+    {
+        return $this->redirectToRoute('app_login');
     }
 
     #[Route('/logout', name: 'app_logout')]

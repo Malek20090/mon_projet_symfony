@@ -2287,3 +2287,41 @@ body.night.savings-page .savings-pagination .page-item.active .page-link{
   background: linear-gradient(135deg, #38bdf8, #22d3ee);
   box-shadow: 0 10px 24px rgba(34, 211, 238, 0.32);
 }
+.ai-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #111;
+  color: white;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.ai-modal {
+  display: none;
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 350px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 5px 30px rgba(0,0,0,0.2);
+}
+
+.ai-modal-content {
+  padding: 15px;
+}
+
+.chat-messages {
+  height: 200px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.chat-messages div {
+  margin-bottom: 8px;
+}

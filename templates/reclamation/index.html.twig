@@ -1,0 +1,66 @@
+{% extends 'base_pages.html.twig' %}
+
+{% block title %}My Reclamations | Decide${% endblock %}
+{% block body_class %}profile-page{% endblock %}
+
+{% block body %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">My Reclamations</h1>
+            <a href="{{ path(back_route|default('app_home')) }}" class="btn btn-outline-primary">Back to profile</a>
+        </div>
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h2 class="h5 mb-3">Create a reclamation</h2>
+                        {{ form_start(form) }}
+                            {{ form_row(form.subject) }}
+                            {{ form_row(form.message) }}
+                            <button class="btn btn-primary w-100" type="submit">Submit</button>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h2 class="h5 mb-3">History</h2>
+                        {% if reclamations is empty %}
+                            <p class="text-muted mb-0">No reclamation yet.</p>
+                        {% else %}
+                            <div class="list-group list-group-flush">
+                                {% for item in reclamations %}
+                                    <div class="list-group-item px-0">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong>{{ item.subject }}</strong>
+                                            {% set badgeClass = item.status == 'RESOLVED' ? 'text-bg-success' : (item.status == 'REJECTED' ? 'text-bg-danger' : (item.status == 'IN_PROGRESS' ? 'text-bg-info' : (item.status == 'BLOCKED_BAD_WORDS' ? 'text-bg-dark' : 'text-bg-secondary'))) %}
+                                            <span class="badge {{ badgeClass }}">{{ item.status }}</span>
+                                        </div>
+                                        <p class="mb-1 mt-2">{{ item.message }}</p>
+                                        {% if item.adminResponse %}
+                                            <div class="alert alert-info py-2 mb-2">
+                                                <strong>Admin response:</strong> {{ item.adminResponse }}
+                                            </div>
+                                        {% endif %}
+                                        <small class="text-muted">{{ item.createdAt|date('Y-m-d H:i') }}</small>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

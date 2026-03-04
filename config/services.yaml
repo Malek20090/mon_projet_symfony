@@ -7,10 +7,17 @@ parameters:
     user_images_directory: '%kernel.project_dir%/public/uploads/users'
     google_ai_api_key_default: ''
     google_ai_model_default: 'gemini-2.5-flash'
+    groq_api_key_default: ''
+    groq_model_default: 'llama-3.1-8b-instant'
+    groq_api_url_default: 'https://api.groq.com/openai/v1/chat/completions'
     openai_api_key_default: ''
     openai_model_default: 'gpt-4o-mini'
+    geo_api_key_default: ''
     facepp_base_url: '%env(string:FACEPP_API_BASE_URL)%'
     facepp_min_confidence: '%env(float:FACEPP_MIN_CONFIDENCE)%'
+    pdfshift_api_key_default: ''
+    pdfshift_processor_version_default: '142'
+    GOOGLE_AI_API_KEY: '%env(GOOGLE_AI_API_KEY)%'
     expense_anomaly_sensitivity: 2.5
     expense_anomaly_min_amount: 400
 services:
@@ -36,8 +43,9 @@ services:
 
     App\Service\SalaryExpenseAiService:
         arguments:
-            $googleAiApiKey: '%env(default:google_ai_api_key_default:GOOGLE_AI_API_KEY)%'
-            $googleAiModel: '%env(default:google_ai_model_default:GOOGLE_AI_MODEL)%'
+            $groqApiKey: '%env(default:groq_api_key_default:GROQ_API_KEY)%'
+            $groqModel: '%env(default:groq_model_default:GROQ_MODEL)%'
+            $groqApiUrl: '%env(default:groq_api_url_default:GROQ_API_URL)%'
 
     App\Service\CasDecisionAiService:
         arguments:
@@ -49,6 +57,11 @@ services:
             $openAiApiKey: '%env(default:openai_api_key_default:OPENAI_API_KEY)%'
             $openAiModel: '%env(default:openai_model_default:OPENAI_MODEL)%'
 
+    App\Service\PdfShiftService:
+        arguments:
+            $apiKey: '%env(default:pdfshift_api_key_default:PDFSHIFT_API_KEY)%'
+            $processorVersion: '%env(default:pdfshift_processor_version_default:PDFSHIFT_PROCESSOR_VERSION)%'
+
     App\Service\WhatIfAiNarratorService:
         arguments:
             $cache: '@cache.app'
@@ -59,7 +72,13 @@ services:
             $apiSecret: '%env(string:FACEPP_API_SECRET)%'
             $baseUrl: '%facepp_base_url%'
             $minConfidence: '%facepp_min_confidence%'
+
+    App\Controller\Api\SalaryNearbyController:
+        arguments:
+            $cache: '@cache.app'
+            $geoApiKey: '%env(default:geo_api_key_default:GEO_API_KEY)%'
     App\Service\ExpenseAnomalyAIService:
         arguments:
             $sensitivity: '%expense_anomaly_sensitivity%'
             $minAmount: '%expense_anomaly_min_amount%'
+    

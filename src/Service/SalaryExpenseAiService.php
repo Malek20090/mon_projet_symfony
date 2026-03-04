@@ -10,8 +10,9 @@ class SalaryExpenseAiService
 {
     public function __construct(
         private readonly HttpClientInterface $httpClient,
-        private readonly ?string $googleAiApiKey = null,
-        private readonly string $googleAiModel = 'gemini-2.5-flash'
+        private readonly ?string $groqApiKey = null,
+        private readonly string $groqModel = 'llama-3.1-8b-instant',
+        private readonly string $groqApiUrl = 'https://api.groq.com/openai/v1/chat/completions'
     ) {
     }
 
@@ -172,7 +173,7 @@ class SalaryExpenseAiService
      */
     private function generateAiSummary(array $insights): ?string
     {
-        $key = trim((string) $this->googleAiApiKey);
+        $key = trim((string) $this->groqApiKey);
         if ($key === '') {
             return null;
         }
@@ -193,7 +194,7 @@ class SalaryExpenseAiService
                 ], JSON_THROW_ON_ERROR)
             );
 
-            $content = $this->requestGeminiText($prompt, false);
+            $content = $this->requestGroqText($prompt, false);
 
             return $content !== '' ? $content : null;
         } catch (\Throwable) {
@@ -242,7 +243,9 @@ class SalaryExpenseAiService
     {
         if ($months === []) {
             return [
-                'by_month' => [],
+                'by_month' => [
+                    $selectedMonth => 'No expenses recorded for this month yet. Add expenses to receive tailored advice.',
+                ],
                 'selected' => $selectedMonth,
                 'source' => 'local',
             ];
@@ -254,6 +257,10 @@ class SalaryExpenseAiService
         if ($byMonth === null || $byMonth === []) {
             $byMonth = $this->generateMonthlyAdviceLocally($months);
             $source = 'local';
+        }
+
+        if (!isset($byMonth[$selectedMonth])) {
+            $byMonth[$selectedMonth] = 'No expenses recorded for this month yet. Add expenses to receive tailored advice.';
         }
 
         return [
@@ -269,7 +276,7 @@ class SalaryExpenseAiService
      */
     private function generateMonthlyAdviceWithAi(array $months): ?array
     {
-        $key = trim((string) $this->googleAiApiKey);
+        $key = trim((string) $this->groqApiKey);
         if ($key === '') {
             return null;
         }
@@ -285,7 +292,7 @@ class SalaryExpenseAiService
                 'months' => $months,
             ], JSON_THROW_ON_ERROR);
 
-            $content = $this->requestGeminiText($prompt, true);
+            $content = $this->requestGroqText($prompt, true);
             if ($content === '') {
                 return null;
             }
@@ -348,45 +355,71 @@ class SalaryExpenseAiService
         return $adviceByMonth;
     }
 
-    private function requestGeminiText(string $prompt, bool $jsonExpected): string
+    private function requestGroqText(string $prompt, bool $jsonExpected): string
     {
-        $key = trim((string) $this->googleAiApiKey);
+        $key = trim((string) $this->groqApiKey);
         if ($key === '') {
             return '';
         }
 
-        $url = sprintf(
-            'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s',
-            rawurlencode($this->googleAiModel),
-            rawurlencode($key)
-        );
-
         $payload = [
-            'contents' => [[
-                'parts' => [[
-                    'text' => $prompt,
-                ]],
-            ]],
-            'generationConfig' => [
-                'temperature' => 0.2,
+            'model' => $this->groqModel,
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => $jsonExpected
+                        ? 'You are a finance assistant. Return valid JSON only.'
+                        : 'You are a concise personal finance assistant.',
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt,
+                ],
             ],
+            'temperature' => 0.2,
         ];
 
-        if ($jsonExpected) {
-            $payload['generationConfig']['responseMimeType'] = 'application/json';
-        }
-
-        $response = $this->httpClient->request('POST', $url, [
+        $response = $this->httpClient->request('POST', $this->groqApiUrl, [
             'headers' => [
                 'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $key,
             ],
             'json' => $payload,
-            'timeout' => 15,
+            'timeout' => 20,
         ]);
 
-        $data = $response->toArray(false);
+        if ($response->getStatusCode() >= 400) {
+            return '';
+        }
 
-        return trim((string) ($data['candidates'][0]['content']['parts'][0]['text'] ?? ''));
+        $data = $response->toArray(false);
+        $content = trim((string) ($data['choices'][0]['message']['content'] ?? ''));
+
+        if (!$jsonExpected) {
+            return $content;
+        }
+
+        return $this->extractJsonFromText($content);
+    }
+
+    private function extractJsonFromText(string $text): string
+    {
+        $trimmed = trim($text);
+        if ($trimmed === '') {
+            return '';
+        }
+
+        if (preg_match('/```(?:json)?\s*(\{.*\})\s*```/si', $trimmed, $match) === 1) {
+            return trim((string) $match[1]);
+        }
+
+        $start = strpos($trimmed, '{');
+        $end = strrpos($trimmed, '}');
+        if ($start !== false && $end !== false && $end > $start) {
+            return trim(substr($trimmed, $start, ($end - $start) + 1));
+        }
+
+        return $trimmed;
     }
 
 }

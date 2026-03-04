@@ -17,6 +17,24 @@ class UserRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return string[]
+     */
+    public function findAdminEmails(): array
+    {
+        $rows = $this->createQueryBuilder('u')
+            ->select('u.email')
+            ->andWhere('u.roles LIKE :role')
+            ->setParameter('role', '%ROLE_ADMIN%')
+            ->getQuery()
+            ->getScalarResult();
+
+        $emails = array_map(static fn (array $row): string => (string) ($row['email'] ?? ''), $rows);
+        $emails = array_values(array_unique(array_filter(array_map('trim', $emails))));
+
+        return $emails;
+    }
+
+    /**
      
      *
      * @return User[]

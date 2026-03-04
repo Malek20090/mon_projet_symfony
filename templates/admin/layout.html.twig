@@ -76,6 +76,11 @@
                class="{{ _route starts with 'admin_objectifs' ? 'active' : '' }}">
                 <i class="fas fa-bullseye"></i> <span>Objectives</span>
             </a>
+
+            <a href="{{ path('admin_reclamation_index') }}"
+               class="{{ _route starts with 'admin_reclamation' ? 'active' : '' }}">
+                <i class="fas fa-comments"></i> <span>Reclamations</span>
+            </a>
            
            <a href="{{ path('admin_goals_admin_goals_index')
 }}"

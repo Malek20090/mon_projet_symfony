@@ -1,0 +1,178 @@
+﻿<?php
+
+namespace App\Service;
+
+use App\Entity\Investissement;
+use App\Entity\User;
+use App\Repository\CryptoRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+
+class ChatInvestmentService
+{
+    private HttpClientInterface $client;
+    private CryptoRepository $cryptoRepository;
+    private EntityManagerInterface $entityManager;
+    
+
+    public function __construct(
+        HttpClientInterface $client,
+        CryptoRepository $cryptoRepository,
+        EntityManagerInterface $entityManager,
+        
+    ) {
+        $this->client = $client;
+        $this->cryptoRepository = $cryptoRepository;
+        $this->entityManager = $entityManager;
+        
+    }
+
+    public function handleMessage(string $message, User $user): array
+{
+    $apiKey = $_ENV['GROQ_API_KEY'] ?? null;
+
+    if (!$apiKey) {
+        return ['error' => 'Groq API key not configured'];
+    }
+
+    $prompt = $this->buildPrompt($message);
+
+    $response = $this->client->request(
+        'POST',
+        'https://api.groq.com/openai/v1/chat/completions',
+        [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+            ],
+            'json' => [
+                'model' => 'llama-3.1-8b-instant',
+                'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => 'You are a financial assistant that ONLY returns strict JSON.'
+                    ],
+                    [
+                        'role' => 'user',
+                        'content' => $prompt
+                    ]
+                ],
+                'temperature' => 0
+            ]
+        ]
+    );
+
+    $data = $response->toArray(false);
+    
+
+    if (isset($data['error'])) {
+        return ['error' => $data['error']['message']];
+    }
+
+    $text = $data['choices'][0]['message']['content'] ?? '';
+
+    // Nettoyage au cas oÃ¹ le modÃ¨le ajoute ```json
+    $text = trim($text);
+    $text = preg_replace('/^```json|```$/', '', $text);
+    $text = trim($text);
+
+    $json = json_decode($text, true);
+
+    if (!$json || !isset($json['action'])) {
+        return ['error' => 'Invalid AI response'];
+    }
+
+    
+    if ($json['action'] === 'invalid_request') {
+    return [
+        'success' => false,
+        'error' => $json['message'] ?? 'Invalid request'
+    ];
+    }
+    
+
+    if (!isset($json['crypto_symbol'], $json['amount'])) {
+        return ['error' => 'Missing required fields'];
+    }
+
+    $crypto = $this->cryptoRepository->findOneBy([
+        'symbol' => strtoupper($json['crypto_symbol'])
+    ]);
+
+    if (!$crypto) {
+        return ['error' => 'Unsupported cryptocurrency'];
+    }
+
+    $amount = (float) $json['amount'];
+
+    if ($amount <= 0) {
+        return ['error' => 'Invalid amount'];
+    }
+
+    $buyPrice = $crypto->getCurrentprice();
+    $quantity = $amount / $buyPrice;
+
+    $investment = new Investissement();
+    $investment->setAmountInvested($amount);
+    $investment->setBuyPrice($buyPrice);
+    $investment->setQuantity($quantity);
+    $investment->setCreatedAt(new \DateTime());
+    $investment->setCrypto($crypto);
+    $investment->setUserId($user);
+
+    $this->entityManager->persist($investment);
+    $this->entityManager->flush();
+
+    return [
+        'success' => true,
+        'crypto' => $crypto->getSymbol(),
+        'amount' => $amount
+    ];
+}
+
+    private function buildPrompt(string $userMessage): string
+    {
+        return "
+You are a financial assistant.
+
+Available cryptocurrencies (user may use FULL NAME or SYMBOL):
+
+- Bitcoin / BTC
+- Ethereum / ETH
+- Solana / SOL
+- Cardano / ADA
+- Ripple / XRP
+- Polkadot / DOT
+- Dogecoin / DOGE
+
+IMPORTANT:
+- Recognize both lowercase and uppercase.
+- 'btc' means BTC.
+- 'bitcoin' means BTC.
+- 'eth' means ETH.
+- Always convert the crypto to its SYMBOL in the response.
+
+User message:
+\"$userMessage\"
+
+Rules:
+1. Return ONLY valid JSON.
+2. If both amount and supported cryptocurrency are provided, return:
+
+{
+  \"action\": \"create_investment\",
+  \"crypto_symbol\": \"BTC\",
+  \"amount\": 500
+}
+
+3. If amount OR crypto is missing or unsupported, return:
+
+{
+  \"action\": \"invalid_request\",
+  \"message\": \"You must specify both amount and supported cryptocurrency.\"
+}
+
+Do not return anything outside JSON.
+";
+    }
+}

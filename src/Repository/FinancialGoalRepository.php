@@ -141,4 +141,100 @@ class FinancialGoalRepository extends ServiceEntityRepository
             ->getQuery()
             ->getArrayResult();
     }
+
+    /**
+     * Dashboard list for Savings/Goals tab using QueryBuilder/DQL.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findDashboardRowsByAccountId(int $accountId, ?string $q, string $sort): array
+    {
+        if ($accountId <= 0) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('g')
+            ->select([
+                'g.id AS id',
+                'g.nom AS nom',
+                'g.montantCible AS montant_cible',
+                'g.montantActuel AS montant_actuel',
+                'g.dateLimite AS date_limite',
+                'g.priorite AS priorite',
+            ])
+            ->join('g.savingAccount', 'sa')
+            ->andWhere('sa.id = :accId')
+            ->setParameter('accId', $accountId);
+
+        $q = trim((string) $q);
+        if ($q !== '') {
+            $orParts = [
+                'LOWER(g.nom) LIKE :qtxt',
+                'STR(g.priorite) LIKE :qlike',
+                'STR(g.montantCible) LIKE :qlike',
+                'STR(g.montantActuel) LIKE :qlike',
+            ];
+            $asDate = \DateTimeImmutable::createFromFormat('Y-m-d', $q);
+            if ($asDate instanceof \DateTimeImmutable) {
+                $orParts[] = 'g.dateLimite = :qdate';
+                $qb->setParameter('qdate', \DateTime::createFromImmutable($asDate->setTime(0, 0, 0)));
+            }
+
+            $qb->andWhere($qb->expr()->orX(...$orParts))
+                ->setParameter('qtxt', '%' . mb_strtolower($q) . '%')
+                ->setParameter('qlike', '%' . $q . '%');
+        }
+
+        switch ($sort) {
+            case 'deadline_desc':
+                $qb->addOrderBy('g.dateLimite', 'DESC');
+                break;
+            case 'priority_desc':
+                $qb->addOrderBy('g.priorite', 'DESC');
+                break;
+            case 'priority_asc':
+                $qb->addOrderBy('g.priorite', 'ASC');
+                break;
+            case 'progress_desc':
+                $qb->addSelect('(CASE WHEN g.montantCible > 0 THEN (g.montantActuel / g.montantCible) ELSE 0 END) AS HIDDEN progress_order')
+                    ->addOrderBy('progress_order', 'DESC');
+                break;
+            case 'progress_asc':
+                $qb->addSelect('(CASE WHEN g.montantCible > 0 THEN (g.montantActuel / g.montantCible) ELSE 0 END) AS HIDDEN progress_order')
+                    ->addOrderBy('progress_order', 'ASC');
+                break;
+            case 'name_asc':
+                $qb->addOrderBy('g.nom', 'ASC');
+                break;
+            case 'name_desc':
+                $qb->addOrderBy('g.nom', 'DESC');
+                break;
+            case 'id_asc':
+                $qb->addOrderBy('g.id', 'ASC');
+                break;
+            case 'id_desc':
+                $qb->addOrderBy('g.id', 'DESC');
+                break;
+            case 'deadline_asc':
+            default:
+                $qb->addOrderBy('g.dateLimite', 'ASC');
+                break;
+        }
+
+        $rows = $qb->getQuery()->getArrayResult();
+
+        // Keep backward-compatible shape with legacy SQL rows used by SavingsController.
+        return array_map(static function (array $row): array {
+            $date = $row['date_limite'] ?? null;
+            if ($date instanceof \DateTimeInterface) {
+                $row['date_limite'] = $date->format('Y-m-d');
+            } elseif ($date === null) {
+                $row['date_limite'] = null;
+            } else {
+                $row['date_limite'] = (string) $date;
+            }
+
+            return $row;
+        }, $rows);
+    }
 }
