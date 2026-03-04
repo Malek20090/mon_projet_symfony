@@ -20,8 +20,8 @@ class AiObjectiveReport
     #[ORM\Column(nullable: true)]
     private ?int $riskScore = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTime $createdAt = null;
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'aiObjectiveReports')]
     #[ORM\JoinColumn(nullable: false)]
@@ -56,16 +56,21 @@ class AiObjectiveReport
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTime
+    public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(?\DateTime $createdAt): static
+    protected function setCreatedAt(?\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
 
         return $this;
+    }
+
+    public function markCreatedAt(?\DateTimeImmutable $createdAt): static
+    {
+        return $this->setCreatedAt($createdAt);
     }
 
     public function getObjectif(): ?Objectif

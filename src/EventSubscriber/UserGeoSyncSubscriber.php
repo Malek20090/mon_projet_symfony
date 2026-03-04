@@ -52,7 +52,7 @@ class UserGeoSyncSubscriber implements EventSubscriberInterface
         $user->setGeoRegionName($ctx['region_name']);
         $user->setGeoCityName($ctx['city_name']);
         $user->setGeoVpnSuspected($ctx['vpn_suspected']);
-        $user->setGeoLastCheckedAt(new \DateTimeImmutable());
+        $user->markGeoLastCheckedAt(new \DateTimeImmutable());
 
         $this->em->flush();
     }

@@ -64,11 +64,11 @@ class AdminReclamationController extends AbstractController
 
         $reclamation->setStatus($status);
         $reclamation->setAdminResponse($response !== '' ? $response : null);
-        $reclamation->setUpdatedAt(new \DateTimeImmutable());
+        $reclamation->markUpdatedAt(new \DateTimeImmutable());
         if (in_array($status, [Reclamation::STATUS_RESOLVED, Reclamation::STATUS_REJECTED, Reclamation::STATUS_BLOCKED], true)) {
-            $reclamation->setResolvedAt(new \DateTimeImmutable());
+            $reclamation->markResolvedAt(new \DateTimeImmutable());
         } else {
-            $reclamation->setResolvedAt(null);
+            $reclamation->markResolvedAt(null);
         }
 
         /** @var User|null $admin */

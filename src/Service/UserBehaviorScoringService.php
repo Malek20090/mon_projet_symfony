@@ -43,7 +43,7 @@ class UserBehaviorScoringService
                     'Set one weekly spending cap and follow it.',
                     'Enable one automatic monthly saving transfer.'
                 ])
-                ->setUpdatedAt(new \DateTimeImmutable());
+                ->markUpdatedAt(new \DateTimeImmutable());
 
             return [
                 'entity' => $profile,
@@ -98,7 +98,7 @@ class UserBehaviorScoringService
             ->setStrengths($strengths)
             ->setWeaknesses($weaknesses)
             ->setNextActions($nextActions)
-            ->setUpdatedAt(new \DateTimeImmutable());
+            ->markUpdatedAt(new \DateTimeImmutable());
 
         return [
             'entity' => $profile,

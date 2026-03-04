@@ -44,7 +44,7 @@ class SavingAccount
     private ?User $user = null;
 
     /** @var Collection<int, FinancialGoal> */
-    #[ORM\OneToMany(mappedBy: 'savingAccount', targetEntity: FinancialGoal::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'savingAccount', targetEntity: FinancialGoal::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $financialGoals;
 
     public function __construct()

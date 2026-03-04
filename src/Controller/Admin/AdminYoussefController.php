@@ -131,7 +131,7 @@ class AdminYoussefController extends AbstractController
 
             $investissement->setBuyPrice($buyPrice);
             $investissement->setQuantity($quantity);
-            $investissement->setCreatedAt(new \DateTime());
+            $investissement->markCreatedAt(new \DateTimeImmutable());
 
             $entityManager->persist($investissement);
             $entityManager->flush();

@@ -98,9 +98,14 @@ class UserNotification
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    protected function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
         return $this;
+    }
+
+    public function markCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        return $this->setCreatedAt($createdAt);
     }
 }

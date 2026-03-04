@@ -231,10 +231,15 @@ public function setFinancialGoal(?FinancialGoal $financialGoal): static
         return $this->confirmedAt;
     }
 
-    public function setConfirmedAt(?\DateTimeImmutable $confirmedAt): static
+    protected function setConfirmedAt(?\DateTimeImmutable $confirmedAt): static
     {
         $this->confirmedAt = $confirmedAt;
         return $this;
+    }
+
+    public function markConfirmedAt(?\DateTimeImmutable $confirmedAt): static
+    {
+        return $this->setConfirmedAt($confirmedAt);
     }
 
     public function getJustificatifFileName(): ?string
@@ -268,9 +273,14 @@ public function setFinancialGoal(?FinancialGoal $financialGoal): static
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): static
+    protected function setUpdatedAt(?\DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
         return $this;
+    }
+
+    public function markUpdatedAt(?\DateTimeImmutable $updatedAt): static
+    {
+        return $this->setUpdatedAt($updatedAt);
     }
 }

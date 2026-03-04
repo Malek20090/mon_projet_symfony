@@ -55,7 +55,7 @@ class FinancialGoal
     private ?int $priorite = 3;
 
     #[ORM\ManyToOne(inversedBy: 'financialGoals')]
-    #[ORM\JoinColumn(name: 'saving_account_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'saving_account_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     #[Assert\NotNull(message: "Le Saving Account est obligatoire.")]
     private ?SavingAccount $savingAccount = null;
 

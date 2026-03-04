@@ -46,7 +46,7 @@ class ObjectifController extends AbstractController
             // 3️⃣ initialisation des champs
             $objectif->setInitialAmount($initialAmount);
             $objectif->setTargetAmount($targetAmount);
-            $objectif->setCreatedAt(new \DateTime());
+            $objectif->markCreatedAt(new \DateTimeImmutable());
 
             // 4️⃣ lier les investissements à l’objectif
             foreach ($objectif->getInvestissements() as $investissement) {
@@ -222,7 +222,7 @@ public function aiAnalysis(
     $report = new AiObjectiveReport();
     $report->setContent($result['content']);
     $report->setRiskScore($result['riskScore']);
-    $report->setCreatedAt(new \DateTime());
+    $report->markCreatedAt(new \DateTimeImmutable());
     $report->setObjectif($objectif);
 
     $em->persist($report);

@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -33,6 +34,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     #[Assert\NotBlank(message: 'Password is required.')]
     #[Assert\Length(min: 8, max: 255, minMessage: 'Password must be at least 8 characters.')]
+    #[Ignore]
     private string $password;
 
     #[ORM\Column(type: 'json')]
@@ -42,10 +44,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\LessThanOrEqual('today', message: 'Registration date cannot be in the future.')]
     private ?\DateTime $dateInscription = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'decimal', precision: 12, scale: 2, options: ['default' => '0.00'])]
     #[Assert\NotNull(message: 'Initial balance is required.')]
     #[Assert\PositiveOrZero(message: 'Initial balance must be a non-negative number.')]
-    private float $soldeTotal = 0;
+    private string $soldeTotal = '0.00';
 
     #[ORM\OneToMany(
         mappedBy: 'user',
@@ -55,13 +57,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     private Collection $transactions;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Revenue::class)]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Revenue::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $revenues;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Quiz::class)]
     private Collection $quizzes;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Reclamation::class, cascade: ['remove'])]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Reclamation::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $reclamations;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -75,6 +77,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private bool $faceIdEnabled = false;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Ignore]
     private ?string $facePlusToken = null;
 
     #[ORM\Column]
@@ -84,6 +87,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private bool $emailVerified = false;
 
     #[ORM\Column(length: 64, nullable: true)]
+    #[Ignore]
     private ?string $emailVerificationToken = null;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
@@ -154,7 +158,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->password;
     }
 
-    public function setPassword(string $password): self
+    public function setPassword(#[\SensitiveParameter] string $password): self
     {
         $this->password = $password;
         return $this;
@@ -193,12 +197,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getSoldeTotal(): float
     {
-        return $this->soldeTotal;
+        return (float) $this->soldeTotal;
     }
 
     public function setSoldeTotal(float $solde): self
     {
-        $this->soldeTotal = $solde;
+        $this->soldeTotal = number_format($solde, 2, '.', '');
         return $this;
     }
 
@@ -251,7 +255,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->facePlusToken;
     }
 
-    public function setFacePlusToken(?string $facePlusToken): self
+    public function setFacePlusToken(#[\SensitiveParameter] ?string $facePlusToken): self
     {
         $this->facePlusToken = $facePlusToken;
         return $this;
@@ -284,7 +288,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->emailVerificationToken;
     }
 
-    public function setEmailVerificationToken(?string $emailVerificationToken): self
+    public function setEmailVerificationToken(#[\SensitiveParameter] ?string $emailVerificationToken): self
     {
         $this->emailVerificationToken = $emailVerificationToken;
         return $this;
@@ -295,10 +299,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->emailVerifiedAt;
     }
 
-    public function setEmailVerifiedAt(?\DateTimeImmutable $emailVerifiedAt): self
+    protected function setEmailVerifiedAt(?\DateTimeImmutable $emailVerifiedAt): self
     {
         $this->emailVerifiedAt = $emailVerifiedAt;
         return $this;
+    }
+
+    public function markEmailVerifiedAt(?\DateTimeImmutable $emailVerifiedAt): self
+    {
+        return $this->setEmailVerifiedAt($emailVerifiedAt);
     }
 
     public function isBlocked(): bool
@@ -328,10 +337,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->blockedAt;
     }
 
-    public function setBlockedAt(?\DateTimeImmutable $blockedAt): self
+    protected function setBlockedAt(?\DateTimeImmutable $blockedAt): self
     {
         $this->blockedAt = $blockedAt;
         return $this;
+    }
+
+    public function markBlockedAt(?\DateTimeImmutable $blockedAt): self
+    {
+        return $this->setBlockedAt($blockedAt);
     }
 
     public function getGeoCountryCode(): ?string
@@ -405,10 +419,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->geoLastCheckedAt;
     }
 
-    public function setGeoLastCheckedAt(?\DateTimeImmutable $geoLastCheckedAt): self
+    protected function setGeoLastCheckedAt(?\DateTimeImmutable $geoLastCheckedAt): self
     {
         $this->geoLastCheckedAt = $geoLastCheckedAt;
         return $this;
+    }
+
+    public function markGeoLastCheckedAt(?\DateTimeImmutable $geoLastCheckedAt): self
+    {
+        return $this->setGeoLastCheckedAt($geoLastCheckedAt);
     }
 
     /* ================= TRANSACTIONS ================= */
@@ -483,7 +502,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             }
         }
 
-        $this->soldeTotal = $total;
+        $this->setSoldeTotal($total);
     }
 
     /* ================= QUIZZES ================= */

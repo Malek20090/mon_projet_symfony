@@ -196,7 +196,7 @@ class StudentController extends AbstractController
             $quizResult->setTotal($quiz->getPointsValeur());
             $quizResult->setPercentage($percentage);
             $quizResult->setPassed($isCorrect);
-            $quizResult->setDate(new \DateTime());
+            $quizResult->markDate(new \DateTime());
             
             $em->persist($quizResult);
             $em->flush();

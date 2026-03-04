@@ -581,7 +581,7 @@ class ImprevusController extends AbstractController
                 if ($adminUser instanceof User) {
                     $cas->setConfirmedBy($adminUser);
                 }
-                $cas->setConfirmedAt($now);
+                $cas->markConfirmedAt($now);
 
                 $em->flush();
                 $this->addFlash('success', 'Demande acceptee et traitee avec succes.');
@@ -607,7 +607,7 @@ class ImprevusController extends AbstractController
                 if ($adminUser instanceof User) {
                     $cas->setConfirmedBy($adminUser);
                 }
-                $cas->setConfirmedAt($now);
+                $cas->markConfirmedAt($now);
                 $em->flush();
                 $this->addFlash('warning', 'Demande refusee.');
             }
@@ -1031,7 +1031,7 @@ class ImprevusController extends AbstractController
         }
 
         $notification->setMessage($message);
-        $notification->setCreatedAt(new \DateTimeImmutable());
+        $notification->markCreatedAt(new \DateTimeImmutable());
         $notification->setIsRead(false);
 
         $em->persist($notification);

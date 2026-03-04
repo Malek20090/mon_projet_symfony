@@ -16,10 +16,10 @@ class Expense
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::FLOAT)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2)]
     #[Assert\NotNull(message: 'Le montant est obligatoire.')]
     #[Assert\PositiveOrZero(message: 'Le montant doit être positif.')]
-    private ?float $amount = null;
+    private ?string $amount = null;
 
     /**
      * Logical "category" field, stored in DB column "category".
@@ -62,12 +62,12 @@ class Expense
 
     public function getAmount(): ?float
     {
-        return $this->amount;
+        return $this->amount !== null ? (float) $this->amount : null;
     }
 
     public function setAmount(float $amount): static
     {
-        $this->amount = $amount;
+        $this->amount = number_format($amount, 2, '.', '');
 
         return $this;
     }
@@ -77,7 +77,7 @@ class Expense
      */
     public function getMontant(): ?float
     {
-        return $this->amount;
+        return $this->getAmount();
     }
 
     /**
@@ -85,9 +85,7 @@ class Expense
      */
     public function setMontant(float $montant): static
     {
-        $this->amount = $montant;
-
-        return $this;
+        return $this->setAmount($montant);
     }
 
     public function getCategory(): ?string

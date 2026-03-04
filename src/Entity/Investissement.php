@@ -15,23 +15,23 @@ class Investissement
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2)]
     #[Assert\NotNull(message: 'Le montant est obligatoire.')]
     #[Assert\GreaterThanOrEqual(
     value: 1,
     message: 'Le montant investi doit être au minimum de 1 dollar.'
     )]
-    private ?float $amountInvested = null;
+    private ?string $amountInvested = null;
 
 
-    #[ORM\Column]
-    private ?float $buyPrice = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 20, scale: 8)]
+    private ?string $buyPrice = null;
 
     #[ORM\Column]
     private ?float $quantity = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTime $createdAt = null;
+    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+    private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'investissements')]
     #[ORM\JoinColumn(nullable: true)]
@@ -52,23 +52,23 @@ class Investissement
 
     public function getAmountInvested(): ?float
     {
-        return $this->amountInvested;
+        return $this->amountInvested !== null ? (float) $this->amountInvested : null;
     }
 
     public function setAmountInvested(float $amountInvested): static
     {
-        $this->amountInvested = $amountInvested;
+        $this->amountInvested = number_format($amountInvested, 2, '.', '');
         return $this;
     }
 
     public function getBuyPrice(): ?float
     {
-        return $this->buyPrice;
+        return $this->buyPrice !== null ? (float) $this->buyPrice : null;
     }
 
     public function setBuyPrice(float $buyPrice): static
     {
-        $this->buyPrice = $buyPrice;
+        $this->buyPrice = number_format($buyPrice, 8, '.', '');
         return $this;
     }
 
@@ -83,15 +83,20 @@ class Investissement
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTime
+    public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTime $createdAt): static
+    protected function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
         return $this;
+    }
+
+    public function markCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        return $this->setCreatedAt($createdAt);
     }
 
     public function getCrypto(): ?Crypto

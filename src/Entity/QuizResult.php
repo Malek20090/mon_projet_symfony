@@ -150,10 +150,15 @@ class QuizResult
         return $this->date;
     }
 
-    public function setDate(\DateTimeInterface $date): static
+    protected function setDate(\DateTimeInterface $date): static
     {
         $this->date = $date;
 
         return $this;
+    }
+
+    public function markDate(\DateTimeInterface $date): static
+    {
+        return $this->setDate($date);
     }
 }

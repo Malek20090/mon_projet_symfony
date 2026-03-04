@@ -39,17 +39,17 @@ class Objectif
 private ?float $targetMultiplier = null;
 
 
-    #[ORM\Column]
-    private ?float $initialAmount = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2)]
+    private ?string $initialAmount = null;
 
-    #[ORM\Column]
-    private ?float $targetAmount = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2)]
+    private ?string $targetAmount = null;
 
     #[ORM\Column]
     private ?bool $isCompleted = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTime $createdAt = null;
+    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+    private ?\DateTimeImmutable $createdAt = null;
 
     /**
      * @var Collection<int, Investissement>
@@ -105,24 +105,24 @@ private Collection $investissements;
 
     public function getInitialAmount(): ?float
     {
-        return $this->initialAmount;
+        return $this->initialAmount !== null ? (float) $this->initialAmount : null;
     }
 
     public function setInitialAmount(float $initialAmount): static
     {
-        $this->initialAmount = $initialAmount;
+        $this->initialAmount = number_format($initialAmount, 2, '.', '');
 
         return $this;
     }
 
     public function getTargetAmount(): ?float
     {
-        return $this->targetAmount;
+        return $this->targetAmount !== null ? (float) $this->targetAmount : null;
     }
 
     public function setTargetAmount(float $targetAmount): static
     {
-        $this->targetAmount = $targetAmount;
+        $this->targetAmount = number_format($targetAmount, 2, '.', '');
 
         return $this;
     }
@@ -139,16 +139,21 @@ private Collection $investissements;
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTime
+    public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTime $createdAt): static
+    protected function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
 
         return $this;
+    }
+
+    public function markCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        return $this->setCreatedAt($createdAt);
     }
 
     /**

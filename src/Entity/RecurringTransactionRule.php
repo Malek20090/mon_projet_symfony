@@ -32,8 +32,8 @@ class RecurringTransactionRule
     #[ORM\Column(length: 20)]
     private string $frequency = self::FREQ_MONTHLY;
 
-    #[ORM\Column(type: Types::FLOAT)]
-    private float $amount = 0.0;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2)]
+    private string $amount = '0.00';
 
     #[ORM\Column(length: 255)]
     private string $label = '';
@@ -116,12 +116,12 @@ class RecurringTransactionRule
 
     public function getAmount(): float
     {
-        return $this->amount;
+        return (float) $this->amount;
     }
 
     public function setAmount(float $amount): self
     {
-        $this->amount = $amount;
+        $this->amount = number_format($amount, 2, '.', '');
         return $this;
     }
 
@@ -229,10 +229,15 @@ class RecurringTransactionRule
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): self
+    protected function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
         return $this;
+    }
+
+    public function markCreatedAt(\DateTimeInterface $createdAt): self
+    {
+        return $this->setCreatedAt($createdAt);
     }
 
     public function getUpdatedAt(): \DateTimeInterface
@@ -240,10 +245,15 @@ class RecurringTransactionRule
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): self
+    protected function setUpdatedAt(\DateTimeInterface $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
         return $this;
+    }
+
+    public function markUpdatedAt(\DateTimeInterface $updatedAt): self
+    {
+        return $this->setUpdatedAt($updatedAt);
     }
 
     public function touch(): self

@@ -1,6 +1,10 @@
 doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
+        options:
+            # Initialize each DB session with explicit timezone and strict SQL checks.
+            # 1002 = PDO::MYSQL_ATTR_INIT_COMMAND
+            1002: "SET SESSION time_zone = '+00:00', SESSION sql_mode = CONCAT(@@sql_mode, ',STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO')"
 
         # IMPORTANT: You MUST configure your server version,
         # either here or in the DATABASE_URL env var (see .env file)
@@ -9,7 +13,9 @@ doctrine:
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
     orm:
-        auto_generate_proxy_classes: true
+        # Keep proxy generation disabled by default to avoid runtime filesystem checks.
+        # It is explicitly re-enabled for local development in when@dev below.
+        auto_generate_proxy_classes: false
         enable_lazy_ghost_objects: true
         report_fields_where_declared: true
         validate_xml_mapping: true
@@ -28,6 +34,11 @@ when@test:
         dbal:
             # "TEST_TOKEN" is typically set by ParaTest
             dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+
+when@dev:
+    doctrine:
+        orm:
+            auto_generate_proxy_classes: true
 
 when@prod:
     doctrine:

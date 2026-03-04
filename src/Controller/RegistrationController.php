@@ -117,7 +117,7 @@ class RegistrationController extends AbstractController
                 $user->setFacePlusToken($facePlusToken);
             }
             $user->setEmailVerified(true);
-            $user->setEmailVerifiedAt(new \DateTimeImmutable());
+            $user->markEmailVerifiedAt(new \DateTimeImmutable());
             $user->setEmailVerificationToken(null);
 
             foreach ($validator->validate($user) as $violation) {
@@ -178,7 +178,7 @@ class RegistrationController extends AbstractController
         }
 
         $user->setEmailVerified(true);
-        $user->setEmailVerifiedAt(new \DateTimeImmutable());
+        $user->markEmailVerifiedAt(new \DateTimeImmutable());
         $user->setEmailVerificationToken(null);
         $em->flush();
 

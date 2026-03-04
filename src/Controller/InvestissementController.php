@@ -48,7 +48,7 @@ public function new(
 
         $investissement->setBuyPrice($buyPrice);
         $investissement->setQuantity($quantity);
-        $investissement->setCreatedAt(new \DateTime());
+        $investissement->markCreatedAt(new \DateTimeImmutable());
         //user 
         $investissement->setUserId($this->getUser());
 

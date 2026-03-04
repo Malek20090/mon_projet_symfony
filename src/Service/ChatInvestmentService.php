@@ -56,7 +56,7 @@ class ChatInvestmentService
         $investment->setAmountInvested($amount);
         $investment->setBuyPrice($buyPrice);
         $investment->setQuantity($amount / $buyPrice);
-        $investment->setCreatedAt(new \DateTime());
+        $investment->markCreatedAt(new \DateTimeImmutable());
         $investment->setCrypto($crypto);
         $investment->setUserId($user);
 
@@ -186,4 +186,3 @@ User message:
 ";
     }
 }
-

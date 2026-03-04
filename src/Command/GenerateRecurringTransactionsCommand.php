@@ -79,7 +79,7 @@ class GenerateRecurringTransactionsCommand extends Command
                     $revenue->setType($rule->getRevenueType() ?: 'FIXE');
                     $revenue->setDescription($rule->getDescription() ?: $rule->getLabel());
                     $revenue->setReceivedAt(\DateTime::createFromInterface($nextRunAt));
-                    $revenue->setCreatedAt(new \DateTimeImmutable());
+                    $revenue->markCreatedAt(new \DateTimeImmutable());
 
                     $this->entityManager->persist($revenue);
                     $user->setSoldeTotal($user->getSoldeTotal() + $rule->getAmount());

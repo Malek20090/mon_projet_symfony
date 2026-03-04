@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\CryptoRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CryptoRepository::class)]
@@ -24,8 +25,8 @@ class Crypto
     #[ORM\Column(length: 255)]
     private ?string $apiid = null;
 
-    #[ORM\Column]
-    private ?float $currentprice = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 20, scale: 8)]
+    private ?string $currentprice = null;
 
     /**
      * @var Collection<int, Investissement>
@@ -81,12 +82,12 @@ class Crypto
 
     public function getCurrentprice(): ?float
     {
-        return $this->currentprice;
+        return $this->currentprice !== null ? (float) $this->currentprice : null;
     }
 
     public function setCurrentprice(float $currentprice): static
     {
-        $this->currentprice = $currentprice;
+        $this->currentprice = number_format($currentprice, 8, '.', '');
 
         return $this;
     }

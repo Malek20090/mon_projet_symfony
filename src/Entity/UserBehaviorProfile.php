@@ -145,11 +145,15 @@ class UserBehaviorProfile
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): self
+    protected function setUpdatedAt(\DateTimeImmutable $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
 
         return $this;
     }
-}
 
+    public function markUpdatedAt(\DateTimeImmutable $updatedAt): self
+    {
+        return $this->setUpdatedAt($updatedAt);
+    }
+}

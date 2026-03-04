@@ -144,10 +144,15 @@ class Reclamation
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): self
+    protected function setCreatedAt(\DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
         return $this;
+    }
+
+    public function markCreatedAt(\DateTimeImmutable $createdAt): self
+    {
+        return $this->setCreatedAt($createdAt);
     }
 
     public function getUpdatedAt(): ?\DateTimeImmutable
@@ -155,10 +160,15 @@ class Reclamation
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): self
+    protected function setUpdatedAt(?\DateTimeImmutable $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
         return $this;
+    }
+
+    public function markUpdatedAt(?\DateTimeImmutable $updatedAt): self
+    {
+        return $this->setUpdatedAt($updatedAt);
     }
 
     public function getResolvedAt(): ?\DateTimeImmutable
@@ -166,10 +176,14 @@ class Reclamation
         return $this->resolvedAt;
     }
 
-    public function setResolvedAt(?\DateTimeImmutable $resolvedAt): self
+    protected function setResolvedAt(?\DateTimeImmutable $resolvedAt): self
     {
         $this->resolvedAt = $resolvedAt;
         return $this;
     }
-}
 
+    public function markResolvedAt(?\DateTimeImmutable $resolvedAt): self
+    {
+        return $this->setResolvedAt($resolvedAt);
+    }
+}

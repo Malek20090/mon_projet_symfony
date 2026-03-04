@@ -17,8 +17,8 @@ class Revenue
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
-    #[ORM\Column(name: 'amount', type: Types::FLOAT)]
-    private float $amount;
+    #[ORM\Column(name: 'amount', type: Types::DECIMAL, precision: 12, scale: 2)]
+    private string $amount = '0.00';
 
     #[ORM\Column(name: 'type', length: 20)]
     private string $type;
@@ -36,7 +36,7 @@ class Revenue
     #[ORM\JoinColumn(name: 'user_id', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
-    #[ORM\OneToMany(mappedBy: 'revenue', targetEntity: Expense::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'revenue', targetEntity: Expense::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $expenses;
 
     public function __construct()
@@ -55,12 +55,12 @@ class Revenue
 
     public function getAmount(): float
     {
-        return $this->amount;
+        return (float) $this->amount;
     }
 
     public function setAmount(float $amount): self
     {
-        $this->amount = $amount;
+        $this->amount = number_format($amount, 2, '.', '');
         return $this;
     }
 
@@ -102,10 +102,15 @@ class Revenue
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): self
+    protected function setCreatedAt(\DateTimeInterface $createdAt): self
     {
         $this->createdAt = $createdAt;
         return $this;
+    }
+
+    public function markCreatedAt(\DateTimeInterface $createdAt): self
+    {
+        return $this->setCreatedAt($createdAt);
     }
 
     public function getUser(): User

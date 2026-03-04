@@ -163,13 +163,13 @@ class SecurityController extends AbstractController
             $user->setPassword($passwordHasher->hashPassword($user, bin2hex(random_bytes(32))));
             $user->setEmailVerified(true);
             $user->setEmailVerificationToken(null);
-            $user->setEmailVerifiedAt(new \DateTimeImmutable());
+            $user->markEmailVerifiedAt(new \DateTimeImmutable());
 
             $entityManager->persist($user);
         } elseif (!$user->isEmailVerified()) {
             $user->setEmailVerified(true);
             $user->setEmailVerificationToken(null);
-            $user->setEmailVerifiedAt(new \DateTimeImmutable());
+            $user->markEmailVerifiedAt(new \DateTimeImmutable());
         }
 
         $entityManager->flush();
@@ -304,13 +304,13 @@ class SecurityController extends AbstractController
             $user->setPassword($passwordHasher->hashPassword($user, bin2hex(random_bytes(32))));
             $user->setEmailVerified(true);
             $user->setEmailVerificationToken(null);
-            $user->setEmailVerifiedAt(new \DateTimeImmutable());
+            $user->markEmailVerifiedAt(new \DateTimeImmutable());
 
             $entityManager->persist($user);
         } elseif (!$user->isEmailVerified()) {
             $user->setEmailVerified(true);
             $user->setEmailVerificationToken(null);
-            $user->setEmailVerifiedAt(new \DateTimeImmutable());
+            $user->markEmailVerifiedAt(new \DateTimeImmutable());
         }
 
         $entityManager->flush();

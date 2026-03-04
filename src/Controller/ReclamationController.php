@@ -42,7 +42,7 @@ class ReclamationController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $reclamation->setUser($user);
             $reclamation->setStatus(Reclamation::STATUS_PENDING);
-            $reclamation->setCreatedAt(new \DateTimeImmutable());
+            $reclamation->markCreatedAt(new \DateTimeImmutable());
 
             $analysis = $badWordsService->analyze(
                 $reclamation->getSubject() . ' ' . $reclamation->getMessage()
@@ -53,11 +53,11 @@ class ReclamationController extends AbstractController
                 $reclamation->setContainsBadWords(true);
                 $reclamation->setStatus(Reclamation::STATUS_BLOCKED);
                 $reclamation->setAdminResponse('Automatic moderation: inappropriate language detected.');
-                $reclamation->setResolvedAt(new \DateTimeImmutable());
+                $reclamation->markResolvedAt(new \DateTimeImmutable());
 
                 $user->setIsBlocked(true);
                 $user->setBlockedReason('Inappropriate language detected in reclamation.');
-                $user->setBlockedAt(new \DateTimeImmutable());
+                $user->markBlockedAt(new \DateTimeImmutable());
 
                 $em->persist($reclamation);
                 $em->flush();
