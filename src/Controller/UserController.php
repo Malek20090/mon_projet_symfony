@@ -5,8 +5,11 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\UserType;
 use App\Repository\TransactionRepository;
+use App\Repository\UserBehaviorProfileRepository;
 use App\Repository\UserRepository;
 use App\Service\CryptoApiService;
+use App\Service\UserBehaviorAiNarratorService;
+use App\Service\UserBehaviorScoringService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -161,7 +164,11 @@ final class UserController extends AbstractController
     public function show(
         User $user,
         TransactionRepository $transactionRepository,
-        CryptoApiService $cryptoApiService
+        CryptoApiService $cryptoApiService,
+        UserBehaviorScoringService $behaviorScoringService,
+        UserBehaviorAiNarratorService $behaviorAiNarratorService,
+        UserBehaviorProfileRepository $userBehaviorProfileRepository,
+        EntityManagerInterface $em
     ): Response
     {
         $transactions = $transactionRepository->findBy(['user' => $user], ['date' => 'DESC']);
@@ -244,6 +251,45 @@ final class UserController extends AbstractController
         $apiSource = $apiResult['source'];
         $apiError = empty($apiPrices) ? 'Live API data is temporarily unavailable.' : null;
 
+        try {
+            $existingBehaviorProfile = $userBehaviorProfileRepository->findOneByUser($user);
+            $behaviorSnapshot = $behaviorScoringService->buildSnapshot(
+                $user,
+                $transactions,
+                $existingBehaviorProfile
+            );
+
+            if ($existingBehaviorProfile === null) {
+                $em->persist($behaviorSnapshot['entity']);
+            }
+            $em->flush();
+        } catch (\Throwable) {
+            // Graceful fallback when schema is not migrated yet.
+            $behaviorSnapshot = $behaviorScoringService->buildSnapshot($user, $transactions);
+        }
+
+        $narrationContext = [
+            'score' => $behaviorSnapshot['entity']->getScore(),
+            'profile_type' => $behaviorSnapshot['entity']->getProfileType(),
+            'strengths' => $behaviorSnapshot['entity']->getStrengths(),
+            'weaknesses' => $behaviorSnapshot['entity']->getWeaknesses(),
+            'next_actions' => $behaviorSnapshot['entity']->getNextActions(),
+            'metrics' => $behaviorSnapshot['metrics'],
+            'week_tracking' => $behaviorSnapshot['week_tracking'],
+            'score_delta' => $behaviorSnapshot['score_delta'],
+        ];
+
+        $aiNarration = $behaviorAiNarratorService->narrate($narrationContext);
+        if (!$aiNarration['ok']) {
+            $aiNarration = [
+                'ok' => true,
+                'source' => 'local',
+                'text' => $behaviorAiNarratorService->buildLocalFallback($narrationContext),
+                'model' => null,
+                'error' => $aiNarration['error'],
+            ];
+        }
+
         return $this->render('user/show.html.twig', [
             'user' => $user,
             'transactions' => $transactions,
@@ -270,6 +316,11 @@ final class UserController extends AbstractController
             'api_prices' => $apiPrices,
             'api_source' => $apiSource,
             'api_error' => $apiError,
+            'behavior_profile' => $behaviorSnapshot['entity'],
+            'behavior_metrics' => $behaviorSnapshot['metrics'],
+            'behavior_week_tracking' => $behaviorSnapshot['week_tracking'],
+            'behavior_score_delta' => $behaviorSnapshot['score_delta'],
+            'behavior_ai_narration' => $aiNarration,
         ]);
     }
 

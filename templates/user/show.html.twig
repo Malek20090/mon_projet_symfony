@@ -63,6 +63,10 @@
                     <tr><th>Roles</th><td>{{ user.roles|join(', ') ?: '-' }}</td></tr>
                     <tr><th>Balance</th><td class="fw-bold text-primary">{{ user.soldeTotal|number_format(2, '.', ' ') }} TND</td></tr>
                     <tr><th>Registration date</th><td>{{ user.dateInscription ? user.dateInscription|date('d/m/Y') : '-' }}</td></tr>
+                    <tr><th>Geo Country</th><td>{{ user.geoCountryName ?: user.geoCountryCode ?: '-' }}</td></tr>
+                    <tr><th>Geo Region / City</th><td>{{ user.geoRegionName ?: '-' }}{% if user.geoCityName %} / {{ user.geoCityName }}{% endif %}</td></tr>
+                    <tr><th>Detected IP</th><td>{{ user.geoDetectedIp ?: '-' }}</td></tr>
+                    <tr><th>VPN / Proxy</th><td>{% if user.geoVpnSuspected %}<span class="badge bg-warning text-dark">Suspected</span>{% else %}<span class="badge bg-success">No</span>{% endif %}</td></tr>
                 </tbody>
             </table>
         </div>
@@ -136,6 +140,97 @@
                     <li>{{ line }}</li>
                 {% endfor %}
             </ul>
+        </div>
+    </div>
+
+    <div class="card-custom mb-3">
+        <h5 class="mb-3"><i class="fas fa-brain text-primary me-2"></i>AI User Behavior Profile</h5>
+        <div class="user-stats-grid mb-3">
+            <div class="user-stat-tile">
+                <span class="k">Financial Behavior Score</span>
+                <strong>{{ behavior_profile.score }}/100</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Profile Type</span>
+                <strong>{{ behavior_profile.profileType }}</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Score Trend (vs previous)</span>
+                <strong class="{{ behavior_score_delta >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ behavior_score_delta >= 0 ? '+' : '' }}{{ behavior_score_delta }}
+                </strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Current Week Expenses</span>
+                <strong>{{ behavior_week_tracking.current_week_expense|number_format(2, '.', ' ') }} TND</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Previous Week Expenses</span>
+                <strong>{{ behavior_week_tracking.previous_week_expense|number_format(2, '.', ' ') }} TND</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Expense Delta</span>
+                <strong class="{{ behavior_week_tracking.expense_delta_pct <= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ behavior_week_tracking.expense_delta_pct >= 0 ? '+' : '' }}{{ behavior_week_tracking.expense_delta_pct }}%
+                </strong>
+            </div>
+        </div>
+
+        <div class="user-stats-grid mb-3">
+            <div class="user-stat-tile">
+                <span class="k">Expense Regularity</span>
+                <strong>{{ behavior_metrics.regularity }}/100</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Impulsivity Control</span>
+                <strong>{{ behavior_metrics.impulsivity_control }}/100</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Saving Discipline</span>
+                <strong>{{ behavior_metrics.saving_discipline }}/100</strong>
+            </div>
+            <div class="user-stat-tile">
+                <span class="k">Monthly Stability</span>
+                <strong>{{ behavior_metrics.monthly_stability }}/100</strong>
+            </div>
+        </div>
+
+        <div class="user-insights mt-3">
+            <h6 class="mb-2"><i class="fas fa-shield-heart text-success me-2"></i>Strengths</h6>
+            <ul class="mb-3">
+                {% for line in behavior_profile.strengths %}
+                    <li>{{ line }}</li>
+                {% endfor %}
+            </ul>
+
+            <h6 class="mb-2"><i class="fas fa-triangle-exclamation text-warning me-2"></i>Weaknesses</h6>
+            <ul class="mb-3">
+                {% for line in behavior_profile.weaknesses %}
+                    <li>{{ line }}</li>
+                {% endfor %}
+            </ul>
+
+            <h6 class="mb-2"><i class="fas fa-route text-primary me-2"></i>Adaptive Coaching (3 actions)</h6>
+            <ol class="mb-0">
+                {% for action in behavior_profile.nextActions %}
+                    <li>{{ action }}</li>
+                {% endfor %}
+            </ol>
+        </div>
+
+        <div class="user-insights mt-3">
+            <h6 class="mb-2 d-flex align-items-center gap-2">
+                <span><i class="fas fa-robot text-primary me-2"></i>AI Coaching Note</span>
+                {% if behavior_ai_narration.source == 'openai' %}
+                    <span class="badge bg-success">OpenAI</span>
+                {% else %}
+                    <span class="badge bg-secondary">Local fallback</span>
+                {% endif %}
+            </h6>
+            {% if behavior_ai_narration.model %}
+                <small class="text-muted d-block mb-2">Model: {{ behavior_ai_narration.model }}</small>
+            {% endif %}
+            <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">{{ behavior_ai_narration.text }}</pre>
         </div>
     </div>
 

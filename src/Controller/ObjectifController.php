@@ -14,8 +14,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Service\AiObjectiveAdvisorService;
 use App\Entity\AiObjectiveReport;
 use App\Service\MonteCarloSimulationService;
-use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
-use Symfony\UX\Chartjs\Model\Chart;
 
 class ObjectifController extends AbstractController
 {
@@ -247,8 +245,7 @@ public function showAiReport(AiObjectiveReport $report): Response
 #[Route('/objectifs/{id}/simulation', name: 'objectif_simulation')]
 public function simulation(
     Objectif $objectif,
-    MonteCarloSimulationService $simulationService,
-    ChartBuilderInterface $chartBuilder
+    MonteCarloSimulationService $simulationService
 ): Response {
 
     // 🔐 Sécurité (même logique que pour l'IA)
@@ -265,87 +262,10 @@ public function simulation(
     // Calculate histogram bins from simulation values
     $histogramData = $this->calculateHistogramBins($result['values'], $result['target']);
 
-    // Create BAR chart for histogram
-    $chart = $chartBuilder->createChart(Chart::TYPE_BAR);
-    
-    $chart->setData([
-        'labels' => $histogramData['labels'],
-        'datasets' => [
-            [
-                'label' => 'Frequency',
-                'data' => $histogramData['frequencies'],
-                'backgroundColor' => 'rgba(54, 162, 235, 0.6)',
-                'borderColor' => 'rgba(54, 162, 235, 1)',
-                'borderWidth' => 1,
-            ],
-        ],
-    ]);
-
-    // Add target line as a separate dataset using a line chart overlay
-    $targetLineData = array_fill(0, count($histogramData['frequencies']), null);
-    $targetLineData[$histogramData['targetBinIndex']] = max($histogramData['frequencies']) * 1.1;
-    
-    $chart->setData([
-        'labels' => $histogramData['labels'],
-        'datasets' => [
-            [
-                'type' => 'bar',
-                'label' => 'Frequency',
-                'data' => $histogramData['frequencies'],
-                'backgroundColor' => 'rgba(54, 162, 235, 0.6)',
-                'borderColor' => 'rgba(54, 162, 235, 1)',
-                'borderWidth' => 1,
-                'order' => 2,
-            ],
-            [
-                'type' => 'line',
-                'label' => 'Target: $' . number_format($result['target'], 0),
-                'data' => $targetLineData,
-                'borderColor' => 'rgba(255, 99, 132, 1)',
-                'backgroundColor' => 'rgba(255, 99, 132, 0.2)',
-                'borderWidth' => 3,
-                'pointRadius' => 8,
-                'pointBackgroundColor' => 'rgba(255, 99, 132, 1)',
-                'fill' => false,
-                'tension' => 0,
-                'order' => 1,
-            ],
-        ],
-    ]);
-
-    $chart->setOptions([
-        'responsive' => true,
-        'plugins' => [
-            'legend' => [
-                'display' => true,
-                'position' => 'top',
-            ],
-            'title' => [
-                'display' => true,
-                'text' => 'Monte Carlo Simulation - Distribution of Final Values',
-            ],
-        ],
-        'scales' => [
-            'x' => [
-                'title' => [
-                    'display' => true,
-                    'text' => 'Value Range ($)',
-                ],
-            ],
-            'y' => [
-                'beginAtZero' => true,
-                'title' => [
-                    'display' => true,
-                    'text' => 'Frequency (Count)',
-                ],
-            ],
-        ],
-    ]);
-
     return $this->render('objectif/simulation.html.twig', [
         'objectif' => $objectif,
         'result' => $result,
-        'chart' => $chart,
+        'histogram' => $histogramData,
     ]);
 }
 

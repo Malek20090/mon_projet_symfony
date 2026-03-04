@@ -98,6 +98,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $blockedAt = null;
 
+    #[ORM\Column(length: 8, nullable: true)]
+    private ?string $geoCountryCode = null;
+
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $geoCountryName = null;
+
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $geoRegionName = null;
+
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $geoCityName = null;
+
+    #[ORM\Column(length: 45, nullable: true)]
+    private ?string $geoDetectedIp = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $geoVpnSuspected = false;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $geoLastCheckedAt = null;
+
     public function __construct()
     {
         $this->transactions = new ArrayCollection();
@@ -313,6 +334,83 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getGeoCountryCode(): ?string
+    {
+        return $this->geoCountryCode;
+    }
+
+    public function setGeoCountryCode(?string $geoCountryCode): self
+    {
+        $this->geoCountryCode = $geoCountryCode;
+        return $this;
+    }
+
+    public function getGeoCountryName(): ?string
+    {
+        return $this->geoCountryName;
+    }
+
+    public function setGeoCountryName(?string $geoCountryName): self
+    {
+        $this->geoCountryName = $geoCountryName;
+        return $this;
+    }
+
+    public function getGeoRegionName(): ?string
+    {
+        return $this->geoRegionName;
+    }
+
+    public function setGeoRegionName(?string $geoRegionName): self
+    {
+        $this->geoRegionName = $geoRegionName;
+        return $this;
+    }
+
+    public function getGeoCityName(): ?string
+    {
+        return $this->geoCityName;
+    }
+
+    public function setGeoCityName(?string $geoCityName): self
+    {
+        $this->geoCityName = $geoCityName;
+        return $this;
+    }
+
+    public function getGeoDetectedIp(): ?string
+    {
+        return $this->geoDetectedIp;
+    }
+
+    public function setGeoDetectedIp(?string $geoDetectedIp): self
+    {
+        $this->geoDetectedIp = $geoDetectedIp;
+        return $this;
+    }
+
+    public function isGeoVpnSuspected(): bool
+    {
+        return $this->geoVpnSuspected;
+    }
+
+    public function setGeoVpnSuspected(bool $geoVpnSuspected): self
+    {
+        $this->geoVpnSuspected = $geoVpnSuspected;
+        return $this;
+    }
+
+    public function getGeoLastCheckedAt(): ?\DateTimeImmutable
+    {
+        return $this->geoLastCheckedAt;
+    }
+
+    public function setGeoLastCheckedAt(?\DateTimeImmutable $geoLastCheckedAt): self
+    {
+        $this->geoLastCheckedAt = $geoLastCheckedAt;
+        return $this;
+    }
+
     /* ================= TRANSACTIONS ================= */
 
     /**
@@ -366,11 +464,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function removeRevenue(Revenue $revenue): self
     {
-        if ($this->revenues->removeElement($revenue)) {
-            if ($revenue->getUser() === $this) {
-                $revenue->setUser(null);
-            }
-        }
+        $this->revenues->removeElement($revenue);
 
         return $this;
     }
