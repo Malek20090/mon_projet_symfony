@@ -16,9 +16,9 @@ class CertificationResultRepository extends ServiceEntityRepository
         parent::__construct($registry, CertificationResult::class);
     }
 
-    public function findAllResults(): array
+    public function findAllResults(int $limit = 200): array
     {
-        return $this->findBy([], ['date' => 'DESC']);
+        return $this->findBy([], ['date' => 'DESC'], max(1, $limit));
     }
 
     public function findByUser(string $email): array
@@ -28,16 +28,26 @@ class CertificationResultRepository extends ServiceEntityRepository
 
     public function getStats(): array
     {
-        $results = $this->findAll();
-        
-        $total = count($results);
-        $passed = count(array_filter($results, fn($r) => $r->isPassed()));
-        
+        $total = (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+        $passed = (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->andWhere('r.passed = :passed')
+            ->setParameter('passed', true)
+            ->getQuery()
+            ->getSingleScalarResult();
+        $averageScore = (float) $this->createQueryBuilder('r')
+            ->select('COALESCE(AVG(r.percentage), 0)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
         return [
             'total' => $total,
             'passed' => $passed,
             'failed' => $total - $passed,
-            'averageScore' => $total > 0 ? round(array_sum(array_map(fn($r) => $r->getPercentage(), $results)) / $total) : 0,
+            'averageScore' => (int) round($averageScore),
         ];
     }
 }

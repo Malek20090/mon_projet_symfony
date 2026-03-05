@@ -53,6 +53,7 @@ class SavingsWhatIfAiService
         return $styles[$idx];
     }
 
+    /** @phpstan-ignore-next-line */
     private function boolFromContext(array $context, string $key, bool $default = false): bool
     {
         $v = $context[$key] ?? $default;

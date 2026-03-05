@@ -1,0 +1,51 @@
+﻿PS c:\Users\Yoga\pidev1\mon_projet_symfony> composer show ahmed-bhs/doctrine-doctor
+
+name     : ahmed-bhs/doctrine-doctor
+descrip. : Runtime analysis tool for Doctrine ORM integrated into Symfony Web Profiler. Unlike static linters, it analyzes actual query execution at runtime to detect performance bottlenecks, security vulnerabilities, and best practice violations during development with real execution context and data.
+keywords : Best-Practices, analyzer, code-quality, database-performance, debugging, developer-tools, development-tools, doctrine, doctrine-analyzer, doctrine-orm, dql, missing-indexes, n-plus-one, n-plus-one-detection, orm-debugging, performance, performance-monitoring, profiler, query-analysis, query-analyzer, query-optimization, runtime-analysis, security, slow-queries, sql-profiler, symfony, symfony-bundle, web-profiler
+versions : * v1.0.0
+released : 2025-12-30, 2 months ago
+type     : symfony-bundle
+license  : MIT License (MIT) (OSI approved) https://spdx.org/licenses/MIT.html#licenseText
+homepage : https://github.com/ahmed-bhs/doctrine-doctor
+source   : [git] https://github.com/ahmed-bhs/doctrine-doctor.git c679438aa4bbc4ee82d04931a511a05cf527ab2d
+dist     : [zip] https://api.github.com/repos/ahmed-bhs/doctrine-doctor/zipball/c679438aa4bbc4ee82d04931a511a05cf527ab2d c679438aa4bbc4ee82d04931a511a05cf527ab2d
+path     : C:\Users\Yoga\pidev1\mon_projet_symfony\vendor\ahmed-bhs\doctrine-doctor
+names    : ahmed-bhs/doctrine-doctor
+
+support
+issues : https://github.com/ahmed-bhs/doctrine-doctor/issues
+source : https://github.com/ahmed-bhs/doctrine-doctor
+
+autoload
+psr-4
+AhmedBhs\DoctrineDoctor\ => src/
+
+requires
+doctrine/doctrine-bundle ^2.12
+doctrine/orm ^2.10|^3.0|^4.0
+nikic/php-parser ^5.6
+php ^8.2
+phpmyadmin/sql-parser ^6.0
+symfony/framework-bundle ^6.0|^7.0
+webmozart/assert ^1.11
+
+requires (dev)
+bitbag/coding-standard ^3.0
+deptrac/deptrac ^4.2
+php-parallel-lint/php-parallel-lint ^1.4
+phpmd/phpmd ^2.15
+phpstan/extension-installer ^1.4
+phpstan/phpstan ^2.1
+phpstan/phpstan-doctrine ^2.0
+phpstan/phpstan-phpunit ^2.0
+phpstan/phpstan-symfony ^2.0
+phpunit/phpunit ^10.0
+symfony/stopwatch ^6.0|^7.0
+symfony/var-dumper ^6.0|^7.0
+symfony/var-exporter ^6.4|^7.0
+symplify/easy-coding-standard ^12.6
+twig/twig ^3.0
+
+[exit_code]=0
+

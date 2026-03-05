@@ -31,10 +31,6 @@ class SavingsCalendarService
             return [];
         }
 
-        if (!is_array($rows)) {
-            return [];
-        }
-
         $items = [];
         foreach ($rows as $row) {
             if (!is_array($row)) {
@@ -258,7 +254,7 @@ class SavingsCalendarService
             ];
         }
 
-        if (!is_array($data) || !isset($data[1]) || !is_array($data[1])) {
+        if (!isset($data[1]) || !is_array($data[1])) {
             return [
                 'rate' => 0.0,
                 'year' => null,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Entity;
 
 use App\Entity\Transaction;
+use App\Entity\Expense;
 use App\Entity\User;
 use PHPUnit\Framework\TestCase;
 
@@ -39,5 +40,17 @@ final class TransactionTest extends TestCase
         self::assertSame('Achat materiel', $transaction->getDescription());
         self::assertSame('manual', $transaction->getModuleSource());
         self::assertSame($user, $transaction->getUser());
+    }
+
+    public function testExpenseAssociation(): void
+    {
+        $transaction = new Transaction();
+        $expense = new Expense();
+
+        $transaction->setExpense($expense);
+        self::assertSame($expense, $transaction->getExpense());
+
+        $transaction->setExpense(null);
+        self::assertNull($transaction->getExpense());
     }
 }

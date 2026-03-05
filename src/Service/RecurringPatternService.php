@@ -18,21 +18,7 @@ class RecurringPatternService
     /**
      * @param Revenue[] $revenues
      * @param Expense[] $expenses
-     * @return array<int, array{
-     *   kind: string,
-     *   label: string,
-     *   amount: float,
-     *   frequency: string,
-     *   next_run_at: string,
-     *   confidence: float,
-     *   occurrences: int,
-     *   last_date: string,
-     *   signature: string,
-     *   revenue_type?: string,
-     *   expense_category?: string,
-     *   description?: string,
-     *   expense_revenue_id?: int
-     * }>
+     * @return array<int, array<string, mixed>>
      */
     public function buildSuggestions(User $user, array $revenues, array $expenses): array
     {

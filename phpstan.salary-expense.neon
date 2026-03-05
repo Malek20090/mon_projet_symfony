@@ -1,0 +1,26 @@
+parameters:
+    level: 5
+    paths:
+        - src/Controller/SalaryExpenseController.php
+        - src/Entity/Expense.php
+        - src/Entity/Revenue.php
+        - src/Form/ExpenseType.php
+        - src/Form/RevenueType.php
+        - src/Repository/ExpenseRepository.php
+        - src/Repository/RevenueRepository.php
+        - src/Service/ExpenseCategorySuggestionService.php
+        - src/Service/ExpenseStatisticsService.php
+        - src/Service/ExpenseAnomalyAIService.php
+        - src/Service/ExpenseAnomalyMonitorService.php
+        - src/Service/FinancialMonitoringService.php
+        - src/Service/FinancialAlertMailerService.php
+        - src/Service/SalaryExpenseAiService.php
+        - src/Service/RecurringPatternService.php
+        - src/Command/GenerateRecurringTransactionsCommand.php
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        - identifier: property.unusedType
+          path: src/Entity/Expense.php
+        - identifier: property.unusedType
+          path: src/Entity/Revenue.php
+    tmpDir: var/cache/phpstan

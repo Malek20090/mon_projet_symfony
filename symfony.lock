@@ -1,6 +1,6 @@
 {
     "ahmed-bhs/doctrine-doctor": {
-        "version": "0.1",
+        "version": "1.0",
         "recipe": {
             "repo": "github.com/symfony/recipes-contrib",
             "branch": "main",

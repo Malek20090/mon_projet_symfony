@@ -26,6 +26,15 @@
     </div>
 
     <div class="row g-4">
+        {# Debug: Show raw data #}
+        {% if app.debug %}
+        <div class="col-12 alert alert-info">
+            <h5>Debug Info:</h5>
+            <p><strong>Monthly Revenues:</strong> {{ dashboardData.monthly_revenues|json_encode }}</p>
+            <p><strong>Expense Categories:</strong> {{ dashboardData.expense_categories|json_encode }}</p>
+        </div>
+        {% endif %}
+        
         {% if focus in ['all', 'revenues'] %}
         <div class="col-12 {{ focus == 'all' ? 'col-lg-7' : 'col-lg-10' }}">
             <div class="card shadow-sm h-100">

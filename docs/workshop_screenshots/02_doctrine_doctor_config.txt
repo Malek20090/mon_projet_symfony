@@ -1,0 +1,114 @@
+﻿PS c:\Users\Yoga\pidev1\mon_projet_symfony> php bin/console debug:config doctrine_doctor --env=dev
+
+
+Current configuration for extension with alias "doctrine_doctor"
+================================================================
+
+doctrine_doctor:
+    enabled: true
+    analysis:
+        exclude_third_party_entities: true
+        exclude_paths:
+            - vendor/
+    analyzers:
+        n_plus_one:
+            enabled: true
+            threshold: 5
+        slow_query:
+            enabled: true
+            threshold: 100
+        missing_index:
+            enabled: true
+            slow_query_threshold: 50
+            explain_queries: true
+            min_rows_scanned: 1000
+        hydration:
+            enabled: true
+            row_threshold: 99
+            critical_threshold: 999
+        eager_loading:
+            enabled: true
+            join_threshold: 4
+            critical_join_threshold: 7
+        find_all:
+            enabled: true
+            threshold: 99
+        entity_manager_clear:
+            enabled: true
+            batch_size_threshold: 20
+        get_reference:
+            enabled: true
+            threshold: 2
+        flush_in_loop:
+            enabled: true
+            flush_count_threshold: 5
+            time_window_ms: 1000
+        lazy_loading:
+            enabled: true
+            threshold: 10
+        dql_injection:
+            enabled: true
+        bulk_operation:
+            enabled: true
+            threshold: 20
+        strict_mode:
+            enabled: true
+        charset:
+            enabled: true
+        inno_db_engine:
+            enabled: true
+        connection_pooling:
+            enabled: true
+        collection_initialization:
+            enabled: true
+        cascade_configuration:
+            enabled: true
+        sensitive_data_exposure:
+            enabled: true
+        insecure_random:
+            enabled: true
+        sql_injection_raw_queries:
+            enabled: true
+        foreign_key_mapping:
+            enabled: true
+        partial_object:
+            enabled: true
+            threshold: 5
+        dto_hydration:
+            enabled: true
+        cascade_all:
+            enabled: true
+        cascade_persist_independent:
+            enabled: true
+        missing_orphan_removal:
+            enabled: true
+        cascade_remove_independent:
+            enabled: true
+        bidirectional_consistency:
+            enabled: true
+        orphan_removal_no_cascade:
+            enabled: true
+        ondelete_mismatch:
+            enabled: true
+        join_optimization:
+            enabled: true
+            max_joins_recommended: 5
+            max_joins_critical: 8
+        doctrine_cache:
+            enabled: true
+        naming_convention:
+            enabled: true
+        missing_embeddable_opportunity:
+            enabled: true
+        blameable_trait:
+            enabled: true
+    profiler:
+        show_in_toolbar: true
+        show_debug_info: false
+    debug:
+        enabled: false
+        internal_logging: false
+
+
+[exit_code]=0
+

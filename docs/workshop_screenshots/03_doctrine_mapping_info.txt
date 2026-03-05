@@ -1,0 +1,28 @@
+﻿PS c:\Users\Yoga\pidev1\mon_projet_symfony> php bin/console doctrine:mapping:info --env=dev
+
+ Found 21 mapped entities:
+
+ [OK]   App\Entity\AiObjectiveReport
+ [OK]   App\Entity\CasRelles
+ [OK]   App\Entity\CertificationResult
+ [OK]   App\Entity\Cours
+ [OK]   App\Entity\Crypto
+ [OK]   App\Entity\Expense
+ [OK]   App\Entity\FinancialGoal
+ [OK]   App\Entity\Imprevus
+ [OK]   App\Entity\Investissement
+ [OK]   App\Entity\Objectif
+ [OK]   App\Entity\Quiz
+ [OK]   App\Entity\QuizResult
+ [OK]   App\Entity\Reclamation
+ [OK]   App\Entity\RecurringTransactionRule
+ [OK]   App\Entity\Revenue
+ [OK]   App\Entity\SavingAccount
+ [OK]   App\Entity\Transaction
+ [OK]   App\Entity\User
+ [OK]   App\Entity\UserBehaviorProfile
+ [OK]   App\Entity\UserNotification
+ [OK]   Vich\UploaderBundle\Entity\File
+
+[exit_code]=0
+

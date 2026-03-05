@@ -38,11 +38,11 @@ class StudentProfileController extends AbstractController
             return $this->json(['success' => false, 'message' => 'Access denied.'], 403);
         }
 
-        $courses = $coursRepository->findBy([], ['id' => 'DESC']);
-        $quizzes = $quizRepository->findBy([], ['id' => 'DESC']);
-        $latestCourses = array_slice($courses, 0, 6);
-        $latestQuizzes = array_slice($quizzes, 0, 6);
-        $insights = $studentProfileAiService->buildInsights($courses, $quizzes);
+        $coursesCount = $coursRepository->count([]);
+        $quizzesCount = $quizRepository->count([]);
+        $latestCourses = $coursRepository->findBy([], ['id' => 'DESC'], 6);
+        $latestQuizzes = $quizRepository->findBy([], ['id' => 'DESC'], 6);
+        $insights = $studentProfileAiService->buildInsights($latestCourses, $latestQuizzes);
 
         return $this->json([
             'success' => true,
@@ -51,8 +51,8 @@ class StudentProfileController extends AbstractController
                 'name' => $user->getNom(),
                 'email' => $user->getEmail(),
             ],
-            'courses_count' => count($courses),
-            'quizzes_count' => count($quizzes),
+            'courses_count' => $coursesCount,
+            'quizzes_count' => $quizzesCount,
             'latest_courses' => array_map(
                 static fn ($course): array => [
                     'id' => $course->getId(),
@@ -74,4 +74,3 @@ class StudentProfileController extends AbstractController
         ]);
     }
 }
-

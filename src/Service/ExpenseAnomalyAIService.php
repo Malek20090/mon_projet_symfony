@@ -50,6 +50,9 @@ class ExpenseAnomalyAIService
         return $this->zScore($expense, $category);
     }
 
+    /**
+     * @param array{average: float, stddev: float, count: int} $stats
+     */
     private function isAboveThreshold(Expense $expense, array $stats): bool
     {
         if ((float) $expense->getAmount() < $this->minAmount) {
@@ -66,6 +69,9 @@ class ExpenseAnomalyAIService
         return (float) $expense->getAmount() > $threshold;
     }
 
+    /**
+     * @param array{average: float, stddev: float, count: int} $stats
+     */
     private function zScore(Expense $expense, array $stats): float
     {
         if ((float) $expense->getAmount() < $this->minAmount) {

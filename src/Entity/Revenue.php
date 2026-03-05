@@ -36,6 +36,7 @@ class Revenue
     #[ORM\JoinColumn(name: 'user_id', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
+    /** @var Collection<int, Expense> */
     #[ORM\OneToMany(mappedBy: 'revenue', targetEntity: Expense::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $expenses;
 

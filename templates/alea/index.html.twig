@@ -894,9 +894,16 @@ function confirmSubmit() {
         if (data.success) {
             resultHeader.className = 'modal-header bg-success text-white';
             resultTitle.innerText = 'Succes';
+            const priorityHtml = data.priority ? `
+                <div class="mt-3">
+                    <span class="badge ${data.priority.badgeClass || 'bg-secondary'}">Priorite ${data.priority.level || '-'}</span>
+                    <div class="small text-muted mt-1">Score: ${data.priority.score || 0}/100</div>
+                </div>
+            ` : '';
             document.getElementById('resultMessage').innerHTML = `
                 <i class="fas fa-check-circle text-success fa-3x d-block text-center mb-3"></i>
                 ${data.message}
+                ${priorityHtml}
             `;
         } else {
             resultHeader.className = 'modal-header bg-danger text-white';

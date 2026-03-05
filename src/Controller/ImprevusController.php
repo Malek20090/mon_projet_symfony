@@ -3,11 +3,13 @@
 namespace App\Controller;
 
 use App\Entity\CasRelles;
+use App\Entity\FinancialGoal;
 use App\Entity\Imprevus;
 use App\Entity\User;
 use App\Entity\UserNotification;
 use App\Service\CaseTextAiClassifierService;
 use App\Service\CasDecisionAiService;
+use App\Service\CasPriorityScoringService;
 use App\Service\RiskAnalyzerService;
 use App\Service\SecurityFundService;
 use App\Repository\FinancialGoalRepository;
@@ -131,7 +133,9 @@ class ImprevusController extends AbstractController
         Request $req,
         EntityManagerInterface $em,
         FinancialGoalRepository $financialGoalRepository,
-        CaseTextAiClassifierService $caseTextAiClassifier
+        CaseTextAiClassifierService $caseTextAiClassifier,
+        CasRellesRepository $casRellesRepository,
+        CasPriorityScoringService $casPriorityScoringService
     ): Response
     {
         try {
@@ -179,27 +183,23 @@ class ImprevusController extends AbstractController
                     ]);
                 }
 
-                $financialGoal = $financialGoalRepository->find($financialGoalId);
-                if (!$financialGoal) {
-                    return $this->json([
-                        'success' => false,
-                        'message' => 'Financial goal introuvable.',
-                    ]);
-                }
-
-                if (
-                    !$user instanceof User ||
-                    !$financialGoal->getSavingAccount() ||
-                    $financialGoal->getSavingAccount()->getUser()?->getId() !== $user->getId()
-                ) {
+                if (!$user instanceof User) {
                     return $this->json([
                         'success' => false,
                         'message' => 'Ce financial goal ne vous appartient pas.',
                     ], 403);
                 }
 
-                $cas->setFinancialGoal($financialGoal);
-                $goalCurrent = (float) $financialGoal->getMontantActuel();
+                $goalSnapshot = $financialGoalRepository->findOwnedGoalSnapshotById((int) $financialGoalId, $user);
+                if ($goalSnapshot === null) {
+                    return $this->json([
+                        'success' => false,
+                        'message' => 'Ce financial goal ne vous appartient pas.',
+                    ]);
+                }
+
+                $cas->setFinancialGoal($em->getReference(FinancialGoal::class, (int) $goalSnapshot['id']));
+                $goalCurrent = (float) $goalSnapshot['montantActuel'];
 
                 if ($type === CasRelles::TYPE_NEGATIF && $goalCurrent < $montant) {
                     return $this->json([
@@ -217,9 +217,17 @@ class ImprevusController extends AbstractController
             $em->persist($cas);
             $em->flush();
 
+            $historicalFrequency = 0;
+            if ($user instanceof User) {
+                $historicalCases = $casRellesRepository->findBy(['user' => $user], ['dateEffet' => 'DESC']);
+                $historicalFrequency = $this->countRecentCategoryFrequency($historicalCases, (string) $cas->getCategorie());
+            }
+            $priority = $casPriorityScoringService->score($cas, $historicalFrequency);
+
             return $this->json([
                 'success' => true,
-                'message' => 'Demande creee avec succes. En attente de validation.'
+                'message' => 'Demande creee avec succes. En attente de validation.',
+                'priority' => $priority,
             ]);
         } catch (\Exception $e) {
             return $this->json([
@@ -488,7 +496,13 @@ class ImprevusController extends AbstractController
     }
 
     #[Route('/imprevus-controller/admin/casrelles', name: 'admin_casrelles_list')]
-    public function casrellesListCopy(CasRellesRepository $repo, SavingAccountRepository $epargneRepo, SecurityFundService $securityFundService, Request $request): Response
+    public function casrellesListCopy(
+        CasRellesRepository $repo,
+        SavingAccountRepository $epargneRepo,
+        SecurityFundService $securityFundService,
+        Request $request,
+        CasPriorityScoringService $casPriorityScoringService
+    ): Response
     {
         $search = $request->query->get('search', '');
         $sort = $request->query->get('sort', 'id');
@@ -496,9 +510,11 @@ class ImprevusController extends AbstractController
         $filter = $request->query->get('filter', 'EN_ATTENTE');
 
         $casrelles = $repo->findBySearchAndSort($search, $sort, $order, $filter);
+        $priorityByCase = $this->buildPriorityByCase($casrelles, $casPriorityScoringService);
 
         return $this->render('admin/casrelles/list.html.twig', [
             'casrelles' => $casrelles,
+            'priorityByCase' => $priorityByCase,
             'securityFund' => $securityFundService->getBalance(),
             'epargnes' => $epargneRepo->findAll(),
             'search' => $search,
@@ -693,7 +709,13 @@ class ImprevusController extends AbstractController
     }
 
     #[Route('/imprevus-controller/admin/casrelles/all', name: 'admin_casrelles_all')]
-    public function casrellesAllCopy(CasRellesRepository $repo, SavingAccountRepository $epargneRepo, SecurityFundService $securityFundService, Request $request): Response
+    public function casrellesAllCopy(
+        CasRellesRepository $repo,
+        SavingAccountRepository $epargneRepo,
+        SecurityFundService $securityFundService,
+        Request $request,
+        CasPriorityScoringService $casPriorityScoringService
+    ): Response
     {
         $search = $request->query->get('search', '');
         $sort = $request->query->get('sort', 'id');
@@ -701,9 +723,11 @@ class ImprevusController extends AbstractController
         $filter = 'all';
 
         $casrelles = $repo->findBySearchAndSort($search, $sort, $order, $filter);
+        $priorityByCase = $this->buildPriorityByCase($casrelles, $casPriorityScoringService);
 
         return $this->render('admin/casrelles/list.html.twig', [
             'casrelles' => $casrelles,
+            'priorityByCase' => $priorityByCase,
             'securityFund' => $securityFundService->getBalance(),
             'epargnes' => $epargneRepo->findAll(),
             'search' => $search,
@@ -782,22 +806,18 @@ class ImprevusController extends AbstractController
                     if (!$financialGoalId) {
                         $errors['financial_goal_id'] = 'Selectionner un financial goal.';
                     } else {
-                        $financialGoal = $financialGoalRepository->find($financialGoalId);
-                        if (!$financialGoal) {
-                            $errors['financial_goal_id'] = 'Financial goal introuvable.';
+                        if (!$user instanceof User) {
+                            $errors['financial_goal_id'] = 'Financial goal non autorise.';
                         } else {
-                            if (
-                                !$user instanceof User ||
-                                !$financialGoal->getSavingAccount() ||
-                                $financialGoal->getSavingAccount()->getUser()?->getId() !== $user->getId()
-                            ) {
+                            $goalSnapshot = $financialGoalRepository->findOwnedGoalSnapshotById((int) $financialGoalId, $user);
+                            if ($goalSnapshot === null) {
                                 $errors['financial_goal_id'] = 'Financial goal non autorise.';
                             } else {
-                                $cas->setFinancialGoal($financialGoal);
-                            }
-                            $goalCurrent = (float) $financialGoal->getMontantActuel();
-                            if ($type === CasRelles::TYPE_NEGATIF && $goalCurrent < $cas->getMontant()) {
-                                $errors['montant'] = 'Solde financial goal insuffisant: ' . number_format($goalCurrent, 2, ',', ' ') . ' DT';
+                                $cas->setFinancialGoal($em->getReference(FinancialGoal::class, (int) $goalSnapshot['id']));
+                                $goalCurrent = (float) $goalSnapshot['montantActuel'];
+                                if ($type === CasRelles::TYPE_NEGATIF && $goalCurrent < $cas->getMontant()) {
+                                    $errors['montant'] = 'Solde financial goal insuffisant: ' . number_format($goalCurrent, 2, ',', ' ') . ' DT';
+                                }
                             }
                         }
                     }
@@ -888,23 +908,19 @@ class ImprevusController extends AbstractController
                     if (!$financialGoalId) {
                         $errors['financial_goal_id'] = 'Selectionner un financial goal.';
                     } else {
-                        $financialGoal = $financialGoalRepository->find($financialGoalId);
-                        if (!$financialGoal) {
-                            $errors['financial_goal_id'] = 'Financial goal introuvable.';
+                        $currentUser = $this->getUser();
+                        if (!$currentUser instanceof User) {
+                            $errors['financial_goal_id'] = 'Financial goal non autorise.';
                         } else {
-                            $currentUser = $this->getUser();
-                            if (
-                                !$currentUser instanceof User ||
-                                !$financialGoal->getSavingAccount() ||
-                                $financialGoal->getSavingAccount()->getUser()?->getId() !== $currentUser->getId()
-                            ) {
+                            $goalSnapshot = $financialGoalRepository->findOwnedGoalSnapshotById((int) $financialGoalId, $currentUser);
+                            if ($goalSnapshot === null) {
                                 $errors['financial_goal_id'] = 'Financial goal non autorise.';
                             } else {
-                                $cas->setFinancialGoal($financialGoal);
-                            }
-                            $goalCurrent = (float) $financialGoal->getMontantActuel();
-                            if ($type === CasRelles::TYPE_NEGATIF && $goalCurrent < $cas->getMontant()) {
-                                $errors['montant'] = 'Solde financial goal insuffisant: ' . number_format($goalCurrent, 2, ',', ' ') . ' DT';
+                                $cas->setFinancialGoal($em->getReference(FinancialGoal::class, (int) $goalSnapshot['id']));
+                                $goalCurrent = (float) $goalSnapshot['montantActuel'];
+                                if ($type === CasRelles::TYPE_NEGATIF && $goalCurrent < $cas->getMontant()) {
+                                    $errors['montant'] = 'Solde financial goal insuffisant: ' . number_format($goalCurrent, 2, ',', ' ') . ' DT';
+                                }
                             }
                         }
                     }
@@ -1036,6 +1052,101 @@ class ImprevusController extends AbstractController
 
         $em->persist($notification);
         $em->flush();
+    }
+
+    /**
+     * @param CasRelles[] $cases
+     * @return array<int,array{score:int,level:string,badgeClass:string,frequency:int}>
+     */
+    private function buildPriorityByCase(array $cases, CasPriorityScoringService $casPriorityScoringService): array
+    {
+        $now = new \DateTimeImmutable();
+        $countsByUserCategory = [];
+
+        foreach ($cases as $case) {
+            $userId = $case->getUser()?->getId();
+            if ($userId === null) {
+                continue;
+            }
+
+            $category = strtoupper(trim((string) ($case->getCategorie() ?? 'AUTRE')));
+            if ($category === '') {
+                $category = 'AUTRE';
+            }
+
+            $date = $case->getDateEffet();
+            if (!$date) {
+                continue;
+            }
+            $caseDate = \DateTimeImmutable::createFromMutable(
+                $date instanceof \DateTime ? $date : new \DateTime($date->format('Y-m-d H:i:s'))
+            );
+            $days = (int) $caseDate->diff($now)->format('%a');
+            if ($days > 90) {
+                continue;
+            }
+
+            $key = $userId . '|' . $category;
+            $countsByUserCategory[$key] = ($countsByUserCategory[$key] ?? 0) + 1;
+        }
+
+        $priorityByCase = [];
+        foreach ($cases as $case) {
+            $id = $case->getId();
+            $userId = $case->getUser()?->getId();
+            if ($id === null || $userId === null) {
+                continue;
+            }
+
+            $category = strtoupper(trim((string) ($case->getCategorie() ?? 'AUTRE')));
+            if ($category === '') {
+                $category = 'AUTRE';
+            }
+            $key = $userId . '|' . $category;
+            $frequency = max(0, ($countsByUserCategory[$key] ?? 0) - 1);
+
+            $priorityByCase[$id] = $casPriorityScoringService->score($case, $frequency);
+        }
+
+        return $priorityByCase;
+    }
+
+    /**
+     * @param CasRelles[] $cases
+     */
+    private function countRecentCategoryFrequency(array $cases, string $category): int
+    {
+        $normalizedCategory = strtoupper(trim($category));
+        if ($normalizedCategory === '') {
+            $normalizedCategory = 'AUTRE';
+        }
+
+        $now = new \DateTimeImmutable();
+        $count = 0;
+        foreach ($cases as $case) {
+            $cat = strtoupper(trim((string) ($case->getCategorie() ?? 'AUTRE')));
+            if ($cat === '') {
+                $cat = 'AUTRE';
+            }
+            if ($cat !== $normalizedCategory) {
+                continue;
+            }
+
+            $date = $case->getDateEffet();
+            if (!$date) {
+                continue;
+            }
+
+            $caseDate = \DateTimeImmutable::createFromMutable(
+                $date instanceof \DateTime ? $date : new \DateTime($date->format('Y-m-d H:i:s'))
+            );
+            $days = (int) $caseDate->diff($now)->format('%a');
+            if ($days <= 90) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
     private function sendDecisionEmail(CasRelles $cas, bool $accepted, MailerInterface $mailer): void

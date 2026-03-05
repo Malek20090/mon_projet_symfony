@@ -310,17 +310,19 @@ class StudentController extends AbstractController
             return $this->redirectToRoute('student_profile');
         }
 
-        $courses = $coursRepository->findBy([], ['id' => 'DESC']);
-        $quizzes = $quizRepository->findBy([], ['id' => 'DESC']);
-        $aiInsights = $studentProfileAiService->buildInsights($courses, $quizzes);
+        $coursesCount = $coursRepository->count([]);
+        $quizzesCount = $quizRepository->count([]);
+        $latestCourses = $coursRepository->findBy([], ['id' => 'DESC'], 6);
+        $latestQuizzes = $quizRepository->findBy([], ['id' => 'DESC'], 6);
+        $aiInsights = $studentProfileAiService->buildInsights($latestCourses, $latestQuizzes);
 
         return $this->render('student/profile.html.twig', [
             'user' => $user,
             'form' => $form->createView(),
-            'coursesCount' => count($courses),
-            'quizzesCount' => count($quizzes),
-            'latestCourses' => array_slice($courses, 0, 6),
-            'latestQuizzes' => array_slice($quizzes, 0, 6),
+            'coursesCount' => $coursesCount,
+            'quizzesCount' => $quizzesCount,
+            'latestCourses' => $latestCourses,
+            'latestQuizzes' => $latestQuizzes,
             'aiInsights' => $aiInsights,
         ]);
     }

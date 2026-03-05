@@ -57,7 +57,7 @@ class ExpenseStatisticsService
             $topCategory = (string) (array_key_first($data['categories']) ?? 'N/A');
             $total = (float) $data['total'];
             $count = (int) $data['count'];
-            $average = $count > 0 ? ($total / $count) : 0.0;
+            $average = $total / $count;
 
             $months[] = [
                 'month' => $month,
@@ -117,9 +117,10 @@ class ExpenseStatisticsService
      */
     private function resolvePreviousMonth(string $referenceMonth, array $availableMonths): string
     {
-        $directPrevious = \DateTimeImmutable::createFromFormat('Y-m-d', $referenceMonth . '-01')
-            ?->modify('-1 month')
-            ->format('Y-m') ?? (new \DateTimeImmutable('first day of last month'))->format('Y-m');
+        $referenceDate = \DateTimeImmutable::createFromFormat('Y-m-d', $referenceMonth . '-01');
+        $directPrevious = $referenceDate instanceof \DateTimeImmutable
+            ? $referenceDate->modify('-1 month')->format('Y-m')
+            : (new \DateTimeImmutable('first day of last month'))->format('Y-m');
 
         if (in_array($directPrevious, $availableMonths, true)) {
             return $directPrevious;

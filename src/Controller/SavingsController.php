@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Dto\SavingsTransactionCsvRow;
 use App\Entity\FinancialGoal;
 use App\Entity\SavingAccount;
-use App\Repository\FinancialGoalRepository;
 use App\Service\SavingsCalendarService;
 use App\Service\SavingsPdfService;
 use App\Service\SavingsAssistantService;
@@ -14,6 +13,8 @@ use App\Service\SavingsStatsService;
 use App\Service\GoalWhatIfService;
 use App\Service\GoalWhatIfAdvisor;
 use App\Service\WhatIfAiNarratorService;
+use App\Repository\FinancialGoalRepository;
+use App\Repository\TransactionRepository;
 use Doctrine\DBAL\Connection;
 use Knp\Component\Pager\PaginatorInterface;
 use RichId\CsvGeneratorBundle\Configuration\CsvGeneratorConfiguration;
@@ -142,7 +143,7 @@ class SavingsController extends AbstractController
 
         $userTable = $this->detectUserTable($conn);
 
-        if ($symUser && method_exists($symUser, 'getUserIdentifier')) {
+        if ($symUser) {
             $email = $symUser->getUserIdentifier();
             if ($email) {
                 // try id
@@ -550,6 +551,7 @@ class SavingsController extends AbstractController
         $conn->update('transaction', $data, ['id' => $txId]);
     }
 
+    /** @phpstan-ignore-next-line */
     private function roundToStep(float $value, int $step = 50): float
     {
         if ($step <= 0) {
@@ -570,22 +572,22 @@ class SavingsController extends AbstractController
             return null;
         }
 
-        $amount = (float) str_replace(',', '.', (string) ($m[1] ?? '0'));
+        $amount = (float) str_replace(',', '.', (string) $m[1]);
         return $amount > 0 ? $amount : null;
     }
 
     private function extractAssistantGoalNameHint(string $message): ?string
     {
         if (preg_match('/goal\s*(?:named|name)?\s*[=:]?\s*[\'"]?([\p{L}\p{N}_\-\s]{1,80})[\'"]?/iu', $message, $m) === 1) {
-            return trim((string) ($m[1] ?? ''));
+            return trim((string) $m[1]);
         }
 
         if (preg_match('/objectif\s*(?:nomm[ée]|appel[ée])?\s*[=:]?\s*[\'"]?([\p{L}\p{N}_\-\s]{1,80})[\'"]?/iu', $message, $m) === 1) {
-            return trim((string) ($m[1] ?? ''));
+            return trim((string) $m[1]);
         }
 
         if (preg_match('/(?:to|for)\s+[\'"]?([\p{L}\p{N}_\-\s]{1,80})[\'"]?$/iu', trim($message), $m) === 1) {
-            return trim((string) ($m[1] ?? ''));
+            return trim((string) $m[1]);
         }
 
         return null;
@@ -622,6 +624,7 @@ class SavingsController extends AbstractController
         return $best;
     }
 
+    /** @phpstan-ignore-next-line */
     private function tryHandleAssistantContribution(
         Connection $conn,
         int $userId,
@@ -869,6 +872,7 @@ class SavingsController extends AbstractController
         ];
     }
 
+    /** @phpstan-ignore-next-line */
     private function pickVariant(array $options): string
     {
         if (count($options) === 0) {
@@ -878,6 +882,7 @@ class SavingsController extends AbstractController
         return (string) ($options[$idx] ?? '');
     }
 
+    /** @phpstan-ignore-next-line */
     private function buildConflictAnalysis(
         array $goalRows,
         float $balance,
@@ -947,7 +952,7 @@ class SavingsController extends AbstractController
 
         $summary = 'You cannot safely reach all goals with current cashflow.';
         foreach ($scenarios as $s) {
-            if (($s['riskGoals'] ?? 1) === 0) {
+            if ($s['riskGoals'] === 0) {
                 $summary = 'At least one strategic scenario can make goals safer.';
                 break;
             }
@@ -956,6 +961,7 @@ class SavingsController extends AbstractController
         return ['summary' => $summary, 'scenarios' => $scenarios];
     }
 
+    /** @phpstan-ignore-next-line */
     private function buildStayLazyProjection(float $remainingAfterNow, float $monthlyDeposit): array
     {
         $inflationLoss = round($remainingAfterNow * 0.11, 2);
@@ -969,6 +975,7 @@ class SavingsController extends AbstractController
         ];
     }
 
+    /** @phpstan-ignore-next-line */
     private function buildTimelineSeries(float $remainingAfterNow, float $monthlyDeposit, ?int $monthsToFinish): array
     {
         $limit = $monthsToFinish !== null ? min(12, max(1, $monthsToFinish)) : 12;
@@ -980,6 +987,7 @@ class SavingsController extends AbstractController
         return $series;
     }
 
+    /** @phpstan-ignore-next-line */
     private function buildAssistantDbContext(Connection $conn, int $userId): array
     {
         $accPack = $this->getOrCreateCurrentAccount($conn, $userId);
@@ -1085,6 +1093,7 @@ class SavingsController extends AbstractController
         ];
     }
 
+    /** @phpstan-ignore-next-line */
     private function buildWhatIfFallbackAdvice(
         array $scenario,
         array $result,
@@ -1243,10 +1252,11 @@ class SavingsController extends AbstractController
         Security $security,
         Request $request,
         PaginatorInterface $paginator,
-        FinancialGoalRepository $financialGoalRepository,
         SavingsGoalStatsService $savingsGoalStatsService,
         SavingsStatsService $savingsStatsService,
-        ChartBuilderInterface $chartBuilder
+        ChartBuilderInterface $chartBuilder,
+        FinancialGoalRepository $financialGoalRepository,
+        TransactionRepository $transactionRepository
     ): Response
     {
         $userId = $this->resolveUserId($conn, $security, $request);
@@ -1278,7 +1288,40 @@ class SavingsController extends AbstractController
             'id_desc','id_asc',
         ], 'deadline_asc');
 
-        $goalsRaw = $financialGoalRepository->findDashboardRowsByAccountId($accId, $q, $sort);
+        $orderBy = match ($sort) {
+            'deadline_desc' => "date_limite DESC",
+            'priority_desc' => "priorite DESC",
+            'priority_asc'  => "priorite ASC",
+            'progress_desc' => "(CASE WHEN montant_cible > 0 THEN (montant_actuel / montant_cible) ELSE 0 END) DESC",
+            'progress_asc'  => "(CASE WHEN montant_cible > 0 THEN (montant_actuel / montant_cible) ELSE 0 END) ASC",
+            'name_asc'      => "nom ASC",
+            'name_desc'     => "nom DESC",
+            'id_asc'        => "id ASC",
+            'id_desc'       => "id DESC",
+            default         => "date_limite ASC",
+        };
+
+        $params = ['acc' => $accId];
+        $where = "WHERE `$goalAccCol` = :acc";
+
+        if ($q !== '') {
+            $where .= " AND (
+                nom LIKE :q
+                OR CAST(priorite AS CHAR) LIKE :q
+                OR CAST(montant_cible AS CHAR) LIKE :q
+                OR CAST(montant_actuel AS CHAR) LIKE :q
+                OR CAST(date_limite AS CHAR) LIKE :q
+            )";
+            $params['q'] = '%' . $q . '%';
+        }
+
+        $goalsRaw = ($accId > 0) ? $conn->fetchAllAssociative(
+            "SELECT id, nom, montant_cible, montant_actuel, date_limite, priorite
+             FROM financial_goal
+             $where
+             ORDER BY $orderBy",
+            $params
+        ) : [];
 
         // ----------------------------
         // Stats (goals)
@@ -1333,53 +1376,11 @@ class SavingsController extends AbstractController
             'recommendations' => [],
         ];
 
-        if ($accId > 0 && count($goalsRaw) > 0) {
-            $today = new \DateTimeImmutable('today');
-            $goalRows = [];
-            foreach ($goalsRaw as $row) {
-                $target = max(0.0, $this->safeFloat($row['montant_cible'] ?? 0));
-                $current = max(0.0, $this->safeFloat($row['montant_actuel'] ?? 0));
-                $remaining = max(0.0, $target - $current);
-                $progressRatio = $target > 0 ? min(1.0, $current / $target) : 0.0;
-
-                $dateLimiteRaw = (string) ($row['date_limite'] ?? '');
-                $daysLeft = 999999;
-                if ($dateLimiteRaw !== '') {
-                    try {
-                        $goalDate = new \DateTimeImmutable(substr($dateLimiteRaw, 0, 10));
-                        $daysLeft = (int) $today->diff($goalDate)->format('%r%a');
-                    } catch (\Throwable $e) {
-                        $daysLeft = 999999;
-                    }
-                }
-
-                $dailyNeeded = 0.0;
-                if ($daysLeft > 0 && $remaining > 0.0) {
-                    $dailyNeeded = $remaining / $daysLeft;
-                }
-                $monthlyNeeded = $dailyNeeded * 30.0;
-
-                $urgencyScore = ((int) ($row['priorite'] ?? 3) * 8)
-                    + ((1.0 - $progressRatio) * 60)
-                    + ($daysLeft <= 0 ? 40 : ($daysLeft <= 7 ? 30 : ($daysLeft <= 30 ? 15 : 5)));
-
-                $goalRows[] = [
-                    'id' => (int) ($row['id'] ?? 0),
-                    'nom' => (string) ($row['nom'] ?? 'Goal'),
-                    'montantCible' => $target,
-                    'montantActuel' => $current,
-                    'priorite' => (int) ($row['priorite'] ?? 3),
-                    'dateLimite' => $dateLimiteRaw !== '' ? $dateLimiteRaw : null,
-                    'progressRatio' => $progressRatio,
-                    'remainingAmount' => $remaining,
-                    'daysLeft' => $daysLeft,
-                    'dailyNeeded' => $dailyNeeded,
-                    'monthlyNeeded' => $monthlyNeeded,
-                    'urgencyScore' => $urgencyScore,
-                ];
+        if ($accId > 0) {
+            $goalRows = $financialGoalRepository->findGoalHealthByAccountId((int) $accId);
+            if (count($goalRows) > 0) {
+                $goalHealth = $savingsGoalStatsService->buildGoalHealthDashboard($goalRows, $balance);
             }
-
-            $goalHealth = $savingsGoalStatsService->buildGoalHealthDashboard($goalRows, $balance);
         }
 
         // ----------------------------
@@ -1388,53 +1389,74 @@ class SavingsController extends AbstractController
         $tx_q     = trim((string) $request->query->get('tx_q', ''));
         $tx_sort  = (string) $request->query->get('tx_sort', 'date_desc');
         $tx_range = (string) $request->query->get('tx_range', 'all');
+        $txQb = $transactionRepository->createQueryBuilder('t')
+            ->andWhere('t.user = :uid')
+            ->andWhere('t.moduleSource = :src')
+            ->setParameter('uid', $userId)
+            ->setParameter('src', 'SAVINGS');
 
-        $paramsTx = [
-            'uid' => $userId,
-            'src' => 'SAVINGS'
-        ];
+        if ($tx_range !== 'all') {
+            $from = null;
+            $to = null;
 
-        $whereTx = "WHERE user_id = :uid
-            AND (
-                module_source = :src
-                OR UPPER(type) IN ('EPARGNE', 'SAVING', 'GOAL_CONTRIB', 'GOAL_REFUND')
-            )";
+            if ($tx_range === 'today') {
+                $from = (new \DateTimeImmutable('today'))->setTime(0, 0, 0);
+                $to = $from->modify('+1 day');
+            } elseif ($tx_range === 'week') {
+                $from = (new \DateTimeImmutable('monday this week'))->setTime(0, 0, 0);
+                $to = $from->modify('+1 week');
+            } elseif ($tx_range === 'month') {
+                $from = (new \DateTimeImmutable('first day of this month'))->setTime(0, 0, 0);
+                $to = $from->modify('+1 month');
+            }
 
-        if ($tx_range === 'today') {
-            $whereTx .= " AND DATE(`date`) = CURDATE() ";
-        } elseif ($tx_range === 'week') {
-            $whereTx .= " AND YEARWEEK(`date`, 1) = YEARWEEK(CURDATE(), 1) ";
-        } elseif ($tx_range === 'month') {
-            $whereTx .= " AND YEAR(`date`) = YEAR(CURDATE()) AND MONTH(`date`) = MONTH(CURDATE()) ";
+            if ($from !== null && $to !== null) {
+                $txQb->andWhere('t.date >= :from')->setParameter('from', $from)
+                     ->andWhere('t.date < :to')->setParameter('to', $to);
+            }
         }
 
         if ($tx_q !== '') {
-            $whereTx .= " AND (
-                CAST(id AS CHAR) LIKE :q OR
-                type LIKE :q OR
-                CAST(montant AS CHAR) LIKE :q OR
-                CAST(`date` AS CHAR) LIKE :q OR
-                description LIKE :q
-            )";
-            $paramsTx['q'] = '%' . $tx_q . '%';
+            $orX = $txQb->expr()->orX();
+            $qLower = '%' . mb_strtolower($tx_q) . '%';
+
+            if (is_numeric($tx_q)) {
+                $orX->add('t.id = :tx_id');
+                $orX->add('t.montant = :tx_amt');
+                $txQb->setParameter('tx_id', (int) $tx_q);
+                $txQb->setParameter('tx_amt', (float) $tx_q);
+            }
+
+            $qDate = \DateTime::createFromFormat('Y-m-d', $tx_q);
+            if ($qDate instanceof \DateTime) {
+                $orX->add('t.date = :tx_date');
+                $txQb->setParameter('tx_date', $qDate);
+            }
+
+            $orX->add('LOWER(t.type) LIKE :tx_q');
+            $orX->add('LOWER(t.description) LIKE :tx_q');
+            $txQb->setParameter('tx_q', $qLower);
+
+            $txQb->andWhere($orX);
         }
 
         $orderTx = match ($tx_sort) {
-            'date_asc'     => "`date` ASC",
-            'amount_desc'  => "montant DESC",
-            'amount_asc'   => "montant ASC",
-            'desc_asc'     => "description ASC",
-            'desc_desc'    => "description DESC",
-            default        => "`date` DESC",
+            'date_asc'     => ['t.date', 'ASC'],
+            'amount_desc'  => ['t.montant', 'DESC'],
+            'amount_asc'   => ['t.montant', 'ASC'],
+            'desc_asc'     => ['t.description', 'ASC'],
+            'desc_desc'    => ['t.description', 'DESC'],
+            default        => ['t.date', 'DESC'],
         };
+        $txQb->orderBy($orderTx[0], $orderTx[1]);
 
-        $transactionsRaw = $conn->fetchAllAssociative(
-            "SELECT id, type, montant, `date`, description
-             FROM `transaction`
-             $whereTx
-             ORDER BY $orderTx",
-            $paramsTx
-        );
+        $statsQb = clone $txQb;
+        $transactionsRaw = $statsQb
+            ->select('t.montant', 't.type', 't.description', 't.date')
+            ->orderBy('t.date', 'DESC')
+            ->setMaxResults(99)
+            ->getQuery()
+            ->getArrayResult();
 
         $stat_by = (string) $request->query->get('stat_by', 'type');
         $statsPack = $savingsStatsService->build($transactionsRaw, $stat_by);
@@ -1447,7 +1469,7 @@ class SavingsController extends AbstractController
         $goalPage = max(1, (int) $request->query->get('goal_page', 1));
 
         $transactions = $paginator->paginate(
-            $transactionsRaw,
+            $txQb,
             $txPage,
             5,
             ['pageParameterName' => 'tx_page']
@@ -1826,11 +1848,11 @@ class SavingsController extends AbstractController
         ];
         foreach ($dayEvents as $events) {
             foreach ($events as $evt) {
-                $counts['deadlines'] += ($evt['kind'] ?? '') === 'goal_deadline' ? 1 : 0;
-                $counts['deposits'] += ($evt['kind'] ?? '') === 'deposit' ? 1 : 0;
-                $counts['contributions'] += ($evt['kind'] ?? '') === 'goal_contribution' ? 1 : 0;
-                $counts['holidays'] += ($evt['kind'] ?? '') === 'holiday' ? 1 : 0;
-                $counts['plans'] += ($evt['kind'] ?? '') === 'plan_suggestion' ? 1 : 0;
+                $counts['deadlines'] += $evt['kind'] === 'goal_deadline' ? 1 : 0;
+                $counts['deposits'] += $evt['kind'] === 'deposit' ? 1 : 0;
+                $counts['contributions'] += $evt['kind'] === 'goal_contribution' ? 1 : 0;
+                $counts['holidays'] += $evt['kind'] === 'holiday' ? 1 : 0;
+                $counts['plans'] += $evt['kind'] === 'plan_suggestion' ? 1 : 0;
             }
         }
 
@@ -1854,7 +1876,7 @@ class SavingsController extends AbstractController
                 'source' => (string) ($inflationSnapshot['source'] ?? 'unknown'),
                 'year' => $inflationSnapshot['year'] ?? null,
                 'error' => $inflationSnapshot['error'] ?? null,
-                'seriesYears' => array_slice(array_values(array_keys($inflationSeries)), -8),
+                'seriesYears' => array_slice(array_keys($inflationSeries), -8),
             ],
             'adaptivePlan' => [
                 'inflationMode' => $inflationMode,
@@ -2313,11 +2335,7 @@ class SavingsController extends AbstractController
         $rows = $conn->fetchAllAssociative(
             "SELECT id, type, montant, `date`, description
              FROM `transaction`
-             WHERE user_id = :uid
-               AND (
-                 module_source = :src
-                 OR UPPER(type) IN ('EPARGNE', 'SAVING', 'GOAL_CONTRIB', 'GOAL_REFUND')
-               )
+             WHERE user_id = :uid AND module_source = :src
              $dateWhere
              $searchWhere
              ORDER BY $orderBy",
@@ -2569,7 +2587,7 @@ class SavingsController extends AbstractController
         $goalAccCol = $this->goalAccountFkColumn($conn);
         $session = $request->getSession();
         $state = [];
-        if ($session && $session->has('savings_assistant_state')) {
+        if ($session->has('savings_assistant_state')) {
             $raw = $session->get('savings_assistant_state');
             if (is_array($raw)) {
                 $state = $raw;
@@ -2586,9 +2604,7 @@ class SavingsController extends AbstractController
             $state
         );
 
-        if ($session) {
-            $session->set('savings_assistant_state', is_array($result['state'] ?? null) ? $result['state'] : []);
-        }
+        $session->set('savings_assistant_state', is_array($result['state'] ?? null) ? $result['state'] : []);
 
         $ctx = $assistantService->buildSavingsGoalsSnapshot($conn, $userId, $accPack, $goalAccCol);
 
@@ -2649,11 +2665,7 @@ class SavingsController extends AbstractController
         $rows = $conn->fetchAllAssociative(
             "SELECT id, type, montant, `date`, description
              FROM `transaction`
-             WHERE user_id = :uid
-               AND (
-                 module_source = :src
-                 OR UPPER(type) IN ('EPARGNE', 'SAVING', 'GOAL_CONTRIB', 'GOAL_REFUND')
-               )
+             WHERE user_id = :uid AND module_source = :src
              $dateWhere
              $searchWhere
              ORDER BY $orderBy",

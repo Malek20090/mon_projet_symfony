@@ -53,6 +53,27 @@ final class UserBehaviorScoringServiceTest extends TestCase
         self::assertCount(3, $snapshot['entity']->getNextActions());
     }
 
+    public function testBuildSnapshotIgnoresTransactionsOlderThan90Days(): void
+    {
+        $user = (new User())
+            ->setEmail('old-data@example.com')
+            ->setPassword('secret123');
+
+        $transactions = [
+            $this->createTransaction('EXPENSE', 300, '-120 days'),
+            $this->createTransaction('SAVING', 500, '-180 days'),
+        ];
+
+        $service = new UserBehaviorScoringService();
+        $snapshot = $service->buildSnapshot($user, $transactions);
+
+        self::assertSame(50, $snapshot['entity']->getScore());
+        self::assertSame('Insufficient Data', $snapshot['entity']->getProfileType());
+        self::assertSame(0.0, $snapshot['week_tracking']['current_week_expense']);
+        self::assertSame(0.0, $snapshot['week_tracking']['previous_week_expense']);
+        self::assertSame(0, $snapshot['week_tracking']['expense_delta_pct']);
+    }
+
     private function createTransaction(string $type, float $amount, string $relativeDate): Transaction
     {
         return (new Transaction())
@@ -61,4 +82,3 @@ final class UserBehaviorScoringServiceTest extends TestCase
             ->setDate(new \DateTime($relativeDate));
     }
 }
-

@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\FinancialGoal;
 use App\Entity\SavingAccount;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -140,6 +141,91 @@ class FinancialGoalRepository extends ServiceEntityRepository
             ->addOrderBy('dailyNeeded', 'DESC')
             ->getQuery()
             ->getArrayResult();
+    }
+
+    /**
+     * Advanced goal scoring used by Savings & Goals dashboard (account id variant).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findGoalHealthByAccountId(int $accountId): array
+    {
+        if ($accountId <= 0) {
+            return [];
+        }
+
+        $today = new \DateTimeImmutable('today');
+
+        return $this->createQueryBuilder('g')
+            ->select([
+                'g.id',
+                'g.nom',
+                'g.montantCible',
+                'g.montantActuel',
+                'g.priorite',
+                'g.dateLimite',
+                '(CASE WHEN g.montantCible > 0 THEN (g.montantActuel / g.montantCible) ELSE 0 END) AS progressRatio',
+                '(CASE WHEN g.montantCible > g.montantActuel THEN (g.montantCible - g.montantActuel) ELSE 0 END) AS remainingAmount',
+                '(CASE WHEN g.dateLimite IS NULL THEN 999999 ELSE DATE_DIFF(g.dateLimite, :today) END) AS daysLeft',
+                '(CASE
+                    WHEN g.dateLimite IS NULL OR DATE_DIFF(g.dateLimite, :today) <= 0 THEN 0
+                    ELSE (g.montantCible - g.montantActuel) / DATE_DIFF(g.dateLimite, :today)
+                END) AS dailyNeeded',
+                '(CASE
+                    WHEN g.dateLimite IS NULL OR DATE_DIFF(g.dateLimite, :today) <= 0 THEN 0
+                    ELSE ((g.montantCible - g.montantActuel) / DATE_DIFF(g.dateLimite, :today)) * 30
+                END) AS monthlyNeeded',
+                '(
+                    (COALESCE(g.priorite, 3) * 8)
+                    + ((1 - (CASE WHEN g.montantCible > 0 THEN (g.montantActuel / g.montantCible) ELSE 0 END)) * 60)
+                    + (CASE
+                        WHEN g.dateLimite IS NULL THEN 0
+                        WHEN DATE_DIFF(g.dateLimite, :today) <= 0 THEN 40
+                        WHEN DATE_DIFF(g.dateLimite, :today) <= 7 THEN 30
+                        WHEN DATE_DIFF(g.dateLimite, :today) <= 30 THEN 15
+                        ELSE 5
+                    END)
+                ) AS urgencyScore',
+            ])
+            ->join('g.savingAccount', 'sa')
+            ->andWhere('sa.id = :accId')
+            ->setParameter('accId', $accountId)
+            ->setParameter('today', $today)
+            ->orderBy('urgencyScore', 'DESC')
+            ->addOrderBy('dailyNeeded', 'DESC')
+            ->getQuery()
+            ->getArrayResult();
+    }
+
+    /**
+     * @return array{id:int,montantActuel:float}|null
+     */
+    public function findOwnedGoalSnapshotById(int $goalId, User $user): ?array
+    {
+        if ($goalId <= 0) {
+            return null;
+        }
+
+        $row = $this->createQueryBuilder('g')
+            ->select('g.id AS id', 'g.montantActuel AS montantActuel')
+            ->join('g.savingAccount', 'sa')
+            ->join('sa.user', 'u')
+            ->andWhere('g.id = :goalId')
+            ->andWhere('u.id = :userId')
+            ->setParameter('goalId', $goalId)
+            ->setParameter('userId', (int) $user->getId())
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getArrayResult();
+
+        if ($row === []) {
+            return null;
+        }
+
+        return [
+            'id' => (int) ($row[0]['id'] ?? 0),
+            'montantActuel' => (float) ($row[0]['montantActuel'] ?? 0.0),
+        ];
     }
 
     /**

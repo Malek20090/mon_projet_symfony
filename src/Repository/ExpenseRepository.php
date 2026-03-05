@@ -24,6 +24,7 @@ class ExpenseRepository extends ServiceEntityRepository
      * Return expenses for a user, including legacy rows where expense.user is null
      * but linked revenue belongs to the user.
      *
+     * @param array<string, 'ASC'|'DESC'> $orderBy
      * @return Expense[]
      */
     public function findForUser(User $user, array $orderBy = ['expenseDate' => 'DESC', 'id' => 'DESC']): array
@@ -190,7 +191,7 @@ class ExpenseRepository extends ServiceEntityRepository
         }
 
         $totalExpenses = array_sum(array_map(
-            static fn (array $row): float => (float) ($row['total'] ?? 0.0),
+            static fn (array $row): float => (float) $row['total'],
             $totalsByCategory
         ));
 

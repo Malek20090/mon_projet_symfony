@@ -112,7 +112,7 @@ final class FinancialGoalController extends AbstractController
 
         $userTable = $this->detectUserTable($conn);
 
-        if ($symUser && method_exists($symUser, 'getUserIdentifier')) {
+        if ($symUser) {
             $email = $symUser->getUserIdentifier();
             if ($email) {
                 try {

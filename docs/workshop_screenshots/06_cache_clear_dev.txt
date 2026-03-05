@@ -1,0 +1,10 @@
+﻿PS c:\Users\Yoga\pidev1\mon_projet_symfony> php bin/console cache:clear --env=dev
+
+
+ // Clearing the cache for the dev environment with debug true                                                         
+
+ [OK] Cache for the "dev" environment (debug=true) was successfully cleared.                                           
+
+
+[exit_code]=0
+

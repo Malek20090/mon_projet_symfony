@@ -1,0 +1,22 @@
+﻿PS c:\Users\Yoga\pidev1\mon_projet_symfony> php bin/console doctrine:schema:validate --env=dev
+
+cmd.exe : 
+At line:69 char:16
++         $raw = & cmd /c $entry.cmd 2>&1
++                ~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Mapping
+-------
+
+ [OK] The mapping files are correct.                                                                                   
+
+Database
+--------
+
+ [ERROR] The database schema is not in sync with the current mapping file.                                             
+
+
+[exit_code]=2
+

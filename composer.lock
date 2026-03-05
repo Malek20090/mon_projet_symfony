@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6e802f238d28876f831b6c273b3e7f5f",
+    "content-hash": "f102dfc0c4db2c0ab030bc0d92753191",
     "packages": [
         {
             "name": "composer/semver",
@@ -9460,10 +9460,12 @@
                 "ext-filter": "*",
                 "php": "^7.2 || ^8.0"
             },
-            "suggest": {
-                "ext-intl": "",
-                "ext-simplexml": "",
-                "ext-spl": ""
+            "conflict": {
+                "phpstan/phpstan": "<0.12.20",
+                "vimeo/psalm": "<4.6.1 || 4.6.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^8.5.13"
             },
             "type": "library",
             "extra": {
@@ -9502,23 +9504,23 @@
     "packages-dev": [
         {
             "name": "ahmed-bhs/doctrine-doctor",
-            "version": "v0.1.0-beta.1",
+            "version": "v1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ahmed-bhs/doctrine-doctor.git",
-                "reference": "ae1083ecb4e73c8a6de847a75226a5031420da9c"
+                "reference": "c679438aa4bbc4ee82d04931a511a05cf527ab2d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ahmed-bhs/doctrine-doctor/zipball/ae1083ecb4e73c8a6de847a75226a5031420da9c",
-                "reference": "ae1083ecb4e73c8a6de847a75226a5031420da9c",
+                "url": "https://api.github.com/repos/ahmed-bhs/doctrine-doctor/zipball/c679438aa4bbc4ee82d04931a511a05cf527ab2d",
+                "reference": "c679438aa4bbc4ee82d04931a511a05cf527ab2d",
                 "shasum": ""
             },
             "require": {
                 "doctrine/doctrine-bundle": "^2.12",
                 "doctrine/orm": "^2.10|^3.0|^4.0",
                 "nikic/php-parser": "^5.6",
-                "php": "^8.1",
+                "php": "^8.2",
                 "phpmyadmin/sql-parser": "^6.0",
                 "symfony/framework-bundle": "^6.0|^7.0",
                 "webmozart/assert": "^1.11"
@@ -9536,6 +9538,7 @@
                 "phpunit/phpunit": "^10.0",
                 "symfony/stopwatch": "^6.0|^7.0",
                 "symfony/var-dumper": "^6.0|^7.0",
+                "symfony/var-exporter": "^6.4|^7.0",
                 "symplify/easy-coding-standard": "^12.6",
                 "twig/twig": "^3.0"
             },
@@ -9571,19 +9574,28 @@
                 "Best-Practices",
                 "analyzer",
                 "code-quality",
+                "database-performance",
                 "debugging",
+                "developer-tools",
                 "development-tools",
                 "doctrine",
+                "doctrine-analyzer",
                 "doctrine-orm",
                 "dql",
+                "missing-indexes",
                 "n-plus-one",
+                "n-plus-one-detection",
+                "orm-debugging",
                 "performance",
                 "performance-monitoring",
                 "profiler",
                 "query-analysis",
+                "query-analyzer",
                 "query-optimization",
                 "runtime-analysis",
                 "security",
+                "slow-queries",
+                "sql-profiler",
                 "symfony",
                 "symfony-bundle",
                 "web-profiler"
@@ -9592,7 +9604,7 @@
                 "issues": "https://github.com/ahmed-bhs/doctrine-doctor/issues",
                 "source": "https://github.com/ahmed-bhs/doctrine-doctor"
             },
-            "time": "2025-11-16T19:59:23+00:00"
+            "time": "2025-12-30T13:11:11+00:00"
         },
         {
             "name": "doctrine/data-fixtures",

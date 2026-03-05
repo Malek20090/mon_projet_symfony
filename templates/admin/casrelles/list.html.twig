@@ -65,6 +65,7 @@
                         <th>Montant</th>
                         <th>Solution</th>
                         <th>Date</th>
+                        <th>Priority</th>
                         <th>Statut</th>
                         <th style="width: 140px;">Actions</th>
                     </tr>
@@ -85,6 +86,15 @@
                             <td>{{ cas.solution }}</td>
                             <td>{{ cas.dateEffet|date('d/m/Y H:i') }}</td>
                             <td>
+                                {% set p = priorityByCase[cas.id] ?? null %}
+                                {% if p %}
+                                    <span class="badge {{ p.badgeClass }}">{{ p.level }}</span>
+                                    <div class="small text-muted mt-1">{{ p.score }}/100</div>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
                                 {% if cas.resultat == 'VALIDE' %}
                                     <span class="badge bg-success">Accepted</span>
                                 {% elseif cas.resultat == 'REFUSE' %}
@@ -103,7 +113,7 @@
                             </td>
                         </tr>
                     {% else %}
-                        <tr><td colspan="8" class="text-center text-muted py-4">Noe demande.</td></tr>
+                        <tr><td colspan="9" class="text-center text-muted py-4">Noe demande.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -113,5 +123,4 @@
     <a href="{{ path('admin_index') }}" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left me-2"></i>Back to dashboard</a>
 </div>
 {% endblock %}
-
 

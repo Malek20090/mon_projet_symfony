@@ -83,7 +83,7 @@ class ExpenseType extends AbstractType
                     '#%d - %s TND (%s)',
                     $r->getId(),
                     number_format($r->getAmount(), 2),
-                    $r->getReceivedAt()?->format('d/m/Y') ?? ''
+                    $r->getReceivedAt()->format('d/m/Y')
                 ),
                 'label' => 'Revenu associe',
                 'placeholder' => 'Selectionner un revenu',

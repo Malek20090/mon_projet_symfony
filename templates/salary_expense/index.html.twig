@@ -71,40 +71,168 @@
       color: #38bdf8;
     }
     .savings-page .tabs { position: relative; z-index: 3; }
-    .savings-page .month-filter-form .form-label { font-weight: 700; color: #5e6f7f; }
-    .savings-page .month-filter-form .month-apply-btn {
-      min-height: 40px;
-      font-weight: 800;
-      border-radius: 10px;
-      padding-left: 16px;
-      padding-right: 16px;
-      white-space: nowrap;
+    .savings-page .advanced-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px 18px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+    .savings-page .advanced-header h4 { margin: 0; }
+    .savings-page .month-filter-form { margin: 0; }
+    .savings-page .month-filter-form .form-label {
+      font-weight: 700;
+      color: #5e6f7f;
+      margin-bottom: 6px;
     }
     .savings-page .month-filter-form .month-select {
-      min-width: 150px;
+      min-width: 190px;
       font-weight: 700;
       color: #1f3552;
+      border-radius: 10px;
+      border-color: #c9d8ea;
+      min-height: 42px;
+    }
+    .savings-page .month-filter-form .month-apply-btn {
+      min-height: 42px;
+      font-weight: 800;
+      border-radius: 10px;
+      padding: 0 18px;
+      white-space: nowrap;
     }
     .savings-page .month-filter-controls {
       display: flex;
-      align-items: end;
+      flex-direction: column;
+      align-items: stretch;
       gap: 10px;
-      flex-wrap: wrap;
+      justify-content: flex-end;
+      flex-wrap: nowrap;
     }
     .savings-page .month-filter-controls .field {
-      min-width: 170px;
-      flex: 1 1 170px;
+      min-width: 220px;
+      flex: 0 0 auto;
     }
     .savings-page .month-filter-controls .action {
-      min-width: 170px;
-      flex: 0 0 170px;
+      min-width: 220px;
+      flex: 0 0 auto;
     }
     body.night .savings-page .month-filter-form .month-select {
       color: #e6f6ff;
     }
+    .savings-page .advanced-ai-card {
+      border: 1px solid rgba(13, 110, 253, .14);
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, .96), rgba(244, 250, 255, .98));
+      box-shadow: 0 8px 24px rgba(15, 42, 82, .06);
+    }
+    .savings-page .stats-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .savings-page .stats-kpi-item {
+      border: 1px solid rgba(13, 110, 253, .14);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .86);
+      padding: 12px 14px;
+    }
+    .savings-page .stats-kpi-label {
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      color: #637a93;
+      line-height: 1.35;
+    }
+    .savings-page .stats-kpi-value {
+      margin-top: 4px;
+      font-size: clamp(1.2rem, 1.9vw, 1.75rem);
+      line-height: 1.15;
+      font-weight: 800;
+      color: #0f2a52;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .savings-page .stats-kpi-value.pos { color: #118350; }
+    .savings-page .stats-kpi-value.neg { color: #b62f35; }
+    .savings-page .ai-panels-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+      gap: 14px;
+      align-items: start;
+    }
+    .savings-page .ai-panel {
+      border: 1px solid rgba(13, 110, 253, .14);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .84);
+      padding: 14px;
+    }
+    .savings-page .ai-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .savings-page .ai-metric-card {
+      border: 1px solid rgba(13, 110, 253, .16);
+      border-radius: 10px;
+      background: #f6fbff;
+      padding: 9px 10px;
+      min-height: 92px;
+    }
+    .savings-page .ai-metric-card .label {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      color: #5d748e;
+      font-weight: 700;
+    }
+    .savings-page .ai-metric-card .value {
+      margin-top: 3px;
+      font-size: clamp(1.05rem, 1.45vw, 1.6rem);
+      line-height: 1.15;
+      font-weight: 800;
+      color: #102b52;
+      overflow-wrap: anywhere;
+    }
+    .savings-page .priority-list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+    .savings-page .priority-list li {
+      margin-bottom: 4px;
+      line-height: 1.45;
+    }
+    @media (max-width: 1200px) {
+      .savings-page .ai-panels-grid {
+        grid-template-columns: 1fr;
+      }
+    }
     @media (max-width: 992px) {
+      .savings-page .advanced-header {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+      .savings-page .month-filter-controls {
+        justify-content: flex-start;
+      }
+      .savings-page .month-filter-controls .field,
       .savings-page .month-filter-controls .action {
-        flex: 1 1 170px;
+        min-width: 100%;
+        flex: 1 1 auto;
+      }
+      .savings-page .stats-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 576px) {
+      .savings-page .stats-kpi-grid,
+      .savings-page .ai-metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      .savings-page .stats-kpi-value {
+        white-space: normal;
       }
     }
     .savings-page .recurring-engine-card {
@@ -178,6 +306,22 @@
     body.night .savings-page .recurring-item .kind-pill {
       background: rgba(56,189,248,.18);
       color: #9cecff;
+    }
+    body.night .savings-page .advanced-ai-card,
+    body.night .savings-page .stats-kpi-item,
+    body.night .savings-page .ai-panel,
+    body.night .savings-page .ai-metric-card {
+      border-color: rgba(56, 189, 248, .3);
+      background: rgba(8, 26, 58, .76);
+      color: rgba(236, 252, 255, .92);
+    }
+    body.night .savings-page .stats-kpi-label,
+    body.night .savings-page .ai-metric-card .label {
+      color: rgba(182, 221, 255, .85);
+    }
+    body.night .savings-page .stats-kpi-value,
+    body.night .savings-page .ai-metric-card .value {
+      color: rgba(236, 252, 255, .95);
     }
   </style>
 {% endblock %}
@@ -389,9 +533,10 @@
 
     {# TAB: EXPENSES #}
     <div id="tab-expenses" class="tab-panel {{ tab == 'expenses' ? 'show' : '' }}">
-      <div class="stat-card p-4 mb-4">
-        <h4 class="mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i>Advanced Expense Statistics</h4>
-        <form method="get" class="row g-2 align-items-end mb-3 month-filter-form">
+      <div class="stat-card p-4 mb-4 advanced-ai-card">
+        <div class="advanced-header">
+          <h4><i class="fa-solid fa-chart-line text-primary me-2"></i>Advanced Expense Statistics</h4>
+          <form method="get" class="month-filter-form">
           <input type="hidden" name="tab" value="expenses">
           <input type="hidden" name="expense_sort1" value="{{ app.request.query.get('expense_sort1', 'expenseDate') }}">
           <input type="hidden" name="expense_dir1" value="{{ app.request.query.get('expense_dir1', 'DESC') }}">
@@ -403,57 +548,96 @@
           <input type="hidden" name="revenue_sort2" value="{{ app.request.query.get('revenue_sort2', 'amount') }}">
           <input type="hidden" name="revenue_dir2" value="{{ app.request.query.get('revenue_dir2', 'DESC') }}">
           <input type="hidden" name="revenue_search" value="{{ app.request.query.get('revenue_search', '') }}">
-          <div class="col-md-8 col-lg-7">
             <div class="month-filter-controls">
-              <div class="field">
-                <label class="form-label small mb-0">Choose month</label>
-                <select name="month" class="form-select form-select-sm month-select">
-                  {% if selectedMonth not in expenseStats.available_months %}
-                    <option value="{{ selectedMonth }}" selected>{{ selectedMonth }}</option>
-                  {% endif %}
-                  {% for monthOption in expenseStats.available_months %}
-                    <option value="{{ monthOption }}" {{ selectedMonth == monthOption ? 'selected' : '' }}>{{ monthOption }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="action">
-                <button type="submit" class="btn btn-primary w-100 month-apply-btn">
-                  <i class="fa-solid fa-check me-1"></i>Apply Month
-                </button>
-              </div>
+            <div class="field">
+              <label class="form-label small">Choose month</label>
+              <select name="month" class="form-select form-select-sm month-select">
+                {% if selectedMonth not in expenseStats.available_months %}
+                  <option value="{{ selectedMonth }}" selected>{{ selectedMonth }}</option>
+                {% endif %}
+                {% for monthOption in expenseStats.available_months %}
+                  <option value="{{ monthOption }}" {{ selectedMonth == monthOption ? 'selected' : '' }}>{{ monthOption }}</option>
+                {% endfor %}
+              </select>
             </div>
-          </div>
-        </form>
-        <div class="row g-3 mb-3">
-          <div class="col-md-3">
-            <div class="small text-muted">Selected month total ({{ expenseStats.selected_month }})</div>
-            <div class="fw-bold">{{ expenseStats.current_month_total|number_format(2, '.', ' ') }} TND</div>
-          </div>
-          <div class="col-md-3">
-            <div class="small text-muted">Previous month total</div>
-            <div class="fw-bold">{{ expenseStats.previous_month_total|number_format(2, '.', ' ') }} TND</div>
-          </div>
-          <div class="col-md-3">
-            <div class="small text-muted">Monthly evolution</div>
-            <div class="fw-bold {{ expenseStats.evolution_percent > 0 ? 'text-danger' : 'text-success' }}">
+            <div class="action">
+              <button type="submit" class="btn btn-primary w-100 month-apply-btn">
+                <i class="fa-solid fa-check me-1"></i>Apply Month
+              </button>
+            </div>
+            </div>
+          </form>
+        </div>
+        <div class="stats-kpi-grid">
+          <article class="stats-kpi-item">
+            <div class="stats-kpi-label">Selected month total ({{ expenseStats.selected_month }})</div>
+            <div class="stats-kpi-value">{{ expenseStats.current_month_total|number_format(2, '.', ' ') }} TND</div>
+          </article>
+          <article class="stats-kpi-item">
+            <div class="stats-kpi-label">Previous month total</div>
+            <div class="stats-kpi-value">{{ expenseStats.previous_month_total|number_format(2, '.', ' ') }} TND</div>
+          </article>
+          <article class="stats-kpi-item">
+            <div class="stats-kpi-label">Monthly evolution</div>
+            <div class="stats-kpi-value {{ expenseStats.evolution_percent > 0 ? 'neg' : 'pos' }}">
               {{ expenseStats.evolution_percent|number_format(2, '.', ' ') }}%
             </div>
-          </div>
-          <div class="col-md-3">
-            <div class="small text-muted">Average monthly spend</div>
-            <div class="fw-bold">{{ expenseStats.average_monthly_spend|number_format(2, '.', ' ') }} TND</div>
-          </div>
+          </article>
+          <article class="stats-kpi-item">
+            <div class="stats-kpi-label">Average monthly spend</div>
+            <div class="stats-kpi-value">{{ expenseStats.average_monthly_spend|number_format(2, '.', ' ') }} TND</div>
+          </article>
         </div>
 
-        <div>
-          <h5 class="mb-2"><i class="fa-solid fa-robot text-primary me-2"></i>AI Monthly Advice</h5>
-          {% set selectedAdvice = monthlyAdvice.by_month[expenseStats.selected_month]|default('No AI advice available for the selected month yet.') %}
-          <div class="advice-highlight" role="note" aria-live="polite">
-            <i class="fa-solid fa-sparkles"></i>
-            <div class="advice-text">
-              <span class="advice-month">{{ expenseStats.selected_month }}:</span>{{ selectedAdvice }}
+        <div class="ai-panels-grid">
+          <section class="ai-panel">
+            <h5 class="mb-2"><i class="fa-solid fa-robot text-primary me-2"></i>AI Monthly Advice</h5>
+            {% set selectedAdvice = monthlyAdvice.by_month[expenseStats.selected_month]|default('No AI advice available for the selected month yet.') %}
+            <div class="advice-highlight mt-2" role="note" aria-live="polite">
+              <i class="fa-solid fa-sparkles"></i>
+              <div class="advice-text">
+                <span class="advice-month">{{ expenseStats.selected_month }}:</span>{{ selectedAdvice }}
+              </div>
             </div>
-          </div>
+          </section>
+          <section class="ai-panel">
+            <h5 class="mb-2"><i class="fa-solid fa-chart-line text-primary me-2"></i>AI Cashflow Intelligence</h5>
+            <div class="ai-metrics-grid">
+              <article class="ai-metric-card">
+                <div class="label">Cashflow health</div>
+                <div class="value">{{ aiInsights.cashflow_health.level|upper }} ({{ aiInsights.cashflow_health.score }}/100)</div>
+              </article>
+              <article class="ai-metric-card">
+                <div class="label">30-day forecast</div>
+                <div class="value">{{ aiInsights.forecast_30_days.expected_expenses|number_format(2, '.', ' ') }} TND</div>
+              </article>
+              <article class="ai-metric-card">
+                <div class="label">Trend</div>
+                <div class="value">
+                  {{ aiInsights.trend.direction|upper }}
+                  ({{ aiInsights.trend.delta_percent|number_format(2, '.', ' ') }}%)
+                </div>
+              </article>
+              <article class="ai-metric-card">
+                <div class="label">Source</div>
+                <div class="value">{{ aiInsights.ai_source|upper }}</div>
+              </article>
+            </div>
+            <div class="advice-highlight mt-2" role="note">
+              <i class="fa-solid fa-lightbulb"></i>
+              <div class="advice-text">{{ aiInsights.ai_summary }}</div>
+            </div>
+            {% if aiInsights.priority_actions is not empty %}
+              <div class="mt-2">
+                <div class="small text-muted mb-1">Priority actions</div>
+                <ul class="priority-list">
+                  {% for action in aiInsights.priority_actions|slice(0, 4) %}
+                    <li>{{ action }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          </section>
         </div>
       </div>
 

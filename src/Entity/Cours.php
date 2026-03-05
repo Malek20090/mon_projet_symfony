@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CoursRepository::class)]
 class Cours
@@ -17,9 +18,23 @@ class Cours
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
+    #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
+    #[Assert\Length(
+        min: 3,
+        minMessage: 'Le titre doit contenir au moins {{ limit }} caracteres.',
+        max: 150,
+        maxMessage: 'Le titre ne doit pas depasser {{ limit }} caracteres.'
+    )]
     private ?string $titre = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Assert\NotBlank(message: 'Le contenu est obligatoire.')]
+    #[Assert\Length(
+        min: 10,
+        minMessage: 'Le contenu doit contenir au moins {{ limit }} caracteres.',
+        max: 10000,
+        maxMessage: 'Le contenu ne doit pas depasser {{ limit }} caracteres.'
+    )]
     private ?string $contenuTexte = null;
 
     #[ORM\Column(length: 10)]
